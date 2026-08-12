@@ -204,15 +204,15 @@ fresh cloneから同じ開発・test・release buildを再現できるclean base
 
 ### Todo
 
-- [ ] `tools/testserver/` にGo製local HTTP serverを作成する。
-- [ ] test serverのport選択、startup readiness、shutdown、state resetを自動化する。
-- [ ] `GET /status/{code}` を実装する。
-- [ ] `GET /delay/{milliseconds}` を実装する。
-- [ ] `GET /bytes/{size}` と `GET /stream/{size}` を実装する。
-- [ ] `GET /headers` と `POST /echo` を実装する。
-- [ ] `GET /redirect/{count}` を実装する。
-- [ ] `GET /flaky/{failCount}` と `GET /rate-limit/{count}` を実装する。
-- [ ] fixture、hash検証、大容量payload生成を整備する。
+- [x] `tools/testserver/` にGo製local HTTP serverを作成する。
+- [x] test serverのport選択、startup readiness、shutdown、state resetを自動化する。
+- [x] `GET /status/{code}` を実装する。
+- [x] `GET /delay/{milliseconds}` を実装する。
+- [x] `GET /bytes/{size}` と `GET /stream/{size}` を実装する。
+- [x] `GET /headers` と `POST /echo` を実装する。
+- [x] `GET /redirect/{count}` を実装する。
+- [x] `GET /flaky/{failCount}` と `GET /rate-limit/{count}` を実装する。
+- [x] fixture、hash検証、大容量payload生成を整備する。
 - [ ] Excel process memoryとnative handleを測定するutilityを整備する。
 - [ ] Raw WinHttpRequestのbenchmark harnessを作成する。
 - [ ] VBA-Webのupstream commitを固定したsetup手順を作成する。

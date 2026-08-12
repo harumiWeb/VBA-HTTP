@@ -1,0 +1,219 @@
+package main
+
+import (
+	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"strconv"
+	"testing"
+	"time"
+)
+
+func TestStatus(t *testing.T) {
+	server := httptest.NewServer(newTestServer().routes())
+	defer server.Close()
+
+	response := get(t, server.URL+"/status/418")
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusTeapot {
+		t.Fatalf("status = %d, want %d", response.StatusCode, http.StatusTeapot)
+	}
+}
+
+func TestInvalidParametersReturnBadRequest(t *testing.T) {
+	server := httptest.NewServer(newTestServer().routes())
+	defer server.Close()
+
+	for _, path := range []string{"/status/199", "/delay/-1", "/bytes/-1", "/redirect/101"} {
+		response := get(t, server.URL+path)
+		response.Body.Close()
+		if response.StatusCode != http.StatusBadRequest {
+			t.Fatalf("%s status = %d, want 400", path, response.StatusCode)
+		}
+	}
+}
+
+func TestDelay(t *testing.T) {
+	server := httptest.NewServer(newTestServer().routes())
+	defer server.Close()
+
+	started := time.Now()
+	response := get(t, server.URL+"/delay/20")
+	defer response.Body.Close()
+	if elapsed := time.Since(started); elapsed < 15*time.Millisecond {
+		t.Fatalf("delay elapsed = %s, want at least 15ms", elapsed)
+	}
+}
+
+func TestBytesAndStreamUseDeterministicPattern(t *testing.T) {
+	server := httptest.NewServer(newTestServer().routes())
+	defer server.Close()
+
+	for _, endpoint := range []string{"bytes", "stream"} {
+		t.Run(endpoint, func(t *testing.T) {
+			const size = int64(200_000)
+			response := get(t, server.URL+"/"+endpoint+"/"+strconv.FormatInt(size, 10))
+			defer response.Body.Close()
+			body, err := io.ReadAll(response.Body)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if int64(len(body)) != size {
+				t.Fatalf("length = %d, want %d", len(body), size)
+			}
+			hash := sha256.Sum256(body)
+			if got := hex.EncodeToString(hash[:]); got != patternHash(size) {
+				t.Fatalf("hash = %s, want %s", got, patternHash(size))
+			}
+		})
+	}
+}
+
+func TestSHA256DescribesGeneratedPayload(t *testing.T) {
+	server := httptest.NewServer(newTestServer().routes())
+	defer server.Close()
+
+	response := get(t, server.URL+"/sha256/200000")
+	defer response.Body.Close()
+	var payload struct {
+		Algorithm string `json:"algorithm"`
+		Bytes     int64  `json:"bytes"`
+		Digest    string `json:"digest"`
+	}
+	if err := json.NewDecoder(response.Body).Decode(&payload); err != nil {
+		t.Fatal(err)
+	}
+	if payload.Algorithm != "sha256" || payload.Bytes != 200_000 || payload.Digest != patternHash(200_000) {
+		t.Fatalf("unexpected hash payload: %#v", payload)
+	}
+}
+
+func TestAdminShutdownSignalsLifecycle(t *testing.T) {
+	testServer := newTestServer()
+	request := httptest.NewRequest(http.MethodPost, "/__admin/shutdown", nil)
+	recorder := httptest.NewRecorder()
+	testServer.routes().ServeHTTP(recorder, request)
+	if recorder.Code != http.StatusAccepted {
+		t.Fatalf("status = %d, want %d", recorder.Code, http.StatusAccepted)
+	}
+	select {
+	case <-testServer.shutdownRequested:
+	default:
+		t.Fatal("shutdown signal was not published")
+	}
+}
+
+func TestHeadersAndEcho(t *testing.T) {
+	server := httptest.NewServer(newTestServer().routes())
+	defer server.Close()
+
+	request, err := http.NewRequest(http.MethodGet, server.URL+"/headers?name=value", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	request.Header.Set("X-Test-Header", "present")
+	response, err := http.DefaultClient.Do(request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer response.Body.Close()
+	var payload struct {
+		Headers http.Header `json:"headers"`
+		Query   urlValues   `json:"query"`
+	}
+	if err := json.NewDecoder(response.Body).Decode(&payload); err != nil {
+		t.Fatal(err)
+	}
+	if payload.Headers.Get("X-Test-Header") != "present" || payload.Query.Get("name") != "value" {
+		t.Fatalf("unexpected headers payload: %#v", payload)
+	}
+
+	echoBody := []byte("echo payload")
+	echoResponse, err := http.Post(server.URL+"/echo", "text/plain", bytes.NewReader(echoBody))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer echoResponse.Body.Close()
+	actualEcho, err := io.ReadAll(echoResponse.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(actualEcho, echoBody) {
+		t.Fatalf("echo = %q, want %q", actualEcho, echoBody)
+	}
+}
+
+func TestRedirect(t *testing.T) {
+	server := httptest.NewServer(newTestServer().routes())
+	defer server.Close()
+
+	response := get(t, server.URL+"/redirect/3")
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK || response.Request.URL.Path != "/redirect/0" {
+		t.Fatalf("status/path = %d %s", response.StatusCode, response.Request.URL.Path)
+	}
+}
+
+func TestFlakyAndReset(t *testing.T) {
+	testServer := newTestServer()
+	server := httptest.NewServer(testServer.routes())
+	defer server.Close()
+
+	assertStatuses(t, server.URL+"/flaky/2?id=case", []int{503, 503, 200})
+	resetResponse, err := http.Post(server.URL+"/__admin/reset", "application/json", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resetResponse.Body.Close()
+	assertStatuses(t, server.URL+"/flaky/2?id=case", []int{503})
+}
+
+func TestRateLimit(t *testing.T) {
+	server := httptest.NewServer(newTestServer().routes())
+	defer server.Close()
+
+	response := get(t, server.URL+"/rate-limit/1?id=case&retry_after=7")
+	response.Body.Close()
+	if response.StatusCode != http.StatusTooManyRequests || response.Header.Get("Retry-After") != "7" {
+		t.Fatalf("status/retry-after = %d %q", response.StatusCode, response.Header.Get("Retry-After"))
+	}
+
+	response = get(t, server.URL+"/rate-limit/1?id=case&retry_after=7")
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		t.Fatalf("status = %d, want 200", response.StatusCode)
+	}
+}
+
+type urlValues map[string][]string
+
+func (v urlValues) Get(key string) string {
+	if values := v[key]; len(values) > 0 {
+		return values[0]
+	}
+	return ""
+}
+
+func assertStatuses(t *testing.T, target string, expected []int) {
+	t.Helper()
+	for _, want := range expected {
+		response := get(t, target)
+		response.Body.Close()
+		if response.StatusCode != want {
+			t.Fatalf("status = %d, want %d", response.StatusCode, want)
+		}
+	}
+}
+
+func get(t *testing.T, target string) *http.Response {
+	t.Helper()
+	response, err := http.Get(target)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return response
+}

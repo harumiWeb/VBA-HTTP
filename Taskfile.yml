@@ -33,6 +33,30 @@ tasks:
     cmds:
       - xlflow test --json
 
+  testserver:test:
+    desc: Run deterministic local HTTP server tests
+    cmds:
+      - task: testserver:unit
+      - task: testserver:smoke
+
+  testserver:unit:
+    desc: Run local HTTP server unit tests and static checks
+    dir: tools/testserver
+    cmds:
+      - go test -timeout 30s ./...
+      - go vet ./...
+
+  testserver:smoke:
+    desc: Verify test server readiness, reset, and graceful shutdown
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-TestServerLifecycle.ps1
+
+  testserver:run:
+    desc: Start the local HTTP server on an OS-selected port
+    dir: tools/testserver
+    cmds:
+      - go run . -listen 127.0.0.1:0
+
   bootstrap:dirs:
     desc: Restore empty xlflow scaffold directories omitted by Git
     cmds:
@@ -60,6 +84,7 @@ tasks:
     cmds:
       - task: check
       - task: test
+      - task: testserver:test
       - task: build:plan
 
   hooks:install:
