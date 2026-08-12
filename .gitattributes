@@ -1,0 +1,14 @@
+*.bas text eol=lf
+*.cls text eol=lf
+*.frm text eol=lf
+*.toml text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.ps1 text eol=lf
+*.go text eol=lf
+
+*.xlsm binary
+*.xlam binary
+*.xlsb binary
