@@ -122,7 +122,21 @@ finally {
         Stop-Process -Id $process.Id -Force
         [void]$process.WaitForExit(5000)
     }
+    if ($null -ne $process) {
+        $process.Dispose()
+        $process = $null
+    }
     if (Test-Path -LiteralPath $artifactDirectory) {
-        Remove-Item -LiteralPath $artifactDirectory -Recurse -Force
+        $removed = $false
+        for ($attempt = 1; $attempt -le 10 -and -not $removed; $attempt++) {
+            try {
+                Remove-Item -LiteralPath $artifactDirectory -Recurse -Force
+                $removed = $true
+            }
+            catch {
+                if ($attempt -eq 10) { throw }
+                Start-Sleep -Milliseconds 100
+            }
+        }
     }
 }

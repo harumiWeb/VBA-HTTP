@@ -57,6 +57,11 @@ tasks:
     cmds:
       - go run . -listen 127.0.0.1:0
 
+  benchmark:raw:
+    desc: Run the Raw WinHttpRequest loopback baseline
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Run-RawBenchmark.ps1
+
   bootstrap:dirs:
     desc: Restore empty xlflow scaffold directories omitted by Git
     cmds:

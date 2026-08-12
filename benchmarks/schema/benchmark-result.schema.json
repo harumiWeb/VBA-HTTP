@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vba-http.local/schemas/benchmark-result.schema.json",
+  "title": "VBA-HTTP benchmark result",
+  "type": "object",
+  "required": ["schema_version", "benchmark", "implementation", "environment", "server", "parameters", "results"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "benchmark": { "const": "http-client" },
+    "implementation": {
+      "type": "object",
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "environment": {
+      "type": "object",
+      "required": ["office_bitness", "excel_version", "platform"],
+      "properties": {
+        "office_bitness": { "enum": ["x86", "x64"] },
+        "excel_version": { "type": "string", "minLength": 1 },
+        "platform": { "const": "Windows" }
+      },
+      "additionalProperties": false
+    },
+    "server": {
+      "type": "object",
+      "required": ["base_url", "external_network"],
+      "properties": {
+        "base_url": { "type": "string", "pattern": "^http://(127\\.0\\.0\\.1|localhost)(:[0-9]+)?$" },
+        "external_network": { "const": false }
+      },
+      "additionalProperties": false
+    },
+    "parameters": {
+      "type": "object",
+      "required": ["warmup_iterations", "latency_iterations", "download_bytes", "timeouts_ms"],
+      "properties": {
+        "warmup_iterations": { "type": "integer", "minimum": 0 },
+        "latency_iterations": { "type": "integer", "minimum": 1 },
+        "download_bytes": { "type": "integer", "minimum": 104857600 },
+        "timeouts_ms": { "type": "object" }
+      },
+      "additionalProperties": false
+    },
+    "results": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["scenario", "method", "path", "iterations", "status", "elapsed_ms", "process_before", "process_after"],
+        "properties": {
+          "scenario": { "enum": ["sequential_get", "buffered_download"] },
+          "method": { "const": "GET" },
+          "path": { "type": "string", "pattern": "^/" },
+          "iterations": { "type": "integer", "minimum": 1 },
+          "status": { "type": "integer", "minimum": 200, "maximum": 599 },
+          "elapsed_ms": { "type": "number", "exclusiveMinimum": 0 },
+          "mean_ms": { "type": "number", "minimum": 0 },
+          "min_ms": { "type": "number", "minimum": 0 },
+          "max_ms": { "type": "number", "minimum": 0 },
+          "requests_per_second": { "type": "number", "minimum": 0 },
+          "bytes": { "type": "integer", "minimum": 0 },
+          "throughput_mib_s": { "type": "number", "minimum": 0 },
+          "process_before": { "$ref": "#/$defs/processSnapshot" },
+          "process_after": { "$ref": "#/$defs/processSnapshot" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "$defs": {
+    "processSnapshot": {
+      "type": "object",
+      "required": ["handles", "working_set_bytes", "peak_working_set_bytes", "private_bytes"],
+      "properties": {
+        "handles": { "type": "integer", "minimum": 0 },
+        "working_set_bytes": { "type": "number", "minimum": 0 },
+        "peak_working_set_bytes": { "type": "number", "minimum": 0 },
+        "private_bytes": { "type": "number", "minimum": 0 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

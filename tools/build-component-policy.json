@@ -8,8 +8,10 @@
   ],
   "excluded": [
     "BenchmarkSupport",
+    "BenchmarkTests",
     "BootstrapTests",
     "DevSupport",
+    "RawWinHttpBenchmark",
     "XlflowAssert",
     "XlflowDebug",
     "XlflowRuntime",
