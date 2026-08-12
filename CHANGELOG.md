@@ -1,5 +1,10 @@
 ## Unreleased
 
+- Added a redirect security boundary: credential and cookie headers suppress
+  automatic redirects, redirect loops honor the bounded maximum, and both COM
+  and native transports explicitly reject HTTPS-to-HTTP downgrade redirects.
+  Cookie persistence remains caller-owned and deferred to a separate policy.
+
 - Added snapshot-safe preemptive Basic/Bearer authentication providers for COM
   and native requests, deterministic loopback auth endpoints, redirect
   suppression, secret-header redaction helpers, and release consumer auth smoke.

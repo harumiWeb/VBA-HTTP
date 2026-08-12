@@ -378,8 +378,8 @@ Private Function PrepareRequest(ByVal Request As HttpRequest) As HttpRequest
     If snapshot.AuthProvider Is Nothing Then Set snapshot.AuthProvider = mAuthProvider
     If Not snapshot.AuthProvider Is Nothing Then
         snapshot.AuthProvider.Apply snapshot
-        snapshot.FollowRedirects = False
     End If
+    If HttpSecurity.HasRedirectSensitiveHeaders(snapshot.Headers) Then snapshot.FollowRedirects = False
     Set PrepareRequest = snapshot
 End Function
 

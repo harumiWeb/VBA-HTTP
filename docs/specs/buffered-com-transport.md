@@ -20,7 +20,9 @@ library.
   UTF-8 bytes by `HttpBody`; binary bodies retain their exact bytes.
 - `HttpRequest.FollowRedirects` defaults to `True` and
   `HttpRequest.MaxRedirects` defaults to 10. The transport applies both WinHTTP
-  options before sending. Automatic HTTPS-to-HTTP redirects remain disabled.
+  options before sending. `EnableHttpsToHttpRedirects` is explicitly set to
+  `False`. Requests containing `Authorization`, `Proxy-Authorization`, or
+  `Cookie` disable automatic redirects and return the 3xx response.
 - The execution snapshot may contain a preemptive Basic or Bearer
   `IHttpAuthProvider`; the client has already materialized its `Authorization`
   header before `Open`/`Send`. Such snapshots always set `FollowRedirects` to

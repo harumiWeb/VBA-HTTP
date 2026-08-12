@@ -469,9 +469,9 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 ### Todo
 
 - [ ] cookie jarと最小cookie policyを実装する。
-- [ ] redirect loopとmaximum redirectを実装する。
-- [ ] cross-originでAuthorization／Proxy-Authorizationを除去する。
-- [ ] HTTPSからHTTPへのdowngrade redirectをdefault拒否する。
+- [x] redirect loopとmaximum redirectを実装する（WinHTTP上限とloopback検証、release consumer smoke）。
+- [x] cross-originでAuthorization／Proxy-Authorizationを除去する（native callbackを使わず、credential-bearing automatic redirectを停止して3xxをcallerへ返す）。
+- [x] HTTPSからHTTPへのdowngrade redirectをdefault拒否する（COM option 12=false、native policy=DISALLOW_HTTPS_TO_HTTP）。
 - [ ] malformed headers、unicode、binary response testsを追加する。
 - [ ] 10,000 sequential／scheduled request stress testsを追加する。
 - [ ] repeated cancellation／timeout stress testsを追加する。

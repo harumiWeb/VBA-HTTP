@@ -466,10 +466,11 @@ Private Sub ApplyRequestOptions(ByVal nativeRequest As WinHttpRequestHandle, ByV
     Dim redirectFlag As Long
 
     If Not WinHttpNativeApi.SetTimeouts(nativeRequest.Value, Request.Timeouts.ResolveMilliseconds, Request.Timeouts.ConnectMilliseconds, Request.Timeouts.SendMilliseconds, Request.Timeouts.ReceiveMilliseconds) Then RaiseNativeFailure "SetTimeouts", Source
-    If Request.FollowRedirects Then
-        redirectFlag = 1
+    If Request.FollowRedirects And Not HttpSecurity.HasRedirectSensitiveHeaders(Request.Headers) Then
+        ' Keep WinHTTP's secure default: follow redirects except HTTPS -> HTTP.
+        redirectFlag = WinHttpNativeApi.WinHttpRedirectPolicyDisallowHttpsToHttp
     Else
-        redirectFlag = 0
+        redirectFlag = WinHttpNativeApi.WinHttpRedirectPolicyNever
     End If
     If Not WinHttpNativeApi.SetOptionLong(nativeRequest.Value, WinHttpNativeApi.WinHttpOptionRedirectPolicy, redirectFlag) Then RaiseNativeFailure "SetRedirects", Source
     If Not WinHttpNativeApi.SetOptionLong(nativeRequest.Value, WinHttpNativeApi.WinHttpOptionMaxAutomaticRedirects, Request.MaxRedirects) Then RaiseNativeFailure "SetMaxRedirects", Source

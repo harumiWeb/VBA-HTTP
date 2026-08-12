@@ -151,6 +151,27 @@ Public Sub Test_Client_PropagatesDefaultProxyOptionsToSnapshot()
     XlflowAssert.AssertNotSame options, transport.LastRequest.ProxyOptions
 End Sub
 
+Public Sub Test_Client_DisablesRedirectsForSensitiveHeaders()
+    Dim client As New HttpClient
+    Dim transport As New MockHttpTransport
+    Dim configuredResponse As New HttpResponse
+    Dim Request As New HttpRequest
+    Dim headerName As Variant
+
+    configuredResponse.Initialize 302
+    transport.SetResponse configuredResponse
+    Set client.Transport = transport
+    Request.Url = "https://example.test/redirect"
+    For Each headerName In Array("Authorization", "Proxy-Authorization", "Cookie")
+        Request.Headers.Clear
+        Request.Headers.SetValue CStr(headerName), "redacted-test-value"
+        Request.FollowRedirects = True
+        Call client.Execute(Request)
+        XlflowAssert.AssertFalse transport.LastRequest.FollowRedirects, CStr(headerName) & " must suppress automatic redirects."
+        XlflowAssert.AssertTrue Request.FollowRedirects, "The caller-owned request must not be mutated."
+    Next headerName
+End Sub
+
 '@ExpectedError(-2147200502, "URL must contain a host.", "HttpClient.Execute")
 Public Sub Test_Client_RejectsAbsoluteUrlWithoutHost()
     Dim client As New HttpClient

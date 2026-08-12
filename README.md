@@ -135,6 +135,11 @@ integrated authentication, proxy credentials, and OAuth flows are outside the
 current provider contract; see
 [`docs/specs/auth-policy.md`](docs/specs/auth-policy.md).
 
+Requests carrying `Authorization`, `Proxy-Authorization`, or `Cookie` headers
+also return 3xx responses instead of automatically forwarding those values to a
+redirected origin. HTTPS-to-HTTP downgrade redirects are rejected by default;
+see [`docs/specs/redirect-policy.md`](docs/specs/redirect-policy.md).
+
 The native transport uses synchronous WinHTTP calls, OS certificate validation, and deterministic handle cleanup. Buffered native requests still reject active cancellation and total-deadline options because a blocking call cannot observe them; streaming downloads support cooperative cancellation and total-deadline checkpoints between bounded reads.
 
 For a large file, use the native client and let the library publish only after the temporary file is complete:

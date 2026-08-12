@@ -265,6 +265,46 @@ Public Sub Test_NativeTransport_AuthProviderDisablesRedirects()
 End Sub
 
 '@Tag("integration")
+Public Sub Test_NativeTransport_SensitiveHeadersDisableRedirects()
+    Dim client As New HttpClient
+    Dim Request As New HttpRequest
+    Dim response As HttpResponse
+    Dim headerName As Variant
+
+    client.BaseUrl = RequireBaseUrl()
+    Set client.Transport = New WinHttpNativeTransport
+    Request.Url = "/redirect/1"
+    For Each headerName In Array("Authorization", "Proxy-Authorization", "Cookie")
+        Request.Headers.Clear
+        Request.Headers.SetValue CStr(headerName), "redacted-test-value"
+        Request.FollowRedirects = True
+        Set response = client.Execute(Request)
+        XlflowAssert.AssertEquals 302, response.StatusCode
+        XlflowAssert.AssertEquals "/redirect/0", response.Headers.GetValue("Location")
+    Next headerName
+End Sub
+
+'@Tag("integration")
+Public Sub Test_NativeTransport_BoundsRedirectLoop()
+    Dim client As New HttpClient
+    Dim Request As New HttpRequest
+    Dim observedNumber As Long
+
+    Request.Url = RequireBaseUrl() & "/redirect-loop"
+    Request.MaxRedirects = 2
+    Set client.Transport = New WinHttpNativeTransport
+    On Error GoTo ExpectedFailure
+    Call client.Execute(Request)
+    XlflowAssert.AssertTrue False, "Redirect loop should exceed the configured maximum."
+    Exit Sub
+
+    ExpectedFailure: ' xlflow:disable-line VBA237
+    observedNumber = Err.Number
+    Err.Clear
+    XlflowAssert.AssertEquals HttpErrorProtocol, HttpErrors.CategoryFromNumber(observedNumber)
+End Sub
+
+'@Tag("integration")
 Public Sub Test_NativeTransport_MapsConnectionFailure()
     Dim client As New HttpClient
     Dim Request As New HttpRequest

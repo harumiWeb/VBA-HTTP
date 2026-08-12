@@ -15,6 +15,7 @@ Implements IHttpAttemptTransport
 
 Private Const TransportSource As String = "WinHttpComTransport.Execute"
 Private Const WinHttpOptionEnableRedirects As Long = 6
+Private Const WinHttpOptionEnableHttpsToHttpRedirects As Long = 12
 Private Const WinHttpOptionMaxAutomaticRedirects As Long = 14
 Private Const WinHttpRequestProxySettingDefault As Long = 0
 Private Const WinHttpRequestProxySettingDirect As Long = 1
@@ -54,7 +55,8 @@ Private Function ExecuteCore(ByVal Request As HttpRequest) As HttpResponse
 
     Set backend = CreateObject("WinHttp.WinHttpRequest.5.1")
     backend.SetTimeouts Request.Timeouts.ResolveMilliseconds, Request.Timeouts.ConnectMilliseconds, Request.Timeouts.SendMilliseconds, Request.Timeouts.ReceiveMilliseconds
-    backend.Option(WinHttpOptionEnableRedirects) = Request.FollowRedirects
+    backend.Option(WinHttpOptionEnableRedirects) = Request.FollowRedirects And Not HttpSecurity.HasRedirectSensitiveHeaders(Request.Headers)
+    backend.Option(WinHttpOptionEnableHttpsToHttpRedirects) = False
     backend.Option(WinHttpOptionMaxAutomaticRedirects) = Request.MaxRedirects
 
     started = HttpTiming.CounterValue()
@@ -432,7 +434,8 @@ Private Function CreateAsyncOperation(ByVal Request As HttpRequest, ByVal itemIn
     ValidateDecompressionOptions Request
     Set backend = CreateObject("WinHttp.WinHttpRequest.5.1")
     backend.SetTimeouts Request.Timeouts.ResolveMilliseconds, Request.Timeouts.ConnectMilliseconds, Request.Timeouts.SendMilliseconds, Request.Timeouts.ReceiveMilliseconds
-    backend.Option(WinHttpOptionEnableRedirects) = Request.FollowRedirects
+    backend.Option(WinHttpOptionEnableRedirects) = Request.FollowRedirects And Not HttpSecurity.HasRedirectSensitiveHeaders(Request.Headers)
+    backend.Option(WinHttpOptionEnableHttpsToHttpRedirects) = False
     backend.Option(WinHttpOptionMaxAutomaticRedirects) = Request.MaxRedirects
     started = HttpTiming.CounterValue()
     backend.Open Request.Method, Request.Url, True

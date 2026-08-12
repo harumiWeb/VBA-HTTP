@@ -138,6 +138,28 @@ Public Sub RunAuthSmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As St
     End If
 End Sub
 
+Public Sub RunRedirectSecuritySmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As String)
+    Dim client As Object
+    Dim nativeClient As Object
+    Dim response As Object
+
+    Set client = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateClient")
+    client.BaseUrl = baseUrl
+    client.DefaultHeaders.SetValue "Authorization", "redacted-release-smoke"
+    Set response = client.GetResponse("/redirect/1")
+    If response.StatusCode <> 302 Then
+        Err.Raise vbObjectError + 753, "ReleaseBatchSmoke.RunRedirectSecuritySmoke", "Release COM redirect security smoke followed a credential-bearing redirect."
+    End If
+
+    Set nativeClient = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateNativeClient")
+    nativeClient.BaseUrl = baseUrl
+    nativeClient.DefaultHeaders.SetValue "Cookie", "redacted-release-smoke"
+    Set response = nativeClient.GetResponse("/redirect/1")
+    If response.StatusCode <> 302 Then
+        Err.Raise vbObjectError + 754, "ReleaseBatchSmoke.RunRedirectSecuritySmoke", "Release native redirect security smoke followed a cookie-bearing redirect."
+    End If
+End Sub
+
 Public Sub RunUploadSmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As String, ByVal sourcePath As String)
     Dim client As Object
     Dim form As Object

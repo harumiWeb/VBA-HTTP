@@ -69,6 +69,7 @@ func (s *testServer) routes() http.Handler {
 	mux.HandleFunc("POST /upload/multipart", s.uploadMultipart)
 	mux.HandleFunc("POST /upload/challenge", s.uploadChallenge)
 	mux.HandleFunc("GET /redirect/{count}", s.redirect)
+	mux.HandleFunc("GET /redirect-loop", s.redirectLoop)
 	mux.HandleFunc("GET /flaky/{failCount}", s.flaky)
 	mux.HandleFunc("GET /rate-limit/{count}", s.rateLimit)
 	mux.HandleFunc("GET /retry-status/{code}/{count}", s.retryStatus)
@@ -390,6 +391,10 @@ func (s *testServer) redirect(w http.ResponseWriter, r *http.Request) {
 		target += "?" + r.URL.RawQuery
 	}
 	http.Redirect(w, r, target, http.StatusFound)
+}
+
+func (s *testServer) redirectLoop(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/redirect-loop", http.StatusFound)
 }
 
 func (s *testServer) flaky(w http.ResponseWriter, r *http.Request) {

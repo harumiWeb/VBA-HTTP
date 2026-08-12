@@ -17,7 +17,7 @@ For every request the transport performs this sequence on the VBA thread:
 2. validate the request proxy snapshot and open a WinHTTP session using the
    requested OS/default, direct, or named-proxy configuration;
 3. connect to the host and open a request handle;
-4. apply timeout and redirect options, the optional native protocol policy,
+4. apply timeout and secure redirect options, the optional native protocol policy,
    and optional response decompression;
 5. add validated request headers, then send the buffered or streaming body with
    its exact byte count;
@@ -59,6 +59,9 @@ evidence.
   by the shared WinHTTP error classifier to the ADR-0003 categories; raw URLs,
   headers, credentials, and response data never enter descriptions.
 - TLS uses OS certificate validation. No certificate-ignore flag is exposed.
+- Automatic redirects use `DISALLOW_HTTPS_TO_HTTP` by default, or `NEVER` when
+  `FollowRedirects` is false. `Authorization`, `Proxy-Authorization`, and
+  `Cookie` headers force `NEVER` for the request snapshot.
 - Protocol flags are queried opportunistically. `HttpProtocolOptions` can
   enable HTTP/2/3 and can require the selected mask; allow-fallback treats an
   unsupported native option as a capability miss, while required mode maps

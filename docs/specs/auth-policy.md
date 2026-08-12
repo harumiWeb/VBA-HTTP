@@ -36,8 +36,10 @@ The factories accept an optional `AllowInsecureHttp` Boolean. Its default is
 
 Provider-generated credentials set the execution snapshot's
 `FollowRedirects=False`. WinHTTP user-defined headers can otherwise cross an
-automatic redirect unchanged; callers receive the 3xx response and must apply
-an origin-aware redirect policy before issuing a follow-up request.
+automatic redirect unchanged. The same boundary applies to caller-supplied
+`Authorization`, `Proxy-Authorization`, and `Cookie` headers. Callers receive
+the 3xx response and must apply an origin-aware redirect policy before issuing a
+follow-up request; see `redirect-policy.md`.
 
 401 and 407 are returned as normal responses. There is no automatic challenge
 replay, credential refresh, or proxy authentication in this slice. Streaming

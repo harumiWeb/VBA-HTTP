@@ -42,6 +42,21 @@ func TestInvalidParametersReturnBadRequest(t *testing.T) {
 	}
 }
 
+func TestRedirectLoopIsDeterministic(t *testing.T) {
+	server := httptest.NewServer(newTestServer().routes())
+	defer server.Close()
+
+	client := &http.Client{CheckRedirect: func(_ *http.Request, _ []*http.Request) error { return http.ErrUseLastResponse }}
+	response, err := client.Get(server.URL + "/redirect-loop")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusFound || response.Header.Get("Location") != "/redirect-loop" {
+		t.Fatalf("loop response = %d %q", response.StatusCode, response.Header.Get("Location"))
+	}
+}
+
 func TestDelay(t *testing.T) {
 	server := httptest.NewServer(newTestServer().routes())
 	defer server.Close()
