@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "benchmark": "bounded-concurrency",
+  "environment": {"office_bitness": "x64", "excel_version": "16.0", "platform": "Windows"},
+  "parameters": {"requests": 100, "delay_ms": 100, "sequential_concurrency": 1, "concurrent_concurrency": 16},
+  "results": {"sequential_elapsed_ms": 11041.019, "concurrent_elapsed_ms": 858.266, "speedup": 12.864, "server_max_in_flight": 16}
+}

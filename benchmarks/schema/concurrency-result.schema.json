@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vba-http.local/schemas/concurrency-result.schema.json",
+  "title": "VBA-HTTP bounded concurrency benchmark",
+  "type": "object",
+  "required": ["schema_version", "benchmark", "environment", "parameters", "results"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "benchmark": { "const": "bounded-concurrency" },
+    "environment": {
+      "type": "object",
+      "required": ["office_bitness", "excel_version", "platform"],
+      "properties": {
+        "office_bitness": { "enum": ["x86", "x64"] },
+        "excel_version": { "type": "string", "minLength": 1 },
+        "platform": { "const": "Windows" }
+      },
+      "additionalProperties": false
+    },
+    "parameters": {
+      "type": "object",
+      "required": ["requests", "delay_ms", "sequential_concurrency", "concurrent_concurrency"],
+      "properties": {
+        "requests": { "const": 100 },
+        "delay_ms": { "const": 100 },
+        "sequential_concurrency": { "const": 1 },
+        "concurrent_concurrency": { "const": 16 }
+      },
+      "additionalProperties": false
+    },
+    "results": {
+      "type": "object",
+      "required": ["sequential_elapsed_ms", "concurrent_elapsed_ms", "speedup", "server_max_in_flight"],
+      "properties": {
+        "sequential_elapsed_ms": { "type": "number", "exclusiveMinimum": 0 },
+        "concurrent_elapsed_ms": { "type": "number", "exclusiveMinimum": 0 },
+        "speedup": { "type": "number", "minimum": 6 },
+        "server_max_in_flight": { "type": "integer", "minimum": 1, "maximum": 16 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

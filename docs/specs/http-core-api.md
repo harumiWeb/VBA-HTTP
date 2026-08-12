@@ -19,7 +19,7 @@ Debug.Print response.StatusCode
 Debug.Print response.Text
 ```
 
-`HttpClient.Execute(request)` is the primitive operation. `GetResponse`, `PostResponse`, `PutResponse`, `PatchResponse`, and `DeleteResponse` are convenience methods that construct a request and delegate to `Execute`. The `Response` suffix is required because VBA reserves `Get`, `Put`, and related tokens; this keeps ordinary early-bound calls compilable. Batch, download, and upload APIs are additive contracts introduced by later specs.
+`HttpClient.Execute(request)` is the primitive operation. `GetResponse`, `PostResponse`, `PutResponse`, `PatchResponse`, and `DeleteResponse` are convenience methods that construct a request and delegate to `Execute`. The `Response` suffix is required because VBA reserves `Get`, `Put`, and related tokens; this keeps ordinary early-bound calls compilable. Batch execution is defined by `bounded-concurrency.md`; download and upload APIs remain additive contracts for later specs.
 
 `HttpClient.BaseUrl` resolves a relative request URL. An absolute request URL is used as-is. Base and relative URL joining must not discard path segments accidentally and is covered by URL unit tests before network transports are enabled.
 
@@ -75,3 +75,4 @@ The authoritative decision is ADR-0003. `HttpErrors` reserves the public namespa
 - Architectural boundary: `docs/adr/ADR-0002-dual-transport-boundary.md`
 - Error decision: `docs/adr/ADR-0003-http-error-model.md`
 - Buffered backend: `docs/specs/buffered-com-transport.md`
+- Batch API and scheduler contract: `docs/specs/bounded-concurrency.md`

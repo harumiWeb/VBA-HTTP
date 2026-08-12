@@ -6,9 +6,11 @@ Option Private Module
 #If VBA7 Then
 Private Declare PtrSafe Function QueryPerformanceCounter Lib "kernel32" (ByRef value As Currency) As Long
 Private Declare PtrSafe Function QueryPerformanceFrequency Lib "kernel32" (ByRef value As Currency) As Long
+Private Declare PtrSafe Sub Sleep Lib "kernel32" (ByVal milliseconds As Long)
 #Else
 Private Declare Function QueryPerformanceCounter Lib "kernel32" (ByRef value As Currency) As Long
 Private Declare Function QueryPerformanceFrequency Lib "kernel32" (ByRef value As Currency) As Long
+Private Declare Sub Sleep Lib "kernel32" (ByVal milliseconds As Long)
 #End If
 
 Public Function CounterValue() As Currency
@@ -27,3 +29,8 @@ Public Function ElapsedMilliseconds(ByVal started As Currency, ByVal finished As
     End If
     ElapsedMilliseconds = (CDbl(finished) - CDbl(started)) * 1000# / CDbl(frequency)
 End Function
+
+Public Sub Pause(ByVal milliseconds As Long)
+    If milliseconds < 0 Then HttpErrors.RaiseValidation "HttpTiming.Pause", "Pause duration cannot be negative."
+    If milliseconds > 0 Then Sleep milliseconds
+End Sub

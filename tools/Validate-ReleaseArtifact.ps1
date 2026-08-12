@@ -89,7 +89,10 @@ finally {
     }
 }
 
-$runJson = & xlflow run Main.Run --input $resolvedArtifact --headless --no-save --direct --json
+# The production transport contains an intentional, controlled DoEvents checkpoint.
+# xlflow's conservative headless preflight rejects any workbook containing DoEvents,
+# even though Main.Run does not execute that path. Excel still runs invisibly here.
+$runJson = & xlflow run Main.Run --input $resolvedArtifact --no-save --direct --json
 if ($LASTEXITCODE -ne 0) {
     throw "Release consumer smoke failed with exit code $LASTEXITCODE."
 }
@@ -106,6 +109,8 @@ $serverProcess = $null
 $consumerExcel = $null
 $consumerWorkbooks = $null
 $consumerWorkbook = $null
+$harnessWorkbook = $null
+$harnessComponent = $null
 $client = $null
 $response = $null
 $ready = $null
@@ -161,6 +166,12 @@ try {
     if ($null -eq $response -or $response.StatusCode -ne 204 -or -not $response.IsSuccess) {
         throw "Release HttpClient GET returned an unexpected response."
     }
+
+    $harnessWorkbook = $consumerWorkbooks.Add()
+    $harnessComponent = $harnessWorkbook.VBProject.VBComponents.Import((Join-Path $PSScriptRoot "consumer\ReleaseBatchSmoke.bas"))
+    if ($harnessComponent.Name -ne "ReleaseBatchSmoke") { throw "External batch smoke module import failed." }
+    $batchMacro = "'$($harnessWorkbook.Name)'!ReleaseBatchSmoke.RunBatchSmoke"
+    [void]$consumerExcel.Run($batchMacro, $consumerWorkbook.Name, [string]$ready.url)
 }
 finally {
     if ($null -ne $response -and [Runtime.InteropServices.Marshal]::IsComObject($response)) {
@@ -168,6 +179,11 @@ finally {
     }
     if ($null -ne $client -and [Runtime.InteropServices.Marshal]::IsComObject($client)) {
         [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($client)
+    }
+    if ($null -ne $harnessComponent) { [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($harnessComponent) }
+    if ($null -ne $harnessWorkbook) {
+        try { $harnessWorkbook.Close($false) } catch { Write-Warning "Could not close external batch smoke workbook: $_" }
+        [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($harnessWorkbook)
     }
     if ($null -ne $consumerWorkbook) {
         try { $consumerWorkbook.Close($false) } catch { Write-Warning "Could not close consumer smoke workbook: $_" }
@@ -192,4 +208,4 @@ finally {
     }
 }
 
-Write-Output "Release artifact is valid: $($actualComponents.Count) components; Main.Run and external HttpClient GET passed."
+Write-Output "Release artifact is valid: $($actualComponents.Count) components; external GET and concurrent batch smoke passed."

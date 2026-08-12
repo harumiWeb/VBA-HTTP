@@ -22,6 +22,8 @@ const (
 type testServer struct {
 	mu                sync.Mutex
 	attempts          map[string]int
+	inFlight          int
+	maxInFlight       int
 	shutdownOnce      sync.Once
 	shutdownRequested chan struct{}
 }
@@ -38,8 +40,10 @@ func (s *testServer) routes() http.Handler {
 	mux.HandleFunc("GET /healthz", s.health)
 	mux.HandleFunc("POST /__admin/reset", s.reset)
 	mux.HandleFunc("POST /__admin/shutdown", s.shutdown)
+	mux.HandleFunc("GET /__admin/stats", s.stats)
 	mux.HandleFunc("GET /status/{code}", s.status)
 	mux.HandleFunc("GET /delay/{milliseconds}", s.delay)
+	mux.HandleFunc("GET /disconnect", s.disconnect)
 	mux.HandleFunc("GET /bytes/{size}", s.bytes)
 	mux.HandleFunc("GET /stream/{size}", s.stream)
 	mux.HandleFunc("GET /sha256/{size}", s.sha256)
@@ -66,6 +70,8 @@ func (s *testServer) health(w http.ResponseWriter, _ *http.Request) {
 func (s *testServer) reset(w http.ResponseWriter, _ *http.Request) {
 	s.mu.Lock()
 	clear(s.attempts)
+	s.inFlight = 0
+	s.maxInFlight = 0
 	s.mu.Unlock()
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -83,6 +89,8 @@ func (s *testServer) delay(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	s.beginInFlight()
+	defer s.endInFlight()
 
 	timer := time.NewTimer(time.Duration(milliseconds) * time.Millisecond)
 	defer timer.Stop()
@@ -92,6 +100,43 @@ func (s *testServer) delay(w http.ResponseWriter, r *http.Request) {
 	case <-timer.C:
 		writeJSON(w, http.StatusOK, map[string]int{"delayed_ms": milliseconds})
 	}
+}
+
+func (s *testServer) disconnect(w http.ResponseWriter, _ *http.Request) {
+	hijacker, ok := w.(http.Hijacker)
+	if !ok {
+		http.Error(w, "connection hijacking unavailable", http.StatusInternalServerError)
+		return
+	}
+	connection, _, err := hijacker.Hijack()
+	if err == nil {
+		_ = connection.Close()
+	}
+}
+
+func (s *testServer) stats(w http.ResponseWriter, _ *http.Request) {
+	s.mu.Lock()
+	current := s.inFlight
+	maximum := s.maxInFlight
+	s.mu.Unlock()
+	w.Header().Set("X-Current-In-Flight", strconv.Itoa(current))
+	w.Header().Set("X-Max-In-Flight", strconv.Itoa(maximum))
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (s *testServer) beginInFlight() {
+	s.mu.Lock()
+	s.inFlight++
+	if s.inFlight > s.maxInFlight {
+		s.maxInFlight = s.inFlight
+	}
+	s.mu.Unlock()
+}
+
+func (s *testServer) endInFlight() {
+	s.mu.Lock()
+	s.inFlight--
+	s.mu.Unlock()
 }
 
 func (s *testServer) bytes(w http.ResponseWriter, r *http.Request) {

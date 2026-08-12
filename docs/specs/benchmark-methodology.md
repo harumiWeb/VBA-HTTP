@@ -44,6 +44,11 @@ Time is measured with Windows `QueryPerformanceCounter`. Process working set, pe
 - Schema: `benchmarks/schema/benchmark-result.schema.json`
 - Current machine-readable baselines: `benchmarks/results/raw-winhttp-baseline.json` and `benchmarks/results/vba-web-baseline.json`
 - Phase 2 evidence: `benchmarks/results/phase2-raw-winhttp.json`, `vba-http-buffered.json`, and `phase2-buffered-overhead.json`
+- Phase 3 evidence: `benchmarks/results/vba-http-concurrency.json`, validated by `benchmarks/schema/concurrency-result.schema.json`
 - Human summary: `docs/BENCHMARKS_BASELINE.md`
+
+## Phase 3 bounded-concurrency scenario
+
+`task benchmark:phase3` runs 5 warmup requests, followed by 100 measured `GET /delay/100` requests with `MaxConcurrency=1`, then the same workload with `MaxConcurrency=16`. Both runs disable host yielding, reset server statistics, and use the normal COM batch transport. The result records elapsed milliseconds, speedup, and the server-observed maximum in-flight count. The runner uses a synchronized temporary workbook and atomically replaces the result only after schema validation.
 
 Result JSON uses schema version 1. Decimal numbers must use a period regardless of Windows locale. Each run writes and validates a same-directory staging file before atomic replacement, so failure preserves the previous baseline. The xlflow structured error and test-server stderr are the diagnostic evidence for failed runs. Run `task benchmark:phase0` to refresh both implementations in one top-level invocation.

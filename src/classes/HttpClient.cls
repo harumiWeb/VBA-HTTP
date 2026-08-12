@@ -12,6 +12,7 @@ Option Explicit
 Private mBaseUrl As String
 Private mDefaultHeaders As New HttpHeaders
 Private mTransport As IHttpTransport
+Private mExecuting As Boolean
 
 Public Property Get BaseUrl() As String
     BaseUrl = mBaseUrl
@@ -39,6 +40,81 @@ Public Property Set Transport(ByVal value As IHttpTransport)
 End Property
 
 Public Function Execute(ByVal Request As HttpRequest) As HttpResponse
+    Dim errorNumber As Long
+    Dim errorSource As String
+    Dim errorDescription As String
+
+    BeginExecution "HttpClient.Execute"
+    On Error GoTo ExecutionFailed
+    Set Execute = ExecuteCore(Request)
+    mExecuting = False
+    Exit Function
+
+ExecutionFailed:
+    errorNumber = Err.Number
+    errorSource = Err.Source
+    errorDescription = Err.Description
+    mExecuting = False
+    Err.Raise errorNumber, errorSource, errorDescription
+End Function
+
+Public Function ExecuteMany(ByVal Requests As Collection, Optional ByVal Options As HttpBatchOptions = Nothing) As HttpBatchResult
+    Dim batchTransport As IHttpBatchTransport
+    Dim prepared As Collection
+    Dim snapshotOptions As HttpBatchOptions
+    Dim errorNumber As Long
+    Dim errorSource As String
+    Dim errorDescription As String
+
+    BeginExecution "HttpClient.ExecuteMany"
+    On Error GoTo ExecutionFailed
+    If Requests Is Nothing Then HttpErrors.RaiseValidation "HttpClient.ExecuteMany", "Requests cannot be Nothing."
+    If Not TypeOf mTransport Is IHttpBatchTransport Then HttpErrors.RaiseValidation "HttpClient.ExecuteMany", "Configured transport does not support batch execution."
+
+    Set prepared = PrepareRequests(Requests)
+    If Options Is Nothing Then
+        Set snapshotOptions = New HttpBatchOptions
+    Else
+        Set snapshotOptions = Options.Clone()
+    End If
+    Set batchTransport = mTransport
+    Set ExecuteMany = batchTransport.ExecuteMany(prepared, snapshotOptions)
+    mExecuting = False
+    Exit Function
+
+ExecutionFailed:
+    errorNumber = Err.Number
+    errorSource = Err.Source
+    errorDescription = Err.Description
+    mExecuting = False
+    Err.Raise errorNumber, errorSource, errorDescription
+End Function
+
+Public Function GetMany(ByVal Urls As Collection, Optional ByVal Options As HttpBatchOptions = Nothing) As HttpBatchResult
+    Dim Requests As New Collection
+    Dim index As Long
+    Dim value As Variant
+    Dim Request As HttpRequest
+
+    If Urls Is Nothing Then
+        HttpErrors.RaiseValidation "HttpClient.GetMany", "URLs cannot be Nothing."
+        Exit Function
+    End If
+    For index = 1 To Urls.Count
+        If IsObject(Urls(index)) Then HttpErrors.RaiseValidation "HttpClient.GetMany", "Every URL must be a non-empty String."
+        value = Urls(index)
+        If VarType(value) <> vbString Or Len(CStr(value)) = 0 Then
+            HttpErrors.RaiseValidation "HttpClient.GetMany", "Every URL must be a non-empty String."
+        End If
+        Set Request = New HttpRequest
+        Request.Method = "GET"
+        Request.Url = CStr(value)
+        Requests.Add Request
+    Next index
+    Set GetMany = ExecuteMany(Requests, Options)
+End Function
+
+Private Function ExecuteCore(ByVal Request As HttpRequest) As HttpResponse
     Dim snapshot As HttpRequest
     Dim response As HttpResponse
 
@@ -49,15 +125,12 @@ Public Function Execute(ByVal Request As HttpRequest) As HttpResponse
         HttpErrors.RaiseValidation "HttpClient.Execute", "No HTTP transport is configured."
     End If
 
-    Set snapshot = Request.Clone()
-    snapshot.Url = ResolveUrl(snapshot.Url)
-    ApplyQuery snapshot
-    ApplyDefaultHeaders snapshot
+    Set snapshot = PrepareRequest(Request)
     Set response = mTransport.Execute(snapshot)
     If response Is Nothing Then
         Err.Raise HttpErrProtocol, "HttpClient.Execute", "Transport returned Nothing instead of an HttpResponse."
     End If
-    Set Execute = response
+    Set ExecuteCore = response
 End Function
 
 Public Function GetResponse(ByVal Url As String, Optional ByVal Query As HttpParams = Nothing) As HttpResponse
@@ -97,6 +170,42 @@ Private Function ExecuteWithBody(ByVal Method As String, ByVal Url As String, By
     If Not Body Is Nothing Then Set Request.Body = Body
     Set ExecuteWithBody = Execute(Request)
 End Function
+
+Private Function PrepareRequest(ByVal Request As HttpRequest) As HttpRequest
+    Dim snapshot As HttpRequest
+
+    If Request Is Nothing Then HttpErrors.RaiseValidation "HttpClient.Execute", "Request cannot be Nothing."
+    Set snapshot = Request.Clone()
+    snapshot.Url = ResolveUrl(snapshot.Url)
+    ApplyQuery snapshot
+    ApplyDefaultHeaders snapshot
+    Set PrepareRequest = snapshot
+End Function
+
+Private Function PrepareRequests(ByVal Requests As Collection) As Collection
+    Dim prepared As New Collection
+    Dim candidate As Object
+    Dim Request As HttpRequest
+    Dim index As Long
+
+    If Requests Is Nothing Then
+        HttpErrors.RaiseValidation "HttpClient.ExecuteMany", "Requests cannot be Nothing."
+        Exit Function
+    End If
+    For index = 1 To Requests.Count
+        If Not IsObject(Requests(index)) Then HttpErrors.RaiseValidation "HttpClient.ExecuteMany", "Every item must be an HttpRequest."
+        Set candidate = Requests(index)
+        If Not TypeOf candidate Is HttpRequest Then HttpErrors.RaiseValidation "HttpClient.ExecuteMany", "Every item must be an HttpRequest."
+        Set Request = candidate
+        prepared.Add PrepareRequest(Request)
+    Next index
+    Set PrepareRequests = prepared
+End Function
+
+Private Sub BeginExecution(ByVal Source As String)
+    If mExecuting Then HttpErrors.RaiseValidation Source, "The same HttpClient cannot execute reentrantly."
+    mExecuting = True
+End Sub
 
 Private Function ResolveUrl(ByVal value As String) As String
     If IsAbsoluteHttpUrl(value) Then

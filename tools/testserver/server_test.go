@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"sync"
 	"testing"
 	"time"
 )
@@ -163,6 +164,38 @@ func TestHeadersAndEcho(t *testing.T) {
 		if response.StatusCode != http.StatusOK || !bytes.Equal(actual, echoBody) {
 			t.Fatalf("%s echo = status %d body %q", method, response.StatusCode, actual)
 		}
+	}
+}
+
+func TestDelayStatsAndDisconnect(t *testing.T) {
+	server := httptest.NewServer(newTestServer().routes())
+	defer server.Close()
+
+	var group sync.WaitGroup
+	for range 4 {
+		group.Add(1)
+		go func() {
+			defer group.Done()
+			response, err := http.Get(server.URL + "/delay/50")
+			if err == nil {
+				response.Body.Close()
+			}
+		}()
+	}
+	group.Wait()
+
+	stats, err := http.Get(server.URL + "/__admin/stats")
+	if err != nil {
+		t.Fatal(err)
+	}
+	stats.Body.Close()
+	if stats.Header.Get("X-Current-In-Flight") != "0" || stats.Header.Get("X-Max-In-Flight") != "4" {
+		t.Fatalf("unexpected in-flight stats: current=%s max=%s", stats.Header.Get("X-Current-In-Flight"), stats.Header.Get("X-Max-In-Flight"))
+	}
+
+	_, err = http.Get(server.URL + "/disconnect")
+	if err == nil {
+		t.Fatal("disconnect endpoint should close the connection before a response")
 	}
 }
 

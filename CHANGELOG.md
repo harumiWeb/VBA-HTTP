@@ -6,6 +6,8 @@
 - Added the default late-bound WinHTTP COM transport contract, including redirect controls and stable transport-error mapping.
 - Added `VBAHttp.CreateClient` for consumers that reference the release workbook and an external release-artifact GET smoke test.
 - Added matched Raw WinHttpRequest/VBA-HTTP Phase 2 benchmark evidence and optimized defensive Byte-array copies without weakening ownership.
+- Added bounded `ExecuteMany` and `GetMany` execution with ordered per-item results, deadlines, cancellation, partial-failure isolation, and same-client reentrancy protection.
+- Added deterministic concurrency integration tests, a server-observed in-flight bound, Phase 3 benchmark evidence, and an external release-artifact batch smoke test.
 
 ### Fixed
 

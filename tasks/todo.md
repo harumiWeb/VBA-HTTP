@@ -295,23 +295,23 @@ VBAをmulti-thread化せず、COM async I/Oをbounded schedulerで並行処理�
 
 ### Todo
 
-- [ ] concurrency semanticsとreentrancy policyをspec化する。
-- [ ] COM async request lifecycleを実装する。
-- [ ] bounded schedulerとcompletion pollingを実装する。
-- [ ] `ExecuteMany` と `GetMany` を実装する。
-- [ ] `HttpBatchResult` と `HttpBatchItem` を実装する。
-- [ ] per-request deadlineとbatch cancellationを実装する。
-- [ ] controlled message pumpとyield intervalを実装する。
-- [ ] 同一clientからのreentrant executionを拒否する。
-- [ ] 個別failureを保持してbatch継続できる結果モデルを実装する。
-- [ ] fairness、result order、timeout、cancel、reentrancy regression testsを追加する。
+- [x] concurrency semanticsとreentrancy policyをspec化する。
+- [x] COM async request lifecycleを実装する。
+- [x] bounded schedulerとcompletion pollingを実装する。
+- [x] `ExecuteMany` と `GetMany` を実装する。
+- [x] `HttpBatchResult` と `HttpBatchItem` を実装する。
+- [x] per-request deadlineとbatch cancellationを実装する。
+- [x] controlled message pumpとyield intervalを実装する。
+- [x] 同一clientからのreentrant executionを拒否する。
+- [x] 個別failureを保持してbatch継続できる結果モデルを実装する。
+- [x] fairness、result order、timeout、cancel、reentrancy regression testsを追加する。
 
 ### Exit Criteria
 
-- [ ] 100 request × 100ms、concurrency 16でsequential比6倍以上を達成する。
-- [ ] 設定した上限を超えるin-flight requestが存在しない。
-- [ ] partial failureとcancellation結果が決定的である。
-- [ ] built artifactからconcurrent consumer smoke testが成功する。
+- [x] 100 request × 100ms、concurrency 16でsequential比6倍以上を達成する。
+- [x] 設定した上限を超えるin-flight requestが存在しない。
+- [x] partial failureとcancellation結果が決定的である。
+- [x] built artifactからconcurrent consumer smoke testが成功する。
 
 ---
 

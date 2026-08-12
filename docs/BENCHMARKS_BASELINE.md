@@ -50,3 +50,9 @@ VBA-HTTP's sequential mean was 66.934% above Raw, so it does not meet the 15% re
 Before the final implementation, a VBA per-byte defensive-copy loop limited the 100 MiB path to 12.845 MiB/s. Replacing only Byte-array copying with VBA's defensive SAFEARRAY assignment retained the ownership regression test and raised the measured result to 125.353 MiB/s. Buffered bodies still require multiple in-memory copies by contract; constant-memory transfer belongs to the native streaming phases.
 
 The machine-readable comparison is `benchmarks/results/phase2-buffered-overhead.json`; its referenced raw results are the authoritative values for this run.
+
+## Phase 3 bounded-concurrency evidence
+
+The Phase 3 loopback run issued 100 requests to `GET /delay/100` through the same VBA-HTTP COM transport. A sequential limit of 1 took 11,041.019 ms; a concurrency limit of 16 took 858.266 ms, a 12.864x speedup. Server-side instrumentation observed a maximum of exactly 16 simultaneous requests, so the configured bound was not exceeded.
+
+This measures cooperative async overlap on one local machine, not VBA multithreading or public-network throughput. The machine-readable result is `benchmarks/results/vba-http-concurrency.json` and follows `benchmarks/schema/concurrency-result.schema.json`.

@@ -1,7 +1,11 @@
 {
   "included": [
     "App",
+    "HttpBatchItem",
+    "HttpBatchOptions",
+    "HttpBatchResult",
     "HttpBody",
+    "HttpCancellationToken",
     "HttpClient",
     "HttpConstants",
     "HttpEncoding",
@@ -12,20 +16,24 @@
     "HttpResponse",
     "HttpTiming",
     "HttpTimeouts",
+    "IHttpBatchTransport",
     "IHttpTransport",
     "Main",
     "Sheet1",
     "ThisWorkbook",
     "Ui",
     "VBAHttp",
+    "WinHttpComOperation",
     "WinHttpComTransport"
   ],
   "excluded": [
     "BenchmarkSupport",
     "BenchmarkTests",
     "BootstrapTests",
+    "ConcurrencyBenchmark",
     "DevSupport",
     "HttpBodyTests",
+    "HttpBatchTests",
     "HttpClientTests",
     "HttpHeadersTests",
     "HttpParamsTests",
@@ -34,11 +42,13 @@
     "HttpTimeoutsTests",
     "MockHttpTransport",
     "RawWinHttpBenchmark",
+    "ReentrantBatchTransport",
     "XlflowAssert",
     "XlflowDebug",
     "XlflowRuntime",
     "XlflowUI",
     "VBAHttpTests",
-    "WinHttpComTransportTests"
+    "WinHttpComTransportTests",
+    "WinHttpConcurrencyTests"
   ]
 }

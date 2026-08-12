@@ -20,3 +20,9 @@ Public Enum HttpErrorCategory
     HttpErrorIo = 9
     HttpErrorStatus = 10
 End Enum
+
+Public Enum HttpBatchItemStatus
+    HttpBatchSucceeded = 1
+    HttpBatchFailed = 2
+    HttpBatchCancelled = 3
+End Enum
