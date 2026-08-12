@@ -5,8 +5,8 @@ import (
 	"compress/flate"
 	"compress/gzip"
 	"context"
-	"crypto/subtle"
 	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -20,11 +20,12 @@ import (
 )
 
 const (
-	maximumBodySize = int64(2 * 1024 * 1024 * 1024)
-	streamChunkSize = 64 * 1024
+	maximumBodySize    = int64(2 * 1024 * 1024 * 1024)
+	streamChunkSize    = 64 * 1024
 	compressionFixture = "VBA-HTTP compression fixture: 0123456789\n"
-	basicAuthValue    = "Basic dXNlcjpwYXNz"
-	bearerAuthValue   = "Bearer vba-http-token"
+	unicodeFixture     = "VBA-HTTP unicode: 日本語🙂"
+	basicAuthValue     = "Basic dXNlcjpwYXNz"
+	bearerAuthValue    = "Bearer vba-http-token"
 )
 
 type testServer struct {
@@ -55,6 +56,8 @@ func (s *testServer) routes() http.Handler {
 	mux.HandleFunc("GET /bytes/{size}", s.bytes)
 	mux.HandleFunc("GET /stream/{size}", s.stream)
 	mux.HandleFunc("GET /sha256/{size}", s.sha256)
+	mux.HandleFunc("GET /unicode", s.unicode)
+	mux.HandleFunc("GET /malformed-utf8", s.malformedUTF8)
 	mux.HandleFunc("GET /compress/gzip", s.compressGzip)
 	mux.HandleFunc("GET /compress/deflate", s.compressDeflate)
 	mux.HandleFunc("GET /headers", s.headers)
@@ -188,6 +191,18 @@ func (s *testServer) sha256(w http.ResponseWriter, r *http.Request) {
 		"bytes":     size,
 		"digest":    patternHash(size),
 	})
+}
+
+func (s *testServer) unicode(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	_, _ = io.WriteString(w, unicodeFixture)
+}
+
+func (s *testServer) malformedUTF8(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte{0xc3, 0x28})
 }
 
 func (s *testServer) compressGzip(w http.ResponseWriter, _ *http.Request) {

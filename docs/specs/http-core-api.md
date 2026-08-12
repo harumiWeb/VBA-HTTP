@@ -82,6 +82,12 @@ Core buffered bodies use `HttpBody` with one of three kinds: empty, text, or byt
 
 The initial core implements UTF-8 and US-ASCII. Additional charsets are additive. Decoding must not silently fall back to the host ANSI code page because results would differ across machines. An explicitly supplied text response used by a mock is encoded to UTF-8 when converted to bytes.
 
+The loopback integration contract also verifies a non-ASCII UTF-8 response,
+an exact binary response body, and a malformed UTF-8 response. The latter
+raises `HttpErrValidation` when `HttpResponse.Text` is materialized; callers
+that need opaque bytes must use `HttpResponse.Body.Bytes` instead of asking for
+text.
+
 ## Headers and query parameters
 
 `HttpHeaders` is case-insensitive for lookup and preserves insertion order and original casing for emission. `Add` appends a value, `SetValue` replaces every value for that name, `GetValue` returns the first value or an empty string, and `GetValues` returns a zero-based `String()` copy. Header names reject empty strings, control characters, colon, and surrounding whitespace. Values reject CR and LF.

@@ -36,6 +36,11 @@ bytes, and elapsed milliseconds are copied before the COM object is released.
 An empty response remains `HttpBodyEmpty`; it is not represented as a one-byte
 or text body.
 
+Loopback integration additionally proves that direct binary GET responses keep
+their exact bytes, that UTF-8 text containing supplementary Unicode code points
+is decoded deterministically, and that malformed UTF-8 is rejected when text is
+requested.
+
 Header parsing splits each raw header line at its first colon, preserving
 repeated fields and the field-value text after trimming optional whitespace.
 Malformed response header lines fail as `HttpErrProtocol` rather than being

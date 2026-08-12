@@ -112,6 +112,31 @@ func TestSHA256DescribesGeneratedPayload(t *testing.T) {
 	}
 }
 
+func TestUnicodeAndMalformedUtf8EndpointsAreDeterministic(t *testing.T) {
+	server := httptest.NewServer(newTestServer().routes())
+	defer server.Close()
+
+	unicodeResponse := get(t, server.URL+"/unicode")
+	defer unicodeResponse.Body.Close()
+	unicodeBody, err := io.ReadAll(unicodeResponse.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if unicodeResponse.StatusCode != http.StatusOK || unicodeResponse.Header.Get("Content-Type") != "text/plain; charset=utf-8" || string(unicodeBody) != unicodeFixture {
+		t.Fatalf("unicode response = %d %q %q", unicodeResponse.StatusCode, unicodeResponse.Header.Get("Content-Type"), unicodeBody)
+	}
+
+	malformedResponse := get(t, server.URL+"/malformed-utf8")
+	defer malformedResponse.Body.Close()
+	malformedBody, err := io.ReadAll(malformedResponse.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if malformedResponse.StatusCode != http.StatusOK || malformedResponse.Header.Get("Content-Type") != "text/plain; charset=utf-8" || !bytes.Equal(malformedBody, []byte{0xc3, 0x28}) {
+		t.Fatalf("malformed response = %d %q %v", malformedResponse.StatusCode, malformedResponse.Header.Get("Content-Type"), malformedBody)
+	}
+}
+
 func TestCompressedEndpointsUseDeterministicWireEncoding(t *testing.T) {
 	server := httptest.NewServer(newTestServer().routes())
 	defer server.Close()

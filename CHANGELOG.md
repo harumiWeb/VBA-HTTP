@@ -1,5 +1,9 @@
 ## Unreleased
 
+- Added deterministic loopback response-boundary coverage for UTF-8 Unicode,
+  exact binary GET bodies, and malformed UTF-8 rejection across the COM and
+  native transports.
+
 - Added a Phase 9 resource-stress gate with 10,000-request warmup followed by
   10,000 measured sequential native and scheduled COM requests, PID-scoped
   Excel process sampling, idle handle-growth limits, atomic JSON evidence, and

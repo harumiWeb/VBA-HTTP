@@ -55,6 +55,8 @@ evidence.
 - Request headers retain insertion order and repeated names.
 - Response status, reason phrase, repeated headers, exact binary body, and
   elapsed time match `WinHttpComTransport`.
+- Loopback integration verifies direct binary GET byte ownership, supplementary
+  Unicode text decoding, and stable rejection of malformed UTF-8 text.
 - HTTP 4xx/5xx responses are returned, not raised. Native failures are mapped
   by the shared WinHTTP error classifier to the ADR-0003 categories; raw URLs,
   headers, credentials, and response data never enter descriptions.

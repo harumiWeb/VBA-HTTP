@@ -472,7 +472,8 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 - [x] redirect loopとmaximum redirectを実装する（WinHTTP上限とloopback検証、release consumer smoke）。
 - [x] cross-originでAuthorization／Proxy-Authorizationを除去する（native callbackを使わず、credential-bearing automatic redirectを停止して3xxをcallerへ返す）。
 - [x] HTTPSからHTTPへのdowngrade redirectをdefault拒否する（COM option 12=false、native policy=DISALLOW_HTTPS_TO_HTTP）。
-- [ ] malformed headers、unicode、binary response testsを追加する。
+- [x] Unicode、direct binary、malformed UTF-8 response testsを追加する（COM/native loopbackでresponse boundaryを検証）。
+- [ ] wire-level malformed response-header fixtureを追加し、COM/nativeの`HttpErrorProtocol` mappingを検証する。
 - [x] 10,000 sequential／scheduled request stress testsを追加する（10,000 warmup後の10,000測定区間）。
 - [ ] repeated cancellation／timeout stress testsを追加する。
 - [x] process memory／native handle leak checksを自動化する（PID scoped、idle handle delta gate、memory peak evidence）。

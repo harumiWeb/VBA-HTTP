@@ -65,6 +65,46 @@ Public Sub Test_ComTransport_PreservesBinaryBody()
 End Sub
 
 '@Tag("integration")
+Public Sub Test_ComTransport_ReturnsUnicodeResponseText()
+    Dim client As New HttpClient
+    Dim response As HttpResponse
+
+    client.BaseUrl = RequireBaseUrl()
+    Set response = client.GetResponse("/unicode")
+
+    XlflowAssert.AssertEquals 200, response.StatusCode
+    XlflowAssert.AssertEquals UnicodeFixtureText(), response.Text
+End Sub
+
+'@Tag("integration")
+Public Sub Test_ComTransport_ReturnsDirectBinaryResponse()
+    Dim client As New HttpClient
+    Dim response As HttpResponse
+    Dim responseBytes As Variant
+
+    client.BaseUrl = RequireBaseUrl()
+    Set response = client.GetResponse("/bytes/3")
+    responseBytes = response.Body.Bytes
+
+    XlflowAssert.AssertEquals 200, response.StatusCode
+    XlflowAssert.AssertEquals 3, HttpEncoding.ByteCount(responseBytes)
+    XlflowAssert.AssertEquals 0, HttpEncoding.ByteAt(responseBytes, 0)
+    XlflowAssert.AssertEquals 1, HttpEncoding.ByteAt(responseBytes, 1)
+    XlflowAssert.AssertEquals 2, HttpEncoding.ByteAt(responseBytes, 2)
+End Sub
+
+'@Tag("integration")
+'@ExpectedError(-2147200503, "Response contains malformed UTF-8.", "HttpEncoding.DecodeUtf8")
+Public Sub Test_ComTransport_RejectsMalformedUtf8ResponseText()
+    Dim client As New HttpClient
+    Dim response As HttpResponse
+
+    client.BaseUrl = RequireBaseUrl()
+    Set response = client.GetResponse("/malformed-utf8")
+    Debug.Print response.Text
+End Sub
+
+'@Tag("integration")
 Public Sub Test_ComTransport_AppliesRedirectPolicy()
     Dim client As New HttpClient
     Dim Request As New HttpRequest
@@ -244,6 +284,10 @@ Private Function RequireBaseUrl() As String
         XlflowAssert.AssertInconclusive "VBA_HTTP_TEST_BASE_URL is not set; run task test:integration."
         Exit Function
     End If
+End Function
+
+Private Function UnicodeFixtureText() As String
+    UnicodeFixtureText = "VBA-HTTP unicode: " & ChrW$(&H65E5) & ChrW$(&H672C) & ChrW$(&H8A9E) & ChrW$(&HD83D) & ChrW$(&HDE42)
 End Function
 
 Private Function RequireProxyUrl() As String
