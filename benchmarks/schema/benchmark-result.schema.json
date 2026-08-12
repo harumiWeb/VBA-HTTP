@@ -12,7 +12,8 @@
       "required": ["name", "version"],
       "properties": {
         "name": { "type": "string", "minLength": 1 },
-        "version": { "type": "string", "minLength": 1 }
+        "version": { "type": "string", "minLength": 1 },
+        "source_commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
       },
       "additionalProperties": false
     },

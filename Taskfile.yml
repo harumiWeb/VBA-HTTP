@@ -62,6 +62,22 @@ tasks:
     cmds:
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Run-RawBenchmark.ps1
 
+  benchmark:vba-web:setup:
+    desc: Acquire and verify the pinned VBA-Web comparator
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Setup-VBAWeb.ps1
+
+  benchmark:vba-web:
+    desc: Run the pinned VBA-Web loopback baseline
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Run-VBAWebBenchmark.ps1
+
+  benchmark:phase0:
+    desc: Refresh the Raw WinHttpRequest and VBA-Web Phase 0 baselines
+    cmds:
+      - task: benchmark:raw
+      - task: benchmark:vba-web
+
   bootstrap:dirs:
     desc: Restore empty xlflow scaffold directories omitted by Git
     cmds:

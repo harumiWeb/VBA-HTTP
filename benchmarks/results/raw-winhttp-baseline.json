@@ -3,10 +3,10 @@
   "benchmark": "http-client",
   "implementation": {"name": "Raw WinHttpRequest", "version": "5.1"},
   "environment": {"office_bitness": "x64", "excel_version": "16.0", "platform": "Windows"},
-  "server": {"base_url": "http://127.0.0.1:52903", "external_network": false},
+  "server": {"base_url": "http://127.0.0.1:59003", "external_network": false},
   "parameters": {"warmup_iterations": 5, "latency_iterations": 50, "download_bytes": 104857600, "timeouts_ms": {"resolve": 5000, "connect": 5000, "send": 30000, "receive": 300000}},
   "results": [
-    {"scenario": "sequential_get", "method": "GET", "path": "/status/204", "iterations": 50, "status": 204, "elapsed_ms": 35.81, "mean_ms": 0.716, "min_ms": 0.596, "max_ms": 1.048, "requests_per_second": 1396.27, "process_before": {"handles": 1467, "working_set_bytes": 159645696, "peak_working_set_bytes": 159645696, "private_bytes": 183083008}, "process_after": {"handles": 1469, "working_set_bytes": 159825920, "peak_working_set_bytes": 159825920, "private_bytes": 183169024}},
-    {"scenario": "buffered_download", "method": "GET", "path": "/bytes/104857600", "iterations": 1, "status": 200, "elapsed_ms": 972.464, "bytes": 104857600, "throughput_mib_s": 102.832, "process_before": {"handles": 1469, "working_set_bytes": 159825920, "peak_working_set_bytes": 159825920, "private_bytes": 183169024}, "process_after": {"handles": 1471, "working_set_bytes": 159854592, "peak_working_set_bytes": 474439680, "private_bytes": 183173120}}
+    {"scenario": "sequential_get", "method": "GET", "path": "/status/204", "iterations": 50, "status": 204, "elapsed_ms": 27.851, "mean_ms": 0.557, "min_ms": 0.466, "max_ms": 0.705, "requests_per_second": 1795.3, "process_before": {"handles": 1475, "working_set_bytes": 160288768, "peak_working_set_bytes": 160288768, "private_bytes": 182980608}, "process_after": {"handles": 1475, "working_set_bytes": 160399360, "peak_working_set_bytes": 160399360, "private_bytes": 182992896}},
+    {"scenario": "buffered_download", "method": "GET", "path": "/bytes/104857600", "iterations": 1, "status": 200, "elapsed_ms": 539.808, "bytes": 104857600, "throughput_mib_s": 185.251, "process_before": {"handles": 1475, "working_set_bytes": 160399360, "peak_working_set_bytes": 160399360, "private_bytes": 182992896}, "process_after": {"handles": 1477, "working_set_bytes": 160423936, "peak_working_set_bytes": 475009024, "private_bytes": 182992896}}
   ]
 }

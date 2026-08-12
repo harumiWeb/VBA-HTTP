@@ -215,16 +215,16 @@ fresh cloneから同じ開発・test・release buildを再現できるclean base
 - [x] fixture、hash検証、大容量payload生成を整備する。
 - [x] Excel process memoryとnative handleを測定するutilityを整備する。
 - [x] Raw WinHttpRequestのbenchmark harnessを作成する。
-- [ ] VBA-Webのupstream commitを固定したsetup手順を作成する。
-- [ ] VBA-Webのbenchmarkをlocal serverへ向け、upstreamの外部network specsを実行対象から除外する。
+- [x] VBA-Webのupstream commitを固定したsetup手順を作成する。
+- [x] VBA-Webのbenchmarkをlocal serverへ向け、upstreamの外部network specsを実行対象から除外する。
 - [x] warmup、試行回数、payload、timeout、集計方法を `docs/specs/` に記録する。
 - [x] benchmark結果の機械可読JSON schemaを実装する。
-- [ ] baselineを `docs/BENCHMARKS_BASELINE.md` とJSONへ保存する。
+- [x] baselineを `docs/BENCHMARKS_BASELINE.md` とJSONへ保存する。
 
 ### Exit Criteria
 
-- [ ] test／benchmarkが外部networkなしでdeterministicに再実行できる。
-- [ ] Raw WinHttpRequestとVBA-Webのsequential／latency比較を取得できる。
+- [x] test／benchmarkが外部networkなしでdeterministicに再実行できる。
+- [x] Raw WinHttpRequestとVBA-Webのsequential／latency比較を取得できる。
 - [x] 100MB以上のdownload benchmarkを実行できる。
 - [x] benchmark条件、環境、失敗時診断が記録される。
 - [x] release buildからbenchmark moduleが除外される。

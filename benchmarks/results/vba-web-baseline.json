@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "benchmark": "http-client",
+  "implementation": {"name": "VBA-Web", "version": "4.1.6", "source_commit": "cefc320acc5372e0b86eed1d20eb3f31b331d598"},
+  "environment": {"office_bitness": "x64", "excel_version": "16.0", "platform": "Windows"},
+  "server": {"base_url": "http://127.0.0.1:63936", "external_network": false},
+  "parameters": {"warmup_iterations": 5, "latency_iterations": 50, "download_bytes": 104857600, "timeouts_ms": {"resolve": 300000, "connect": 300000, "send": 300000, "receive": 300000}},
+  "results": [
+    {"scenario": "sequential_get", "method": "GET", "path": "/status/204", "iterations": 50, "status": 204, "elapsed_ms": 141.655, "mean_ms": 2.833, "min_ms": 2.301, "max_ms": 5.391, "requests_per_second": 352.971, "process_before": {"handles": 1451, "working_set_bytes": 160903168, "peak_working_set_bytes": 160907264, "private_bytes": 183574528}, "process_after": {"handles": 1459, "working_set_bytes": 161026048, "peak_working_set_bytes": 161054720, "private_bytes": 183693312}},
+    {"scenario": "buffered_download", "method": "GET", "path": "/bytes/104857600", "iterations": 1, "status": 200, "elapsed_ms": 496.154, "bytes": 104857600, "throughput_mib_s": 201.55, "process_before": {"handles": 1459, "working_set_bytes": 161026048, "peak_working_set_bytes": 161054720, "private_bytes": 183693312}, "process_after": {"handles": 1459, "working_set_bytes": 161067008, "peak_working_set_bytes": 895119360, "private_bytes": 183713792}}
+  ]
+}
