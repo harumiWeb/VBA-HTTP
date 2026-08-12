@@ -42,7 +42,7 @@ tasks:
   test:
     desc: Run the complete xlflow test suite
     cmds:
-      - xlflow test --json
+      - xlflow test --isolation module --json
 
   test:integration:
     desc: Run WinHTTP integration tests against the deterministic loopback server

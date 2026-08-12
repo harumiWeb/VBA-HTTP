@@ -55,6 +55,10 @@ Public Sub Test_Retry_PostDoesNotRetryWithoutOptIn()
 
     XlflowAssert.AssertEquals 503, response.StatusCode
     XlflowAssert.AssertContains """attempt"":1", response.Text
+
+    Set response = client.PatchResponse("/retry-status/503/1?id=patch-default")
+    XlflowAssert.AssertEquals 503, response.StatusCode
+    XlflowAssert.AssertContains """attempt"":1", response.Text
 End Sub
 
 '@Tag("integration")

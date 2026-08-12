@@ -204,3 +204,20 @@ Public Sub Test_Reliability_RejectsControlForBlockingCustomTransport()
     Set client.Transport = transport
     Call client.GetResponse("http://127.0.0.1/status", Nothing, Options)
 End Sub
+
+'@ExpectedError(-2147200497, "HTTP operation was cancelled.", "HttpClient.Execute")
+Public Sub Test_Reliability_CancellationTakesPriorityOverExpiredDeadline()
+    Dim client As New HttpClient
+    Dim transport As New SequencedHttpTransport
+    Dim runtime As New FakeHttpReliabilityRuntime
+    Dim Options As New HttpExecutionOptions
+    Dim token As New HttpCancellationToken
+
+    transport.EnqueueResponse 200
+    token.Cancel
+    Set Options.CancellationToken = token
+    Options.TotalDeadlineMilliseconds = 1
+    Set client.Transport = transport
+    Set client.ReliabilityRuntime = runtime
+    Call client.GetResponse("http://127.0.0.1/status", Nothing, Options)
+End Sub

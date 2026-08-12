@@ -172,6 +172,8 @@ try {
     if ($harnessComponent.Name -ne "ReleaseBatchSmoke") { throw "External batch smoke module import failed." }
     $batchMacro = "'$($harnessWorkbook.Name)'!ReleaseBatchSmoke.RunBatchSmoke"
     [void]$consumerExcel.Run($batchMacro, $consumerWorkbook.Name, [string]$ready.url)
+    $reliabilityMacro = "'$($harnessWorkbook.Name)'!ReleaseBatchSmoke.RunReliabilitySmoke"
+    [void]$consumerExcel.Run($reliabilityMacro, $consumerWorkbook.Name, [string]$ready.url)
 }
 finally {
     if ($null -ne $response -and [Runtime.InteropServices.Marshal]::IsComObject($response)) {
@@ -208,4 +210,4 @@ finally {
     }
 }
 
-Write-Output "Release artifact is valid: $($actualComponents.Count) components; external GET and concurrent batch smoke passed."
+Write-Output "Release artifact is valid: $($actualComponents.Count) components; external GET, batch, retry, and deadline smoke passed."

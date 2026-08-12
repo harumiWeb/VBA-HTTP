@@ -15,3 +15,10 @@ Public Sub Test_Factory_ReturnsIndependentDefaultClients()
     XlflowAssert.AssertEquals "WinHttpComTransport", TypeName(first.Transport)
     XlflowAssert.AssertEquals "", second.BaseUrl
 End Sub
+
+Public Sub Test_Factory_CreatesReliabilityConfigurationObjects()
+    XlflowAssert.AssertIsNotNothing VBAHttp.CreateRetryPolicy()
+    XlflowAssert.AssertIsNotNothing VBAHttp.CreateExecutionOptions()
+    XlflowAssert.AssertIsNotNothing VBAHttp.CreateBatchOptions()
+    XlflowAssert.AssertIsNotNothing VBAHttp.CreateCancellationToken()
+End Sub

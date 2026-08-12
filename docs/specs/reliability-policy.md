@@ -58,5 +58,5 @@ The reliability engine obtains monotonic time, UTC wall time, jitter samples, an
 ## Evidence
 
 - Decision: `docs/adr/ADR-0005-client-owned-reliability-policy.md`
-- Planned unit tests: `src/modules/Tests/Unit/HttpRetryPolicyTests.bas`
-- Planned integration tests: `src/modules/Tests/Integration/WinHttpReliabilityTests.bas`
+- Unit tests: `src/modules/Tests/Unit/HttpRetryPolicyTests.bas`, `src/modules/Tests/Unit/HttpReliabilityEngineTests.bas`
+- Integration tests: `src/modules/Tests/Integration/WinHttpReliabilityTests.bas`

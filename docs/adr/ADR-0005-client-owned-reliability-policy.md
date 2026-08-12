@@ -2,7 +2,7 @@
 
 ## Status
 
-`proposed`
+`accepted`
 
 ## Background
 
@@ -34,9 +34,9 @@ The policy must also resolve observable conflicts among cancellation, total dead
 ## Rationale
 
 - Related decisions: `docs/adr/ADR-0003-http-error-model.md`, `docs/adr/ADR-0004-cooperative-batch-scheduler.md`
-- Planned contract: `docs/specs/reliability-policy.md`
-- Planned code: `src/classes/HttpRetryPolicy.cls`, `src/classes/HttpExecutionOptions.cls`, `src/classes/IHttpAttemptTransport.cls`
-- Planned tests: `src/modules/Tests/Unit/HttpRetryPolicyTests.bas`, `src/modules/Tests/Integration/WinHttpReliabilityTests.bas`
+- Current contract: `docs/specs/reliability-policy.md`
+- Implemented code: `src/classes/HttpRetryPolicy.cls`, `src/classes/HttpExecutionOptions.cls`, `src/classes/HttpReliabilityEngine.cls`, `src/classes/IHttpAttemptTransport.cls`, `src/classes/HttpBatchWorkItem.cls`
+- Regression tests: `src/modules/Tests/Unit/HttpRetryPolicyTests.bas`, `src/modules/Tests/Unit/HttpReliabilityEngineTests.bas`, `src/modules/Tests/Integration/WinHttpReliabilityTests.bas`
 
 ## Supersedes
 

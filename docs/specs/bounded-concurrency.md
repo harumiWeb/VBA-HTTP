@@ -16,6 +16,8 @@ The input collection is validated completely before I/O: it must be non-`Nothing
 | `YieldIntervalMilliseconds` | 20 | 1 through 1,000 |
 | `RequestDeadlineMilliseconds` | 0 | 0 disables the scheduler deadline; otherwise any positive `Long` |
 | `CancellationToken` | `Nothing` | Optional shared `HttpCancellationToken` |
+| `RetryPolicy` | client's policy | Optional per-batch override |
+| `TotalDeadlineMilliseconds` | 0 | Complete batch deadline; 0 disables it |
 
 The options and all requests are cloned before execution. Mutating caller objects after the call starts cannot alter active operations. The cancellation token is intentionally shared rather than deep-cloned, so a caller can request cancellation while the batch is running.
 
@@ -34,6 +36,8 @@ The options and all requests are cloned before execution. Mutating caller object
 The COM scheduler opens requests asynchronously and fills no more than `MaxConcurrency` slots. It polls completion without COM event callbacks, materializes completed responses, and fills newly available slots. Results are reordered to the original input positions.
 
 Each started operation receives its own monotonic deadline. Deadline expiry aborts that operation and records `HttpErrorTimeout`. WinHTTP resolve/connect/send/receive timeouts continue to apply independently; whichever condition is observed first wins.
+
+Retryable items return to a stable input-ordered pending queue. Their delay consumes no in-flight slot, and each new attempt receives a fresh request deadline capped by the remaining total batch deadline. The final response or error remains in the original item position.
 
 Cancellation is checked before filling slots and during every poll cycle. Once requested, running operations are aborted and all not-yet-started items become `HttpBatchCancelled`. Responses already materialized remain succeeded or failed.
 

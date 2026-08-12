@@ -142,11 +142,11 @@ fresh cloneから同じ開発・test・release buildを再現できるclean base
 ### Clean xlflow baseline
 
 - [x] `src/modules/Tests/SampleTests.bas` のsample／TODO testを製品向けbootstrap smoke testへ置き換える。
-- [ ] 現在format checkで報告されるscaffold 7ファイルを正規化する。
+- [x] 現在format checkで報告されるscaffold 7ファイルを正規化する。
 - [x] `XlflowDebug` の既存analyzer finding 5件を、修正または根拠付き局所抑制で解消する。
 - [x] `XlflowUI` のunused inline suppression warningを解消する。
 - [x] lint、analyze、format check、testのclean baseline結果を記録する。
-- [ ] analyzer／lintのproject-wide suppressionは、個別対応が不可能な場合だけADRまたはspecへ根拠を残して追加する。
+- [x] analyzer／lintのproject-wide suppressionは追加せず、意図した境界だけを根拠付き局所抑制にする。
 
 ### Test and benchmark conventions
 
@@ -154,7 +154,7 @@ fresh cloneから同じ開発・test・release buildを再現できるclean base
 - [x] integration testを `src/modules/Tests/Integration/` に配置し、`integration` tagを付ける規約を定義する。
 - [x] stress testを `src/modules/Tests/Stress/` に配置し、通常suiteから分離する規約を定義する。
 - [x] VBA benchmark moduleを `src/modules/Benchmarks/` に配置する規約を定義する。
-- [ ] deterministic testで使用するclock、random、transportの差し替え方針をspec化する。
+- [x] deterministic testで使用するclock、random、transportの差し替え方針をspec化する。
 - [x] x64 Officeのsmoke test証跡を取得する。
 - [x] 32-bit Officeのcompile／smoke testを行う環境と証跡保存方法を文書化する。
 
@@ -177,7 +177,7 @@ fresh cloneから同じ開発・test・release buildを再現できるclean base
 
 - [x] `docs/adr/` の命名、status、template、supersede規約を定義する。
 - [x] `docs/specs/` に現行仕様だけを置く規約を定義する。
-- [ ] benchmark結果のJSON schemaと保存先を定義する。
+- [x] benchmark結果のJSON schemaと保存先を定義する。
 - [x] contributor向けに標準xlflow proof loopを文書化する。
 - [x] contributor向けにrelease build loopを文書化する。
 - [x] public API、bug fix、performance変更ごとのdocumentation gateをチェックリスト化する。
@@ -327,26 +327,26 @@ retry、deadline、cancellationを統一した信頼性policyとして提供す�
 
 ### Todo
 
-- [ ] retry semanticsのADRを作成する。
-- [ ] exponential backoffと上限delayを実装する。
-- [ ] deterministicに差し替え可能なjitter sourceを実装する。
-- [ ] `Retry-After` delta-secondsとHTTP-dateを実装する。
-- [ ] 408、429、500、502、503、504のdefault retry判定を実装する。
-- [ ] retry可能なnetwork error分類を実装する。
-- [ ] idempotent methodだけをdefault retryする。
-- [ ] non-idempotent methodの明示opt-inを実装する。
-- [ ] per-attempt timeoutとtotal deadlineの優先順位を実装する。
-- [ ] polling、retry wait、送受信checkpointのcancellationを実装する。
-- [ ] flaky／rate-limit endpointを使うdeterministic policy testsを追加する。
-- [ ] retry／timeout／cancelの利用例を追加する。
+- [x] retry semanticsのADRを作成する。
+- [x] exponential backoffと上限delayを実装する。
+- [x] deterministicに差し替え可能なjitter sourceを実装する。
+- [x] `Retry-After` delta-secondsとHTTP-dateを実装する。
+- [x] 408、429、500、502、503、504のdefault retry判定を実装する。
+- [x] retry可能なnetwork error分類を実装する。
+- [x] idempotent methodだけをdefault retryする。
+- [x] non-idempotent methodの明示opt-inを実装する。
+- [x] per-attempt timeoutとtotal deadlineの優先順位を実装する。
+- [x] polling、retry wait、送受信checkpointのcancellationを実装する。
+- [x] flaky／rate-limit endpointを使うdeterministic policy testsを追加する。
+- [x] retry／timeout／cancelの利用例を追加する。
 
 ### Exit Criteria
 
-- [ ] 408、429、500、502、503、504、timeout、接続失敗を決定的に検証できる。
-- [ ] POST／PATCHは明示opt-inなしでretryされない。
-- [ ] total deadlineとcancelがretry loopを確実に停止する。
-- [ ] clean release buildとconsumer reliability smoke testが成功する。
-- [ ] Core＋COM＋concurrency＋reliabilityを備えたv0.3を配布できる。
+- [x] 408、429、500、502、503、504、timeout、接続失敗を決定的に検証できる。
+- [x] POST／PATCHは明示opt-inなしでretryされない。
+- [x] total deadlineとcancelがretry loopを確実に停止する。
+- [x] clean release buildとconsumer reliability smoke testが成功する。
+- [x] Core＋COM＋concurrency＋reliabilityを備えたv0.3を配布できる。
 
 ---
 

@@ -21,7 +21,7 @@ Run the following from the repository root:
 2. `xlflow session start --json` for a closed workbook, or attach to the configured user-open workbook.
 3. `task check`
 4. `xlflow push --fast --session --no-save --json`
-5. Run the focused test, then `xlflow test --session --no-save --json`.
+5. Run the focused test in the live session. The routine full suite is `task test`, which uses module isolation so module-level VBA state and scheduled host callbacks cannot leak across suites.
 6. `xlflow save --session --json`
 7. `xlflow session stop --json`
 8. Confirm source/workbook status is clean.
