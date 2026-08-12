@@ -1,0 +1,123 @@
+Attribute VB_Name = "HttpClientTests"
+Option Explicit
+
+Public Sub Test_Client_ExecutesSnapshotThroughTransport()
+    Dim client As New HttpClient
+    Dim transport As New MockHttpTransport
+    Dim configuredResponse As New HttpResponse
+    Dim Request As New HttpRequest
+    Dim response As HttpResponse
+
+    configuredResponse.Initialize 200, "OK"
+    transport.SetResponse configuredResponse
+    Set client.Transport = transport
+    client.BaseUrl = "https://api.example.test/v1/"
+    Request.Url = "/users"
+
+    Set response = client.Execute(Request)
+
+    XlflowAssert.AssertEquals 200, response.StatusCode
+    XlflowAssert.AssertEquals 1, transport.ExecuteCount
+    XlflowAssert.AssertEquals "https://api.example.test/v1/users", transport.LastRequest.Url
+    XlflowAssert.AssertEquals "/users", Request.Url
+End Sub
+
+Public Sub Test_Client_MergesQueryAndOverridesDefaultHeaders()
+    Dim client As New HttpClient
+    Dim transport As New MockHttpTransport
+    Dim configuredResponse As New HttpResponse
+    Dim Request As New HttpRequest
+
+    configuredResponse.Initialize 204
+    transport.SetResponse configuredResponse
+    Set client.Transport = transport
+    client.DefaultHeaders.SetValue "Accept", "application/json"
+    client.DefaultHeaders.SetValue "X-Default", "kept"
+    Request.Url = "https://example.test/items?fixed=1"
+    Request.Headers.SetValue "accept", "text/plain"
+    Request.Query.Add "q", "a b"
+
+    Call client.Execute(Request)
+
+    XlflowAssert.AssertEquals "https://example.test/items?fixed=1&q=a%20b", transport.LastRequest.Url
+    XlflowAssert.AssertEquals "text/plain", transport.LastRequest.Headers.GetValue("Accept")
+    XlflowAssert.AssertEquals "kept", transport.LastRequest.Headers.GetValue("X-Default")
+    XlflowAssert.AssertEquals "application/json", client.DefaultHeaders.GetValue("Accept")
+End Sub
+
+Public Sub Test_Client_ResponseIsIndependentFromMockTemplate()
+    Dim client As New HttpClient
+    Dim transport As New MockHttpTransport
+    Dim configuredResponse As New HttpResponse
+    Dim response As HttpResponse
+
+    configuredResponse.Initialize 200
+    configuredResponse.Headers.SetValue "X-Template", "original"
+    transport.SetResponse configuredResponse
+    Set client.Transport = transport
+
+    Set response = client.GetResponse("https://example.test/")
+    response.Headers.SetValue "X-Template", "changed"
+
+    Set response = client.GetResponse("https://example.test/")
+    XlflowAssert.AssertEquals "original", response.Headers.GetValue("X-Template")
+End Sub
+
+Public Sub Test_Client_PropagatesTransportFailure()
+    Dim client As New HttpClient
+    Dim transport As New MockHttpTransport
+    Dim observedNumber As Long
+
+    transport.SetFailure HttpErrTimeout, "timed out"
+    Set client.Transport = transport
+    On Error Resume Next
+    Call client.GetResponse("https://example.test/")
+    observedNumber = Err.Number
+    Err.Clear
+    On Error GoTo 0
+
+    XlflowAssert.AssertEquals HttpErrTimeout, observedNumber
+    XlflowAssert.AssertEquals HttpErrorTimeout, HttpErrors.CategoryFromNumber(observedNumber)
+End Sub
+
+Public Sub Test_Client_ConvenienceMethodsSetMethodAndBody()
+    Dim client As New HttpClient
+    Dim transport As New MockHttpTransport
+    Dim configuredResponse As New HttpResponse
+    Dim Body As New HttpBody
+
+    configuredResponse.Initialize 201
+    transport.SetResponse configuredResponse
+    Set client.Transport = transport
+    Body.Text = "payload"
+
+    Call client.PostResponse("https://example.test/items", Body)
+
+    XlflowAssert.AssertEquals "POST", transport.LastRequest.Method
+    XlflowAssert.AssertEquals "payload", transport.LastRequest.Body.Text
+End Sub
+
+'@ExpectedError(-2147200502, "URL must contain a host.", "HttpClient.Execute")
+Public Sub Test_Client_RejectsAbsoluteUrlWithoutHost()
+    Dim client As New HttpClient
+    Dim transport As New MockHttpTransport
+
+    Set client.Transport = transport
+    Call client.GetResponse("https://")
+End Sub
+
+'@ExpectedError(-2147200502, "Request URL must use HTTP or HTTPS.", "HttpClient.Execute")
+Public Sub Test_Client_RejectsNonHttpScheme()
+    Dim client As New HttpClient
+    Dim transport As New MockHttpTransport
+
+    client.BaseUrl = "https://example.test"
+    Set client.Transport = transport
+    Call client.GetResponse("ftp://example.test/file")
+End Sub
+
+'@ExpectedError(-2147200503, "No HTTP transport is configured.", "HttpClient.Execute")
+Public Sub Test_Client_RequiresTransport()
+    Dim client As New HttpClient
+    Call client.GetResponse("https://example.test/")
+End Sub

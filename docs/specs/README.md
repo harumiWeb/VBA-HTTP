@@ -5,3 +5,10 @@
 - 仕様変更と実装・testは同じchange setで更新する。
 - 過去仕様を本文へ蓄積せず、user-visibleな変更履歴はCHANGELOGへ移す。
 - public API、error behavior、security boundary、release validationにはauthoritativeなtestまたは検査scriptへの参照を含める。
+
+## Current specifications
+
+- `development-and-release-workflow.md`: source authority、proof loop、release component boundary
+- `local-test-server.md`: deterministic integration server contract
+- `benchmark-methodology.md`: benchmark conditions、provenance、result evidence
+- `http-core-api.md`: Phase 1 public domain、transport、body、decoding、error contract

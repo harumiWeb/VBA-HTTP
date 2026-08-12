@@ -1,0 +1,22 @@
+Attribute VB_Name = "HttpConstants"
+Option Explicit
+
+Public Enum HttpBodyKind
+    HttpBodyEmpty = 0
+    HttpBodyText = 1
+    HttpBodyBytes = 2
+End Enum
+
+Public Enum HttpErrorCategory
+    HttpErrorNone = 0
+    HttpErrorValidation = 1
+    HttpErrorInvalidUrl = 2
+    HttpErrorDns = 3
+    HttpErrorConnection = 4
+    HttpErrorTls = 5
+    HttpErrorTimeout = 6
+    HttpErrorCancelled = 7
+    HttpErrorProtocol = 8
+    HttpErrorIo = 9
+    HttpErrorStatus = 10
+End Enum
