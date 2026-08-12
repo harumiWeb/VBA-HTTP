@@ -1,0 +1,28 @@
+version: "3"
+
+tasks:
+  default:
+    desc: Run the pre-commit quality gates
+    cmds:
+      - task: check
+
+  lint:
+    desc: Lint VBA source with xlflow
+    cmds:
+      - xlflow lint --json
+
+  analyze:
+    desc: Analyze VBA runtime risks with xlflow
+    cmds:
+      - xlflow analyze --json
+
+  check:
+    desc: Run all pre-commit quality gates
+    cmds:
+      - task: lint
+      - task: analyze
+
+  hooks:install:
+    desc: Install the repository Git hooks with Lefthook
+    cmds:
+      - lefthook install

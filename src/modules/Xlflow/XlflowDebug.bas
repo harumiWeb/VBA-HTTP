@@ -33,16 +33,17 @@ Public Sub Log(ParamArray Parts() As Variant)
 	Dim errorSource As String
 	Dim errorDescription As String
 
+	' ParamArray is allocated when arguments exist; error 9 below handles an empty argument list.
 	On Error GoTo EmptyParts
-	lowerBound = LBound(Parts)
-	upperBound = UBound(Parts)
+	lowerBound = LBound(Parts) ' xlflow:disable-line VBA227
+	upperBound = UBound(Parts) ' xlflow:disable-line VBA227
 	On Error GoTo 0
 
-	For index = lowerBound To upperBound
+	For index = lowerBound To upperBound ' xlflow:disable-line VBA227
 		If index > lowerBound Then
 			message = message & " "
 		End If
-		message = message & StringifyValue(Parts(index))
+		message = message & StringifyValue(Parts(index)) ' xlflow:disable-line VBA227
 	Next index
 
 GoTo PrintMessage
@@ -82,7 +83,7 @@ Private Sub EmitDebugEvent(ByVal Message As String)
 		JsonProperty("runtime_mode", XlflowRuntime.ModeName()) & "," & _
 		JsonProperty("source", "XlflowDebug.Log") & "}"
 
-	SendPipeText pipeName, payload & vbLf
+	Call SendPipeText(pipeName, payload & vbLf)
 End Sub
 
 Private Function StringifyValue(ByVal Value As Variant) As String
@@ -177,24 +178,28 @@ Private Function JsonProperty(ByVal Name As String, ByVal Value As String) As St
 	JsonProperty = Chr$(34) & JsonEscape(Name) & Chr$(34) & ":" & Chr$(34) & JsonEscape(Value) & Chr$(34)
 End Function
 
-Private Sub SendPipeText(ByVal PipeName As String, ByVal Payload As String)
+Private Function SendPipeText(ByVal PipeName As String, ByVal Payload As String) As Boolean
 	Dim bytesWritten As Long
+	Dim writeSucceeded As Long
 #If VBA7 Then
 	Dim pipeHandle As LongPtr
 #Else
 	Dim pipeHandle As Long
 #End If
 
+	SendPipeText = False
 	pipeHandle = CreateFileW(StrPtr(PipeName), xlflowGenericWrite, 0, 0, xlflowOpenExisting, 0, 0)
 	If pipeHandle = xlflowInvalidHandleValue Then
-		Exit Sub
+		Exit Function
 	End If
 
 	On Error GoTo Cleanup
-	Call WriteFile(pipeHandle, StrPtr(Payload), Len(Payload) * 2, bytesWritten, 0)
+	writeSucceeded = WriteFile(pipeHandle, StrPtr(Payload), Len(Payload) * 2, bytesWritten, 0)
+	SendPipeText = writeSucceeded <> 0 And bytesWritten = Len(Payload) * 2
 
 Cleanup:
 	If pipeHandle <> xlflowInvalidHandleValue Then
 		Call CloseHandle(pipeHandle)
 	End If
-End Sub
+	On Error GoTo 0
+End Function

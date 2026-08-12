@@ -35,6 +35,14 @@ Public Sub Test_Expected_Error()
     Err.Raise 5, "SampleTests", "Invalid procedure call or argument"
 End Sub
 
+Public Sub Test_DebugLog_AcceptsEmptyArgumentList()
+    XlflowDebug.Log
+End Sub
+
+Public Sub Test_DebugLog_AcceptsValues()
+    XlflowDebug.Log "debug", 1, True
+End Sub
+
 '@Todo("not implemented yet")
 Public Sub Test_Sample_Todo()
     ' Keep planned tests visible without executing them.

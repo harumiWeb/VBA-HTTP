@@ -339,8 +339,8 @@ Private Function NormalizeFileDialogResponse(ByVal Kind As String, ByVal Id As S
 	If count <> 1 Then
 		Err.Raise xlflowErrInvalidFileDialogResponse, FileDialogSourceName(Kind), "File dialog '" & Id & "' expected one scripted path but received " & CStr(count) & "."
 	End If
-	DisplayValue = CStr(values(LBound(values))) ' xlflow:disable-line VBA227
-	NormalizeFileDialogResponse = CStr(values(LBound(values))) ' xlflow:disable-line VBA227
+	DisplayValue = CStr(values(LBound(values)))
+	NormalizeFileDialogResponse = CStr(values(LBound(values)))
 End Function
 
 Private Function NormalizeFileDialogDefault(ByVal Kind As String, ByVal Id As String, ByVal MultiSelect As Boolean, ByVal DefaultValue As Variant, Optional ByRef DisplayValue As String = "") As Variant
@@ -366,8 +366,8 @@ Private Function NormalizeFileDialogDefault(ByVal Kind As String, ByVal Id As St
 		If count <> 1 Then
 			Err.Raise xlflowErrInvalidFileDialogResponse, FileDialogSourceName(Kind), "File dialog '" & Id & "' default value must contain exactly one path."
 		End If
-		DisplayValue = CStr(values(LBound(values))) ' xlflow:disable-line VBA227
-		NormalizeFileDialogDefault = CStr(values(LBound(values))) ' xlflow:disable-line VBA227
+		DisplayValue = CStr(values(LBound(values)))
+		NormalizeFileDialogDefault = CStr(values(LBound(values)))
 		Exit Function
 	End If
 
@@ -437,8 +437,8 @@ Private Function SplitFileDialogValues(ByVal MarkerValue As String) As Variant
 		Err.Raise xlflowErrInvalidFileDialogResponse, "XlflowUI.FileDialog", "Scripted file dialog response must contain at least one path."
 	End If
 	values = Split(normalizedValue, vbLf)
-	For i = LBound(values) To UBound(values) ' xlflow:disable-line VBA227
-		If Len(CStr(values(i))) = 0 Then ' xlflow:disable-line VBA227
+	For i = LBound(values) To UBound(values)
+		If Len(CStr(values(i))) = 0 Then
 			Err.Raise xlflowErrInvalidFileDialogResponse, "XlflowUI.FileDialog", "Scripted file dialog response contains an empty path entry."
 		End If
 	Next i
