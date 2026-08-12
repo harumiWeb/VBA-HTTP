@@ -28,4 +28,6 @@
 - `diagnostics-policy.md`: opt-in structured operation events, bounded retention, target sanitization, and header redaction
 - `release-checksum.md`: deterministic SHA-256 sidecar generation, validation, and atomic evidence publication
 - `release-security.md`: fail-closed release manifest identity, component path boundary, checksum, and deferred-risk contract
+- `security-risk-register.md`: machine-readable residual risks and zero-current-blocker release gate
 - `compatibility-matrix.md`: observed Windows/Office/protocol evidence and promotion requirements
+- `distribution.md`: development/release workbook separation, build, checksum, install, and upgrade contract

@@ -237,4 +237,29 @@ task release:build
 
 Tests and benchmarks use only the deterministic loopback server. Release workbooks are generated with `xlflow build` and exclude tests, benchmarks, xlflow helpers, development modules, and test-only classes. The release gate verifies the manifest base/output, VBE/atomic-publication evidence, component source boundaries, and checksum before opening Excel; see [`docs/specs/release-security.md`](docs/specs/release-security.md).
 
+Public API quick reference: [`docs/API.md`](docs/API.md). Contributor workflow:
+[`CONTRIBUTING.md`](CONTRIBUTING.md). Distribution, install, and rollback rules:
+[`docs/specs/distribution.md`](docs/specs/distribution.md). The handoff gate is
+[`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md).
+
+## Measured loopback evidence
+
+The following values are recorded in
+[`docs/BENCHMARKS_BASELINE.md`](docs/BENCHMARKS_BASELINE.md) and are not
+universal Internet or hardware guarantees:
+
+- bounded concurrency: 100 requests with 100 ms server delay, concurrency 16,
+  measured 12.864x over sequential execution (maximum in-flight 16);
+- constant-memory download: 1 GiB payload, working-set peak delta 6,836,224
+  bytes and private-bytes peak delta 19,017,728 bytes;
+- streaming upload: 1 GiB payload, server hash matched and 64 KiB write/read
+  bounds remained active; the measured private-bytes peak delta was
+  182,210,560 bytes;
+- Phase 2 buffered comparison: Raw WinHttpRequest mean 0.499 ms versus
+  VBA-HTTP 0.833 ms on the same loopback workload. The 15% target is therefore
+  recorded as an engineering variance, not silently claimed as achieved.
+
+Refresh these figures only with the documented benchmark methodology and keep
+the machine-readable JSON evidence beside the narrative result.
+
 Current contracts are documented in [`docs/specs/http-core-api.md`](docs/specs/http-core-api.md), [`docs/specs/native-winhttp-transport.md`](docs/specs/native-winhttp-transport.md), [`docs/specs/streaming-download.md`](docs/specs/streaming-download.md), [`docs/specs/streaming-upload.md`](docs/specs/streaming-upload.md), [`docs/specs/bounded-concurrency.md`](docs/specs/bounded-concurrency.md), and [`docs/specs/reliability-policy.md`](docs/specs/reliability-policy.md), with architectural decisions under [`docs/adr/`](docs/adr/).

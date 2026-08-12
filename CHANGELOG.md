@@ -1,5 +1,15 @@
 ## Unreleased
 
+- Added a machine-validated Phase 9 security-risk register with an explicit
+  zero-current-blocker gate, fail-closed tamper tests, and release-security
+  integration. Deferred HTTP/2/HTTP/3 and 32-bit evidence, integrated/proxy
+  challenge authentication, and repeated COM receive-timeout handle growth
+  remain visible as future-v1 obligations.
+
+- Added the public API quick reference, contributor proof-loop guide, consumer
+  examples, distribution/install/rollback specification, and repeatable XLSM
+  release checklist. Documentation contracts now run as part of `task verify`.
+
 - Added opt-in structured `HttpDiagnostics` operation events with bounded
   retention, query/user-info target sanitization, stable error categories, and
   automatic sensitive-header redaction. Release consumer smoke verifies that

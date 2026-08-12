@@ -483,7 +483,7 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 
 ### Exit Criteria
 
-- [ ] known critical bugとrelease blocker bugが0件である。
+- [x] known critical bugとcurrent release blocker bugが0件である（`docs/security/risk-register.json`を`task test:security-risks`とrelease security gateで検証。将来v1.0 gateは別途明示）。
 - [x] 10,000 request測定区間後にpersistent resource growthがない（x64実測、native delta <=8／COM delta <=32）。
 - [x] redirect、credential、certificate security testsが成功する（redirect／credential／untrusted TLS certificateのCOM/native loopback検証済み。HTTP/2/3 negotiated evidenceと32-bit証跡はcompatibility gateとして継続）。
 - [x] release artifactのcomponent構成がreview済みである（`task release:security`と`task release:smoke`でproduction allowlist／development denylistのmanifest・実Workbook構成を検証）。
@@ -498,22 +498,22 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 
 ### Todo
 
-- [ ] README、API reference、examplesを完成させる。
-- [ ] xlflow-based contributor guideを完成させる。
-- [ ] `xlflow build` によるrelease workbook生成を自動化する。
+- [x] README、API reference、examplesを完成させる（README、`docs/API.md`、`examples/`、`test:docs`契約ゲート）。
+- [x] xlflow-based contributor guideを完成させる（`CONTRIBUTING.md`、Lefthookの`task check`ゲート）。
+- [x] `xlflow build` によるrelease workbook生成を自動化する（`task release:build`、manifest／VBE／checksum／smoke）。
 - [x] build manifest検証とartifact checksum生成を自動化する。
-- [ ] external consumer smoke harnessをrelease pipelineへ統合する。
-- [ ] source distributionとworkbook distributionの責務を分離する。
-- [ ] source vendoring、install、upgrade手順を文書化する。
-- [ ] `.xlam` 用base workbookと独立build targetを追加する。
-- [ ] CHANGELOGとcompatibility documentationを完成させる。
+- [x] external consumer smoke harnessをrelease pipelineへ統合する。
+- [x] source distributionとworkbook distributionの責務を分離する（`docs/specs/distribution.md`）。
+- [x] source vendoring、install、upgrade手順を文書化する。
+- [!] `.xlam` 用base workbookと独立build targetを追加する（同拡張子の追跡base artifactが未提供。base追加後に独立targetを実装する）。
+- [x] CHANGELOGとcompatibility documentationを完成させる（x64実測と未完了の32-bit／HTTP/3 gateを明記）。
 
 ### Exit Criteria
 
-- [ ] clean environmentでtest、build、smoke、packageを再現できる。
-- [ ] 全public APIに例とerror behaviorの説明がある。
-- [ ] development-only codeを含まない配布workbookを生成できる。
-- [ ] build失敗時に既存release artifactが破壊されない。
+- [~] clean environmentでtest、build、smoke、packageを再現できる（現行x64 Windowsでは`task verify`／`task release:build`成功。32-bit／fresh-host証跡はcompatibility gateとして継続）。
+- [x] 全public APIに例とerror behaviorの説明がある（`docs/API.md`、README、spec、examples）。
+- [x] development-only codeを含まない配布workbookを生成できる。
+- [x] build失敗時に既存release artifactが破壊されない（atomic publication／checksum／tamper tests）。
 - [x] release manifestとchecksum sidecarが保存される。
 
 ---
@@ -526,23 +526,23 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 
 ### Todo
 
-- [ ] Phase 0 baselineを同一条件で再測定する。
-- [ ] sequential／concurrency benchmarkを公開する。
-- [ ] 100MB／1GB download benchmarkを公開する。
-- [ ] multipart upload benchmarkを公開する。
-- [ ] memory／handle stability結果を公開する。
-- [ ] 32-bit／64-bit Office validationを完了する。
-- [ ] release checklistとartifact checksumsを作成する。
-- [ ] READMEには実測値だけを掲載する。
-- [ ] 最終 `xlflow build` とexternal consumer smoke testを実行する。
+- [x] Phase 0 baselineを同一条件で再測定し、`docs/BENCHMARKS_BASELINE.md`とJSONへ保存する。
+- [x] sequential／concurrency benchmarkを公開する。
+- [x] 100MB／1GB download benchmarkを公開する。
+- [x] multipart upload benchmarkを公開する。
+- [x] memory／handle stability結果を公開する。
+- [~] 32-bit／64-bit Office validationを完了する（x64 evidenceは完了、実32-bit host実測待ち）。
+- [x] release checklistとartifact checksumsを作成する（`docs/RELEASE_CHECKLIST.md`、checksum sidecar gate）。
+- [x] READMEには実測値だけを掲載する（loopback条件と未達15% targetを明記）。
+- [x] 最終 `xlflow build` とexternal consumer smoke testを実行する（現行x64 release evidence）。
 
 ### Exit Criteria
 
-- [ ] concurrency、streaming、resource stabilityの実測証跡がある。
-- [ ] 全quality gateが成功する。
-- [ ] API、security、compatibility documentationが完成している。
-- [ ] test、benchmark、xlflow支援コードを含まないv1.0 artifactを生成できる。
-- [ ] build manifestからrelease構成を再現・監査できる。
+- [x] concurrency、streaming、resource stabilityの実測証跡がある。
+- [~] 全quality gateが成功する（現行x64 release gateは成功。32-bit／HTTP/3／challenge-auth promotion gateは未完了）。
+- [~] API、security、compatibility documentationが完成している（現行contractとsecurity gateは完了、未実測compatibility項目はrisk registerで追跡）。
+- [~] test、benchmark、xlflow支援コードを含まないv1.0 artifactを生成できる（production-only artifactは生成済み、v1.0 promotion risksは未解消）。
+- [x] build manifestからrelease構成を再現・監査できる。
 
 ---
 
@@ -556,7 +556,7 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 - [x] `IHttpAuthProvider` の契約（ADR-0013／`docs/specs/auth-policy.md`で確定）。
 - [x] buffered／streaming request・response bodyのownership（buffered bodyはPhase 1、downloadはADR-0007、uploadはADR-0008/specで確定）
 - [x] error分類とVBA error／result objectの境界
-- [ ] retry、deadline、redirect、cancellationの優先順位
+- [x] retry、deadline、redirect、cancellationの優先順位（ADR-0005／`docs/specs/reliability-policy.md`、cancel > total deadline > attempt outcome > retry/delay。unit/integrationで検証済み）
 - [x] native handle lifecycleとnative callback禁止
 - [x] protocol fallback policy（ADR-0009、`docs/specs/protocol-policy.md`）
 - [x] response decompression ownership、fallback／required、streaming length contract（ADR-0010、`docs/specs/decompression-policy.md`）

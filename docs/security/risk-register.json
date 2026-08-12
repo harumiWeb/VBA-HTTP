@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "review_id": "phase-nine-production-hardening",
+  "current_release_blockers": [],
+  "issues": [
+    {
+      "id": "compat-http2-http3-32bit",
+      "title": "HTTP/2 and HTTP/3 negotiation plus 32-bit Office evidence",
+      "status": "deferred",
+      "severity": "high",
+      "blocks_current_release": false,
+      "blocks_v1": true,
+      "required_evidence": "Dedicated TLS/QUIC fixture or compatible host, real 32-bit Office compile/integration/release smoke",
+      "evidence": "docs/specs/compatibility-matrix.md"
+    },
+    {
+      "id": "integrated-proxy-challenge-auth",
+      "title": "Windows integrated and proxy challenge authentication",
+      "status": "deferred",
+      "severity": "medium",
+      "blocks_current_release": false,
+      "blocks_v1": true,
+      "required_evidence": "Buffered replay contract, credential redaction, bounded challenge loop, and opt-in host fixture",
+      "evidence": "docs/specs/auth-policy.md"
+    },
+    {
+      "id": "com-receive-timeout-abort-growth",
+      "title": "Repeated COM receive-timeout abort handle growth",
+      "status": "known",
+      "severity": "medium",
+      "blocks_current_release": false,
+      "blocks_v1": true,
+      "required_evidence": "Repeated receive-timeout stress with stable idle handle count or an upstream WinHTTP workaround",
+      "evidence": "docs/specs/cancellation-stress.md"
+    }
+  ]
+}

@@ -8,6 +8,9 @@ The authoritative implementation is
 `tools/Validate-ReleaseSecurity.ps1`; its tamper matrix is run by
 `task test:release-security` and the gate runs before
 `tools/Validate-ReleaseArtifact.ps1` opens Excel.
+The current blocker assertion is separately recorded in
+`docs/security/risk-register.json` and validated by
+`task test:security-risks` before release inspection.
 
 ## Threat and control matrix
 
@@ -21,6 +24,7 @@ The authoritative implementation is
 | TLS trust and certificate rejection | Self-signed loopback fixture is rejected by both COM/native transports and maps to `HttpErrorTls`; no ignore-certificate option exists | covered |
 | HTTP/2/HTTP/3 TLS and Office bitness | Compatibility evidence is still environment-dependent (current proof is x64) | deferred |
 | Integrated/proxy challenge auth | Explicitly outside the preemptive Basic/Bearer contract and challenge replay | deferred |
+| Current release blockers | Versioned risk register and fail-closed validator | covered (0) |
 
 ## Verification commands
 
@@ -28,6 +32,7 @@ The authoritative implementation is
 task check
 task test:integration
 task test:release-security
+task test:security-risks
 task build:plan
 task release:security
 ```
@@ -41,6 +46,9 @@ without embedding host paths or secrets.
 ## Review outcome
 
 Manifest/component integrity is accepted for the current x64 release path.
+The risk register contains zero current release blockers; its three deferred
+items remain future-v1 evidence obligations and are not silently treated as
+passed compatibility.
 This record does not declare the broader protocol/auth compatibility matrix
 complete; HTTP/2/HTTP/3 negotiation evidence, 32-bit Office evidence, and
 integrated/proxy challenge authentication remain explicit follow-up gates. The

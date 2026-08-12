@@ -99,6 +99,17 @@ tasks:
     cmds:
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-ReleaseSecurity.ps1
 
+  test:security-risks:
+    desc: Verify the current release risk register has no blocker and consistent deferred issues
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-SecurityRiskRegister.ps1
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Validate-SecurityRiskRegister.ps1
+
+  test:docs:
+    desc: Verify public API, contributor, distribution, and release checklist documentation contracts
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-DocumentationContract.ps1
+
   testserver:run:
     desc: Start the local HTTP server on an OS-selected port
     dir: tools/testserver
@@ -186,6 +197,8 @@ tasks:
       - task: testserver:test
       - task: test:release-checksum
       - task: test:release-security
+      - task: test:security-risks
+      - task: test:docs
       - task: build:plan
 
   hooks:install:

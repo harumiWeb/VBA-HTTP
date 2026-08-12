@@ -3,7 +3,8 @@ param(
     [string]$ArtifactPath = "build/Release/VBA-HTTP.xlsm",
     [string]$PolicyPath = "tools/build-component-policy.json",
     [string]$ReportPath = "",
-    [string]$RootPath = ""
+    [string]$RootPath = "",
+    [string]$RiskRegisterPath = ""
 )
 
 Set-StrictMode -Version Latest
@@ -14,6 +15,13 @@ $projectRoot = if ([string]::IsNullOrWhiteSpace($RootPath)) {
 }
 else {
     [IO.Path]::GetFullPath($RootPath)
+}
+
+if ([string]::IsNullOrWhiteSpace($RiskRegisterPath) -and [string]::IsNullOrWhiteSpace($RootPath)) {
+    $RiskRegisterPath = "docs/security/risk-register.json"
+}
+if (-not [string]::IsNullOrWhiteSpace($RiskRegisterPath)) {
+    & (Join-Path $PSScriptRoot "Validate-SecurityRiskRegister.ps1") -Path $RiskRegisterPath | Out-Null
 }
 
 function Resolve-InputPath([string]$Path) {
