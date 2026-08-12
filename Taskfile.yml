@@ -65,6 +65,12 @@ tasks:
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Run-ResourceStressTests.ps1
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Validate-ResourceStressResult.ps1
 
+  test:cancellation-stress:
+    desc: Run repeated COM/native cancellation and timeout cleanup scenarios
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Run-CancellationStressTests.ps1
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Validate-CancellationStressResult.ps1
+
   testserver:test:
     desc: Run deterministic local HTTP server tests
     cmds:

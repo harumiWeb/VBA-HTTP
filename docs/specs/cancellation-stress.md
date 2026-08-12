@@ -1,0 +1,43 @@
+# Cancellation and timeout stress specification
+
+## Scope
+
+`task test:cancellation-stress` runs three loopback-only scenarios against the
+deterministic Go test server. The stress module lives under
+`src/modules/Tests/Stress/` and is excluded from release workbooks.
+
+| Scenario | Backend | Workload | Required invariant | Handle gate |
+| --- | --- | --- | --- | ---: |
+| `com_active_cancellation` | `WinHttpComTransport` | four `GET /delay/2000` requests, cancelled after one second | every item is cancelled; a recovery `GET /status/204` succeeds | <=32 |
+| `com_request_deadline` | `WinHttpComTransport` | four `GET /delay/250` requests, 25 ms per-request deadline | every item is `HttpErrorTimeout`; recovery succeeds | <=32 |
+| `native_download_cancellation` | `WinHttpNativeTransport` | 4 MiB `GET /stream/4194304`, progress cancellation at 64 KiB | `HttpErrCancelled`, 8-byte sentinel and temp-file count unchanged; recovery succeeds | <=8 |
+
+Each selected scenario runs exactly the configured number of iterations
+(default 25, allowed range 1..1000), uses a fresh cancellation token/options for
+each cycle, and sets `MaxAttempts=1` where retries could obscure the result.
+The COM active-cancel scenario uses the existing cooperative `DoEvents` polling
+boundary and does not introduce a native callback.
+
+## Process evidence
+
+The runner records Excel PIDs present before each scenario and samples only new
+processes. VBA writes `start`, `done`, and waits for `release` markers. The
+runner captures process handles, working set, and private bytes before the
+measured loop, at peak, one second after completion, and after a further idle
+second. A missing marker, lost process, failed test, or exceeded idle handle
+limit fails closed. Memory values are evidence for same-host comparison, not a
+universal pass threshold.
+
+## Result contract
+
+The runner atomically publishes
+`benchmarks/results/phase9-cancellation-stress.json`. It must have
+`external_network=false`, a loopback base URL, one passing result per selected
+scenario, exact iteration counts, scenario-specific transport and handle
+limits, and PID-scoped snapshots. Validate it with
+`benchmarks/schema/cancellation-stress-result.schema.json` and
+`tools/Validate-CancellationStressResult.ps1`.
+
+Native `TotalDeadlineMilliseconds` is not used to assert interruption of a
+blocking buffered receive; that capability boundary remains documented by the
+native transport ADR. Cookie state and credentials are not emitted in results.

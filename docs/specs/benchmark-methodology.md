@@ -65,3 +65,16 @@ handles, working-set/private-memory peaks, and an idle post-workload sample;
 only the idle handle delta is a hard gate. The complete result is stored at
 `benchmarks/results/phase9-resource-stress.json` and validated by
 `benchmarks/schema/resource-stress-result.schema.json`.
+
+## Phase 9 cancellation and timeout stress scenario
+
+`task test:cancellation-stress` runs the three transport-capability scenarios
+defined by `cancellation-stress.md`. The default 25 iterations exercise COM
+active cancellation and request deadlines, plus native streaming download
+cancellation. The existing single COM receive-timeout integration remains the
+regression boundary. Each cycle performs a
+loopback recovery request and the runner records PID-scoped handle and memory
+snapshots. The result is atomically written to
+`benchmarks/results/phase9-cancellation-stress.json` and validated by
+`benchmarks/schema/cancellation-stress-result.schema.json`. This gate does not
+claim that a native total deadline interrupts a blocking `ReceiveResponse`.

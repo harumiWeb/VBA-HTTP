@@ -1,5 +1,13 @@
 ## Unreleased
 
+- Added a Phase 9 cancellation/timeout stress gate with repeated COM active
+  cancellation and request-deadline scenarios, native streaming download
+  cancellation, recovery requests, and
+  PID-scoped idle handle evidence. The gate is loopback-only and excluded from
+  release workbooks. The existing single COM receive-timeout integration test
+  remains separate because repeated COM aborts currently expose handle-growth
+  behavior requiring a follow-up fix.
+
 - Added deterministic loopback response-boundary coverage for UTF-8 Unicode,
   exact binary GET bodies, and malformed UTF-8 rejection across the COM and
   native transports, plus raw malformed response-header protocol mapping.
