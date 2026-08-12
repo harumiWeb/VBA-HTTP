@@ -56,3 +56,24 @@ The machine-readable comparison is `benchmarks/results/phase2-buffered-overhead.
 The Phase 3 loopback run issued 100 requests to `GET /delay/100` through the same VBA-HTTP COM transport. A sequential limit of 1 took 11,041.019 ms; a concurrency limit of 16 took 858.266 ms, a 12.864x speedup. Server-side instrumentation observed a maximum of exactly 16 simultaneous requests, so the configured bound was not exceeded.
 
 This measures cooperative async overlap on one local machine, not VBA multithreading or public-network throughput. The machine-readable result is `benchmarks/results/vba-http-concurrency.json` and follows `benchmarks/schema/concurrency-result.schema.json`.
+
+## Phase 6 constant-memory download evidence
+
+The Phase 6 stress run used the deterministic loopback server's chunked
+`GET /stream/1073741824` endpoint. The harness performs a small native warm-up,
+then gates the 1 GiB transfer so Excel startup is included in neither the
+baseline nor the peak delta. This is an engineering memory signal, not a claim
+about all Excel hosts.
+
+| Measure | Result |
+| --- | ---: |
+| Payload | 1,073,741,824 bytes |
+| Elapsed | 44,904.709 ms |
+| Working-set peak delta | 6,836,224 bytes |
+| Private-bytes peak delta | 19,017,728 bytes |
+| SHA-256 | `3a33d58aa8ee1e9d21fd4f510cc5d1ce8d25ba5e24363d19c28e2bf866f4185c` |
+
+The byte-for-byte destination hash matched the server's `/sha256/` response,
+and integration tests verified cancellation, atomic replacement, and temporary
+file cleanup. The machine-readable result is
+`benchmarks/results/phase6-download-stress.json`.

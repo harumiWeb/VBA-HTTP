@@ -2,6 +2,7 @@
 
 ### Added
 
+- Added native constant-memory `HttpClient.DownloadFile` with bounded WinHTTP reads, same-directory temporary files, atomic publication, progress callbacks, cooperative cancellation/deadlines, and external release-artifact download smoke coverage.
 - Defined the initial synchronous HTTP core API, dual-transport boundary, buffered body ownership, and stable error model.
 - Added the default late-bound WinHTTP COM transport contract, including redirect controls and stable transport-error mapping.
 - Added `VBAHttp.CreateClient` for consumers that reference the release workbook and an external release-artifact GET smoke test.

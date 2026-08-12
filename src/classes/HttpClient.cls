@@ -107,6 +107,41 @@ ExecutionFailed:
     Err.Raise errorNumber, errorSource, errorDescription
 End Function
 
+Public Function DownloadFile(ByVal Url As String, ByVal DestinationPath As String, Optional ByVal Options As HttpExecutionOptions = Nothing, Optional ByVal Progress As IHttpProgressSink = Nothing) As HttpDownloadResult
+    Dim downloadTransport As IHttpDownloadTransport
+    Dim Request As New HttpRequest
+    Dim prepared As HttpRequest
+    Dim snapshotOptions As HttpExecutionOptions
+    Dim errorNumber As Long
+    Dim errorSource As String
+    Dim errorDescription As String
+
+    BeginExecution "HttpClient.DownloadFile"
+    On Error GoTo ExecutionFailed
+    If Not TypeOf mTransport Is IHttpDownloadTransport Then HttpErrors.RaiseValidation "HttpClient.DownloadFile", "Configured transport does not support streaming downloads."
+
+    Request.Method = "GET"
+    Request.Url = Url
+    Set prepared = PrepareRequest(Request)
+    If Options Is Nothing Then
+        Set snapshotOptions = New HttpExecutionOptions
+    Else
+        Set snapshotOptions = Options.Clone()
+    End If
+
+    Set downloadTransport = mTransport
+    Set DownloadFile = downloadTransport.DownloadFile(prepared, DestinationPath, snapshotOptions, Progress)
+    mExecuting = False
+    Exit Function
+
+ExecutionFailed:
+    errorNumber = Err.Number
+    errorSource = Err.Source
+    errorDescription = Err.Description
+    mExecuting = False
+    Err.Raise errorNumber, errorSource, errorDescription
+End Function
+
 Public Function GetMany(ByVal Urls As Collection, Optional ByVal Options As HttpBatchOptions = Nothing) As HttpBatchResult
     Dim Requests As New Collection
     Dim index As Long

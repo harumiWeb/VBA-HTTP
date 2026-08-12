@@ -115,6 +115,8 @@ $client = $null
 $response = $null
 $nativeClient = $null
 $nativeResponse = $null
+$downloadResult = $null
+$downloadPath = $null
 $ready = $null
 try {
     [void](New-Item -ItemType Directory -Path $smokeDirectory -Force)
@@ -177,6 +179,15 @@ try {
         throw "Release native HttpClient GET returned an unexpected response."
     }
 
+    $downloadPath = Join-Path $smokeDirectory "consumer-download.bin"
+    $downloadResult = $nativeClient.DownloadFile("/bytes/1048576", $downloadPath)
+    if ($null -eq $downloadResult -or $downloadResult.StatusCode -ne 200 -or -not $downloadResult.Published -or $downloadResult.BytesWritten -ne 1048576) {
+        throw "Release native HttpClient download returned an unexpected result."
+    }
+    if (-not (Test-Path -LiteralPath $downloadPath -PathType Leaf) -or (Get-Item -LiteralPath $downloadPath).Length -ne 1048576) {
+        throw "Release native HttpClient download did not publish the expected file."
+    }
+
     $harnessWorkbook = $consumerWorkbooks.Add()
     $harnessComponent = $harnessWorkbook.VBProject.VBComponents.Import((Join-Path $PSScriptRoot "consumer\ReleaseBatchSmoke.bas"))
     if ($harnessComponent.Name -ne "ReleaseBatchSmoke") { throw "External batch smoke module import failed." }
@@ -191,6 +202,9 @@ finally {
     }
     if ($null -ne $nativeResponse -and [Runtime.InteropServices.Marshal]::IsComObject($nativeResponse)) {
         [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($nativeResponse)
+    }
+    if ($null -ne $downloadResult -and [Runtime.InteropServices.Marshal]::IsComObject($downloadResult)) {
+        [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($downloadResult)
     }
     if ($null -ne $client -and [Runtime.InteropServices.Marshal]::IsComObject($client)) {
         [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($client)
@@ -226,4 +240,4 @@ finally {
     }
 }
 
-Write-Output "Release artifact is valid: $($actualComponents.Count) components; external COM/native GET, batch, retry, and deadline smoke passed."
+Write-Output "Release artifact is valid: $($actualComponents.Count) components; external COM/native GET, download, batch, retry, and deadline smoke passed."

@@ -1,0 +1,30 @@
+{
+    "schema_version":  1,
+    "benchmark":  "vba-http-phase6-download-stress",
+    "server":  {
+                   "base_url":  "http://127.0.0.1:64658",
+                   "external_network":  false
+               },
+    "parameters":  {
+                       "payload_bytes":  1073741824,
+                       "endpoint":  "/stream/1073741824",
+                       "chunk_bytes":  65536
+                   },
+    "result":  {
+                   "status":  200,
+                   "bytes":  1073741824,
+                   "sha256":  "3a33d58aa8ee1e9d21fd4f510cc5d1ce8d25ba5e24363d19c28e2bf866f4185c",
+                   "elapsed_ms":  44904.709,
+                   "process_memory":  {
+                                          "observed_excel":  true,
+                                          "working_set_before":  159821824,
+                                          "working_set_peak":  166658048,
+                                          "working_set_after":  0,
+                                          "private_bytes_before":  168632320,
+                                          "private_bytes_peak":  187650048,
+                                          "private_bytes_after":  0,
+                                          "peak_delta":  6836224,
+                                          "private_peak_delta":  19017728
+                                      }
+               }
+}

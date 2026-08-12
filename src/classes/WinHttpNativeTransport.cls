@@ -10,13 +10,19 @@ Attribute VB_Exposed = True
 Option Explicit
 
 Implements IHttpTransport
+Implements IHttpDownloadTransport
 
 Private Const TransportSource As String = "WinHttpNativeTransport.Execute"
+Private Const DownloadSource As String = "WinHttpNativeTransport.DownloadFile"
 Private Const UserAgent As String = "VBA-HTTP/0.5"
 Private Const ReadChunkBytes As Long = 65536
 
 Public Function Execute(ByVal Request As HttpRequest) As HttpResponse
     Set Execute = ExecuteCore(Request)
+End Function
+
+Private Function IHttpDownloadTransport_DownloadFile(ByVal Request As HttpRequest, ByVal DestinationPath As String, ByVal Options As HttpExecutionOptions, Optional ByVal Progress As IHttpProgressSink = Nothing) As HttpDownloadResult
+    Set IHttpDownloadTransport_DownloadFile = DownloadCore(Request, DestinationPath, Options, Progress)
 End Function
 
 Private Function IHttpTransport_Execute(ByVal Request As HttpRequest) As HttpResponse
@@ -93,27 +99,175 @@ NativeFailure:
     End If
 End Function
 
+Private Function DownloadCore(ByVal Request As HttpRequest, ByVal DestinationPath As String, ByVal Options As HttpExecutionOptions, Optional ByVal Progress As IHttpProgressSink = Nothing) As HttpDownloadResult
+    Dim Url As WinHttpNativeUrl
+    Dim session As WinHttpSessionHandle
+    Dim connection As WinHttpConnectionHandle
+    Dim nativeRequest As WinHttpRequestHandle
+    Dim writer As WinHttpDownloadFileWriter
+    Dim result As HttpDownloadResult
+    Dim responseHeaders As HttpHeaders
+    Dim destination As String
+    Dim temporaryPath As String
+    Dim errorNumber As Long
+    Dim errorSource As String
+    Dim errorDescription As String
+    Dim statusCode As Long
+    Dim reasonPhrase As String
+    Dim protocolUsed As String
+    Dim contentLength As Currency
+    Dim contentLengthKnown As Boolean
+    Dim bytesWritten As Currency
+    Dim started As Currency
+    Dim available As Long
+    Dim requested As Long
+    Dim readBytes As Long
+    Dim chunk() As Byte
+    Dim finalChunk() As Byte
+    Dim copyIndex As Long
+    Dim cleanupSucceeded As Boolean
+    #If VBA7 Then
+    Dim handleValue As LongPtr
+    #Else
+    Dim handleValue As Long
+    #End If
+
+    On Error GoTo DownloadFailure
+    If Request Is Nothing Then HttpErrors.RaiseValidation DownloadSource, "Request cannot be Nothing."
+    If Request.Method <> "GET" Then HttpErrors.RaiseValidation DownloadSource, "Streaming downloads require the GET method."
+    If Options Is Nothing Then HttpErrors.RaiseValidation DownloadSource, "Execution options cannot be Nothing."
+
+    destination = WinHttpDownloadFileSystem.NormalizeDestination(DestinationPath)
+    CheckDownloadControls Options, 0
+    started = HttpTiming.CounterValue()
+    Set Url = New WinHttpNativeUrl
+    Url.Initialize Request.Url
+    Set session = New WinHttpSessionHandle
+    handleValue = WinHttpNativeApi.OpenSession(UserAgent)
+    If handleValue = 0 Then RaiseNativeFailure "OpenSession", DownloadSource
+    session.Initialize handleValue
+
+    Set connection = New WinHttpConnectionHandle
+    handleValue = WinHttpNativeApi.Connect(session.Value, Url.Host, Url.Port)
+    If handleValue = 0 Then RaiseNativeFailure "Connect", DownloadSource
+    connection.Initialize handleValue, session
+
+    Set nativeRequest = New WinHttpRequestHandle
+    If Url.IsSecure Then
+        handleValue = WinHttpNativeApi.OpenRequest(connection.Value, Request.Method, Url.PathAndQuery, WinHttpNativeApi.WinHttpFlagSecure)
+    Else
+        handleValue = WinHttpNativeApi.OpenRequest(connection.Value, Request.Method, Url.PathAndQuery, 0)
+    End If
+    If handleValue = 0 Then RaiseNativeFailure "OpenRequest", DownloadSource
+    nativeRequest.Initialize handleValue, connection
+
+    ApplyRequestOptions nativeRequest, Request, DownloadSource
+    If Not WinHttpNativeApi.AddRequestHeaders(nativeRequest.Value, BuildRequestHeaders(Request.Headers)) Then RaiseNativeFailure "AddRequestHeaders", DownloadSource
+    If Not WinHttpNativeApi.SendBody(nativeRequest.Value, Request.Body.Bytes) Then RaiseNativeFailure "SendRequest", DownloadSource
+    If Not WinHttpNativeApi.ReceiveResponse(nativeRequest.Value) Then RaiseNativeFailure "ReceiveResponse", DownloadSource
+    ReadResponseMetadata nativeRequest, statusCode, reasonPhrase, responseHeaders, protocolUsed, DownloadSource
+
+    contentLengthKnown = TryParseContentLength(responseHeaders, contentLength)
+    If Not contentLengthKnown Then contentLength = -1
+    Set result = New HttpDownloadResult
+    result.Initialize statusCode, reasonPhrase, responseHeaders, protocolUsed, destination, contentLength, contentLengthKnown, HttpTiming.ElapsedMilliseconds(started, HttpTiming.CounterValue())
+    If Not result.IsSuccess Then
+        Set DownloadCore = result
+        CloseNativeHandles nativeRequest, connection, session
+        Exit Function
+    End If
+
+    temporaryPath = WinHttpDownloadFileSystem.CreateTemporaryPath(destination)
+    Set writer = New WinHttpDownloadFileWriter
+    writer.OpenNew temporaryPath
+    ReDim chunk(0 To ReadChunkBytes - 1)
+    NotifyProgress Progress, bytesWritten, ProgressTotal(contentLength, contentLengthKnown)
+    Do
+        CheckDownloadControls Options, started
+        If Not WinHttpNativeApi.QueryDataAvailable(nativeRequest.Value, available) Then RaiseNativeFailure "QueryDataAvailable", DownloadSource
+        If available < 0 Then HttpErrors.RaiseTransport HttpErrorIo, DownloadSource, "Native response chunk size exceeded the VBA Long range."
+        If available = 0 Then Exit Do
+        requested = available
+        If requested > ReadChunkBytes Then requested = ReadChunkBytes
+        If Not WinHttpNativeApi.ReadData(nativeRequest.Value, chunk, requested, readBytes) Then RaiseNativeFailure "ReadData", DownloadSource
+        If readBytes = 0 Then Exit Do
+        If readBytes < ReadChunkBytes Then
+            ReDim finalChunk(0 To readBytes - 1)
+            For copyIndex = 0 To readBytes - 1
+                finalChunk(copyIndex) = chunk(copyIndex)
+            Next copyIndex
+            writer.WriteChunk finalChunk
+            Erase finalChunk
+        Else
+            writer.WriteChunk chunk
+        End If
+        bytesWritten = AddByteCount(bytesWritten, readBytes)
+        CheckDownloadControls Options, started
+        NotifyProgress Progress, bytesWritten, ProgressTotal(contentLength, contentLengthKnown)
+    Loop
+
+    CheckDownloadControls Options, started
+    writer.FlushAndClose
+    WinHttpDownloadFileSystem.ReplaceFileAtomically temporaryPath, destination
+    temporaryPath = ""
+    result.MarkPublished bytesWritten
+    Set DownloadCore = result
+    CloseNativeHandles nativeRequest, connection, session
+    Exit Function
+
+DownloadFailure:
+    errorNumber = Err.Number
+    errorSource = Err.Source
+    errorDescription = Err.Description
+    Err.Clear
+    On Error GoTo CleanupFailed
+    If Not writer Is Nothing Then cleanupSucceeded = writer.Abort
+    If Not cleanupSucceeded Then Err.Clear
+    If Len(temporaryPath) > 0 Then WinHttpDownloadFileSystem.DeleteFileIfExists temporaryPath
+    CloseNativeHandles nativeRequest, connection, session
+    On Error GoTo 0
+    GoTo CleanupFinished
+
+CleanupFailed:
+    Err.Clear
+    On Error GoTo 0
+
+CleanupFinished:
+
+    If errorNumber <> 0 Then
+        If HttpErrors.CategoryFromNumber(errorNumber) <> HttpErrorNone Then
+            Err.Raise errorNumber, errorSource, errorDescription
+        Else
+            WinHttpErrorMapping.RaiseMappedWinHttpFailure errorNumber, DownloadSource
+        End If
+        Err.Raise errorNumber, errorSource, errorDescription
+    Else
+        Err.Raise HttpErrIo, DownloadSource, "Native streaming download failed without an error number."
+    End If
+End Function
+
 Private Sub CloseNativeHandles(ByVal nativeRequest As WinHttpRequestHandle, ByVal connection As WinHttpConnectionHandle, ByVal session As WinHttpSessionHandle)
     If Not nativeRequest Is Nothing Then nativeRequest.ReleaseHandle
     If Not connection Is Nothing Then connection.ReleaseHandle
     If Not session Is Nothing Then session.ReleaseHandle
 End Sub
 
-Private Sub RaiseNativeFailure(Optional ByVal Operation As String = "")
-    WinHttpErrorMapping.RaiseMappedWinHttpFailure WinHttpNativeApi.LastErrorCode(), TransportSource, Operation
+Private Sub RaiseNativeFailure(Optional ByVal Operation As String = "", Optional ByVal Source As String = "")
+    If Len(Source) = 0 Then Source = TransportSource
+    WinHttpErrorMapping.RaiseMappedWinHttpFailure WinHttpNativeApi.LastErrorCode(), Source, Operation
 End Sub
 
-Private Sub ApplyRequestOptions(ByVal nativeRequest As WinHttpRequestHandle, ByVal Request As HttpRequest)
+Private Sub ApplyRequestOptions(ByVal nativeRequest As WinHttpRequestHandle, ByVal Request As HttpRequest, Optional ByVal Source As String = "")
     Dim redirectFlag As Long
 
-    If Not WinHttpNativeApi.SetTimeouts(nativeRequest.Value, Request.Timeouts.ResolveMilliseconds, Request.Timeouts.ConnectMilliseconds, Request.Timeouts.SendMilliseconds, Request.Timeouts.ReceiveMilliseconds) Then RaiseNativeFailure "SetTimeouts"
+    If Not WinHttpNativeApi.SetTimeouts(nativeRequest.Value, Request.Timeouts.ResolveMilliseconds, Request.Timeouts.ConnectMilliseconds, Request.Timeouts.SendMilliseconds, Request.Timeouts.ReceiveMilliseconds) Then RaiseNativeFailure "SetTimeouts", Source
     If Request.FollowRedirects Then
         redirectFlag = 1
     Else
         redirectFlag = 0
     End If
-    If Not WinHttpNativeApi.SetOptionLong(nativeRequest.Value, WinHttpNativeApi.WinHttpOptionRedirectPolicy, redirectFlag) Then RaiseNativeFailure "SetRedirects"
-    If Not WinHttpNativeApi.SetOptionLong(nativeRequest.Value, WinHttpNativeApi.WinHttpOptionMaxAutomaticRedirects, Request.MaxRedirects) Then RaiseNativeFailure "SetMaxRedirects"
+    If Not WinHttpNativeApi.SetOptionLong(nativeRequest.Value, WinHttpNativeApi.WinHttpOptionRedirectPolicy, redirectFlag) Then RaiseNativeFailure "SetRedirects", Source
+    If Not WinHttpNativeApi.SetOptionLong(nativeRequest.Value, WinHttpNativeApi.WinHttpOptionMaxAutomaticRedirects, Request.MaxRedirects) Then RaiseNativeFailure "SetMaxRedirects", Source
 End Sub
 
 Private Function BuildRequestHeaders(ByVal Headers As HttpHeaders) As String
@@ -128,31 +282,40 @@ Private Function BuildRequestHeaders(ByVal Headers As HttpHeaders) As String
 End Function
 
 Private Function BuildResponse(ByVal nativeRequest As WinHttpRequestHandle, ByVal elapsedMilliseconds As Double) As HttpResponse
-    Dim statusText As String
-    Dim rawHeaders As String
     Dim statusCode As Long
+    Dim reasonPhrase As String
+    Dim responseHeaders As HttpHeaders
     Dim Body As HttpBody
     Dim protocolUsed As String
     Dim response As New HttpResponse
 
-    If Not WinHttpNativeApi.QueryHeaderString(nativeRequest.Value, WinHttpNativeApi.WinHttpQueryStatusCode, statusText) Then RaiseNativeFailure "QueryStatusCode"
+    ReadResponseMetadata nativeRequest, statusCode, reasonPhrase, responseHeaders, protocolUsed, TransportSource
+    Set Body = ReadBufferedBody(nativeRequest)
+
+    response.Initialize statusCode, reasonPhrase, responseHeaders, Body, elapsedMilliseconds, protocolUsed
+    Set BuildResponse = response
+End Function
+
+Private Sub ReadResponseMetadata(ByVal nativeRequest As WinHttpRequestHandle, ByRef statusCode As Long, ByRef reasonPhrase As String, ByRef responseHeaders As HttpHeaders, ByRef protocolUsed As String, Optional ByVal Source As String = "")
+    Dim statusText As String
+    Dim rawHeaders As String
+
+    If Len(Source) = 0 Then Source = TransportSource
+    If Not WinHttpNativeApi.QueryHeaderString(nativeRequest.Value, WinHttpNativeApi.WinHttpQueryStatusCode, statusText) Then RaiseNativeFailure "QueryStatusCode", Source
     On Error GoTo InvalidStatus
     statusCode = CLng(Trim$(statusText))
     On Error GoTo 0
     If statusCode < 100 Or statusCode > 599 Then GoTo InvalidStatus
-    If Not WinHttpNativeApi.QueryHeaderString(nativeRequest.Value, WinHttpNativeApi.WinHttpQueryStatusText, statusText) Then RaiseNativeFailure "QueryStatusText"
-    If Not WinHttpNativeApi.QueryHeaderString(nativeRequest.Value, WinHttpNativeApi.WinHttpQueryRawHeadersCrlf, rawHeaders) Then RaiseNativeFailure "QueryRawHeaders"
-    Set Body = ReadBufferedBody(nativeRequest)
-    protocolUsed = QueryProtocol(nativeRequest)
-
-    response.Initialize statusCode, statusText, ParseResponseHeaders(rawHeaders), Body, elapsedMilliseconds, protocolUsed
-    Set BuildResponse = response
-    Exit Function
+    If Not WinHttpNativeApi.QueryHeaderString(nativeRequest.Value, WinHttpNativeApi.WinHttpQueryStatusText, reasonPhrase) Then RaiseNativeFailure "QueryStatusText", Source
+    If Not WinHttpNativeApi.QueryHeaderString(nativeRequest.Value, WinHttpNativeApi.WinHttpQueryRawHeadersCrlf, rawHeaders) Then RaiseNativeFailure "QueryRawHeaders", Source
+    Set responseHeaders = ParseResponseHeaders(rawHeaders)
+    protocolUsed = QueryProtocol(nativeRequest, Source)
+    Exit Sub
 
 InvalidStatus:
     On Error GoTo 0
-    Err.Raise HttpErrProtocol, TransportSource, "WinHTTP returned an invalid response status."
-End Function
+    Err.Raise HttpErrProtocol, Source, "WinHTTP returned an invalid response status."
+End Sub
 
 Private Function ReadBufferedBody(ByVal nativeRequest As WinHttpRequestHandle) As HttpBody
     Dim Body As New HttpBody
@@ -230,11 +393,12 @@ NextHeader:
     Set ParseResponseHeaders = Headers
 End Function
 
-Private Function QueryProtocol(ByVal nativeRequest As WinHttpRequestHandle) As String
+Private Function QueryProtocol(ByVal nativeRequest As WinHttpRequestHandle, Optional ByVal Source As String = "") As String
     Dim protocolFlags As Long
 
+    If Len(Source) = 0 Then Source = TransportSource
     If Not WinHttpNativeApi.QueryProtocolUsed(nativeRequest.Value, protocolFlags) Then
-        If WinHttpNativeApi.LastErrorCode() <> WinHttpNativeApi.WinHttpErrorInvalidOption Then RaiseNativeFailure "QueryProtocolUsed"
+        If WinHttpNativeApi.LastErrorCode() <> WinHttpNativeApi.WinHttpErrorInvalidOption Then RaiseNativeFailure "QueryProtocolUsed", Source
     End If
     If (protocolFlags And WinHttpNativeApi.WinHttpProtocolFlagHttp3) <> 0 Then
         QueryProtocol = "HTTP/3"
@@ -243,4 +407,70 @@ Private Function QueryProtocol(ByVal nativeRequest As WinHttpRequestHandle) As S
     Else
         QueryProtocol = "HTTP/1.1"
     End If
+End Function
+
+Private Sub CheckDownloadControls(ByVal Options As HttpExecutionOptions, ByVal started As Currency)
+    If Options Is Nothing Then Exit Sub
+    If Not Options.CancellationToken Is Nothing Then
+        If Options.CancellationToken.IsCancellationRequested Then Err.Raise HttpErrCancelled, DownloadSource, "HTTP download was cancelled."
+    End If
+    If Options.TotalDeadlineMilliseconds > 0 And started <> 0 Then
+        If HttpTiming.ElapsedMilliseconds(started, HttpTiming.CounterValue()) >= Options.TotalDeadlineMilliseconds Then
+            Err.Raise HttpErrTimeout, DownloadSource, "HTTP download total deadline expired."
+        End If
+    End If
+End Sub
+
+Private Sub NotifyProgress(ByVal Progress As IHttpProgressSink, ByVal bytesWritten As Currency, ByVal totalBytes As Currency)
+    If Progress Is Nothing Then Exit Sub
+    Progress.OnProgress bytesWritten, totalBytes
+End Sub
+
+Private Function ProgressTotal(ByVal contentLength As Currency, ByVal contentLengthKnown As Boolean) As Currency
+    If contentLengthKnown Then
+        ProgressTotal = contentLength
+    Else
+        ProgressTotal = -1
+    End If
+End Function
+
+Private Function AddByteCount(ByVal currentValue As Currency, ByVal increment As Long) As Currency
+    On Error GoTo Overflow
+    AddByteCount = currentValue + CCur(increment)
+    Exit Function
+
+Overflow:
+    On Error GoTo 0
+    Err.Raise HttpErrIo, DownloadSource, "Streaming download byte count exceeded the supported Currency range."
+End Function
+
+Private Function TryParseContentLength(ByVal Headers As HttpHeaders, ByRef contentLength As Currency) As Boolean
+    Dim rawValue As String
+
+    contentLength = -1
+    If Headers Is Nothing Then Exit Function
+    If Not Headers.Contains("Content-Length") Then Exit Function
+    rawValue = Trim$(Headers.GetValue("Content-Length"))
+    If Len(rawValue) = 0 Or Not IsDigits(rawValue) Then Exit Function
+    On Error GoTo InvalidLength
+    contentLength = CCur(rawValue)
+    If contentLength < 0 Then GoTo InvalidLength
+    TryParseContentLength = True
+    Exit Function
+
+InvalidLength:
+    contentLength = -1
+    TryParseContentLength = False
+End Function
+
+Private Function IsDigits(ByVal value As String) As Boolean
+    Dim index As Long
+    Dim code As Long
+
+    If Len(value) = 0 Then Exit Function
+    For index = 1 To Len(value)
+        code = AscW(Mid$(value, index, 1))
+        If code < 48 Or code > 57 Then Exit Function
+    Next index
+    IsDigits = True
 End Function

@@ -384,23 +384,23 @@ streamingとadvanced protocolの土台となる安全なNative WinHTTP transport
 
 ### Todo
 
-- [ ] streaming ownership／failure semanticsのADRまたはspecを作成する。
-- [ ] `WinHttpQueryDataAvailable`／`WinHttpReadData` loopを実装する。
-- [ ] temporary fileへのchunked writeとflushを実装する。
-- [ ] 成功時のatomic replacementを実装する。
-- [ ] failure／cancel時のpartial file cleanupを実装する。
-- [ ] `IHttpProgressSink` とprogress reportingを実装する。
-- [ ] streaming checkpointでcancellationを検査する。
-- [ ] 2GB超のfile size／byte count表現を実装する。
-- [ ] hash、memory、cleanupのintegration／stress testsを追加する。
+- [x] streaming ownership／failure semanticsのADRまたはspecを作成する。
+- [x] `WinHttpQueryDataAvailable`／`WinHttpReadData` loopを実装する。
+- [x] temporary fileへのchunked writeとflushを実装する。
+- [x] 成功時のatomic replacementを実装する。
+- [x] failure／cancel時のpartial file cleanupを実装する。
+- [x] `IHttpProgressSink` とprogress reportingを実装する。
+- [x] streaming checkpointでcancellationを検査する。
+- [x] 2GB超のfile size／byte count表現を実装する。
+- [x] hash、memory、cleanupのintegration／stress testsを追加する。
 
 ### Exit Criteria
 
-- [ ] 1GB downloadのhashが一致する。
-- [ ] additional working memory 32MB未満をengineering targetとして実測する。
-- [ ] failure／cancel時に既存destinationを破壊しない。
-- [ ] partial fileとnative resourceが残らない。
-- [ ] built artifactからdownload consumer smoke testが成功する。
+- [x] 1GB downloadのhashが一致する（loopback stress: SHA-256 `3a33d58aa8ee1e9d21fd4f510cc5d1ce8d25ba5e24363d19c28e2bf866f4185c`）。
+- [x] additional working memory 32MB未満をengineering targetとして実測する（working-set peak delta 6,836,224 bytes、private-bytes peak delta 19,017,728 bytes）。
+- [x] failure／cancel時に既存destinationを破壊しない。
+- [x] partial fileとnative resourceが残らない。
+- [x] built artifactからdownload consumer smoke testが成功する（native 1 MiB loopback download、published/file-size検証）。
 
 ---
 
@@ -548,8 +548,9 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 
 - [x] dual transportとtransport selection policy
 - [ ] public `HttpClient` の同期、batch、download、upload API
-- [ ] `IHttpTransport`、`IHttpAuthProvider`、`IHttpProgressSink`
-- [ ] buffered／streaming request・response bodyのownership
+- [x] `IHttpTransport` と `IHttpProgressSink` の契約（auth providerとは分離）
+- [ ] `IHttpAuthProvider` の契約（Phase 8で確定する）。
+- [x] buffered／streaming request・response bodyのownership（buffered bodyはPhase 1、download streamingはADR-0007/specで確定）
 - [x] error分類とVBA error／result objectの境界
 - [ ] retry、deadline、redirect、cancellationの優先順位
 - [x] native handle lifecycleとnative callback禁止

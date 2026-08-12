@@ -4,7 +4,7 @@ VBA-HTTP is a Windows Excel/VBA HTTP client designed for deterministic testing, 
 
 ## Development status
 
-Phase 5 adds an explicit synchronous native WinHTTP backend on top of the Phase 4 API. The default remains the late-bound `WinHttp.WinHttpRequest.5.1` transport; the native backend provides pointer-safe handles and negotiated protocol reporting without a WinHTTP type-library reference.
+Phase 6 adds constant-memory downloads on the synchronous native WinHTTP backend. The default remains the late-bound `WinHttp.WinHttpRequest.5.1` transport; the native backend provides pointer-safe handles, negotiated protocol reporting, and bounded file streaming without a WinHTTP type-library reference.
 
 ```vb
 Dim client As HttpClient
@@ -57,7 +57,23 @@ Set nativeResponse = nativeClient.GetResponse("https://example.com/api")
 Debug.Print nativeResponse.ProtocolUsed
 ```
 
-The native Phase 5 transport uses synchronous WinHTTP calls, OS certificate validation, and deterministic handle cleanup. Active cancellation and total-deadline options are rejected until a later native streaming design can enforce them while I/O is in flight.
+The native transport uses synchronous WinHTTP calls, OS certificate validation, and deterministic handle cleanup. Buffered native requests still reject active cancellation and total-deadline options because a blocking call cannot observe them; streaming downloads support cooperative cancellation and total-deadline checkpoints between bounded reads.
+
+For a large file, use the native client and let the library publish only after the temporary file is complete:
+
+```vb
+Dim nativeClient As HttpClient
+Dim download As HttpDownloadResult
+Dim options As New HttpExecutionOptions
+
+Set nativeClient = VBAHttp.CreateNativeClient()
+nativeClient.BaseUrl = "http://127.0.0.1:8080"
+Set download = nativeClient.DownloadFile("/large.bin", "C:\Temp\large.bin", options)
+download.RaiseForStatus
+Debug.Print download.BytesWritten, download.Published
+```
+
+`DownloadFile` reads at most 64 KiB at a time, writes beside the destination, and atomically replaces the destination after a successful response. Existing destinations remain unchanged on HTTP failure, cancellation, timeout, or write failure. Implement `IHttpProgressSink` to receive integral byte counters; an unknown `Content-Length` is reported as `-1`.
 
 GET, HEAD, PUT, DELETE, OPTIONS, and TRACE retry 408, 429, 500, 502, 503, 504 and transient DNS, connection, timeout, and I/O failures by default. POST, PATCH, and extension methods require explicit opt-in:
 
@@ -88,4 +104,4 @@ task release:build
 
 Tests and benchmarks use only the deterministic loopback server. Release workbooks are generated with `xlflow build` and exclude tests, benchmarks, xlflow helpers, development modules, and test-only classes.
 
-Current contracts are documented in [`docs/specs/http-core-api.md`](docs/specs/http-core-api.md), [`docs/specs/native-winhttp-transport.md`](docs/specs/native-winhttp-transport.md), [`docs/specs/bounded-concurrency.md`](docs/specs/bounded-concurrency.md), and [`docs/specs/reliability-policy.md`](docs/specs/reliability-policy.md), with architectural decisions under [`docs/adr/`](docs/adr/).
+Current contracts are documented in [`docs/specs/http-core-api.md`](docs/specs/http-core-api.md), [`docs/specs/native-winhttp-transport.md`](docs/specs/native-winhttp-transport.md), [`docs/specs/streaming-download.md`](docs/specs/streaming-download.md), [`docs/specs/bounded-concurrency.md`](docs/specs/bounded-concurrency.md), and [`docs/specs/reliability-policy.md`](docs/specs/reliability-policy.md), with architectural decisions under [`docs/adr/`](docs/adr/).

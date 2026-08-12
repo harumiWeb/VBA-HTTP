@@ -129,6 +129,171 @@ Public Sub Test_NativeTransport_ReleasesHandles()
     XlflowAssert.AssertTrue afterCount - beforeCount <= 8, "Native request handles grew persistently."
 End Sub
 
+'@Tag("integration")
+Public Sub Test_NativeTransport_DownloadsKnownLengthAndReportsProgress()
+    Dim client As New HttpClient
+    Dim options As New HttpExecutionOptions
+    Dim sink As New RecordingProgressSink
+    Dim result As HttpDownloadResult
+    Dim destination As String
+    Dim errorNumber As Long
+    Dim errorSource As String
+    Dim errorDescription As String
+
+    destination = NewDownloadDestination("known")
+    On Error GoTo Cleanup
+    client.BaseUrl = RequireBaseUrl()
+    Set client.Transport = New WinHttpNativeTransport
+    Set result = client.DownloadFile("/bytes/1048576", destination, options, sink)
+
+    XlflowAssert.AssertEquals 200, result.StatusCode
+    XlflowAssert.AssertTrue result.IsSuccess
+    XlflowAssert.AssertTrue result.Published
+    XlflowAssert.AssertEquals CCur(1048576), result.BytesWritten
+    XlflowAssert.AssertTrue result.ContentLengthKnown
+    XlflowAssert.AssertEquals CCur(1048576), result.ContentLength
+    XlflowAssert.AssertTrue sink.CallCount > 0
+    XlflowAssert.AssertEquals CCur(1048576), sink.LastBytesTransferred
+    XlflowAssert.AssertEquals CCur(1048576), sink.LastTotalBytes
+    XlflowAssert.AssertEquals 1048576, FileLen(destination)
+    XlflowAssert.AssertEquals 0, ReadDownloadByte(destination, 0)
+    XlflowAssert.AssertEquals 250, ReadDownloadByte(destination, 250)
+    DeleteDownloadFile destination
+    Exit Sub
+
+Cleanup:
+    errorNumber = Err.Number
+    errorSource = Err.Source
+    errorDescription = Err.Description
+    Err.Clear
+    DeleteDownloadFile destination
+    Err.Raise errorNumber, errorSource, errorDescription
+End Sub
+
+'@Tag("integration")
+Public Sub Test_NativeTransport_StreamsUnknownLengthAndReplacesAtomically()
+    Dim client As New HttpClient
+    Dim options As New HttpExecutionOptions
+    Dim sink As New RecordingProgressSink
+    Dim result As HttpDownloadResult
+    Dim destination As String
+    Dim temporaryCountBefore As Long
+    Dim temporaryCountAfter As Long
+    Dim errorNumber As Long
+    Dim errorSource As String
+    Dim errorDescription As String
+
+    destination = NewDownloadDestination("stream")
+    On Error GoTo Cleanup
+    WriteDownloadSentinel destination
+    temporaryCountBefore = CountDownloadTemporaryFiles(destination)
+    client.BaseUrl = RequireBaseUrl()
+    Set client.Transport = New WinHttpNativeTransport
+    Set result = client.DownloadFile("/stream/2097152", destination, options, sink)
+    temporaryCountAfter = CountDownloadTemporaryFiles(destination)
+
+    XlflowAssert.AssertTrue result.Published
+    XlflowAssert.AssertFalse result.ContentLengthKnown
+    XlflowAssert.AssertEquals - 1, result.ContentLength
+    XlflowAssert.AssertEquals CCur(2097152), result.BytesWritten
+    XlflowAssert.AssertEquals - 1, sink.LastTotalBytes
+    XlflowAssert.AssertTrue sink.CallCount > 1
+    XlflowAssert.AssertEquals 2097152, FileLen(destination)
+    XlflowAssert.AssertEquals 0, ReadDownloadByte(destination, 0)
+    XlflowAssert.AssertEquals temporaryCountBefore, temporaryCountAfter
+    DeleteDownloadFile destination
+    Exit Sub
+
+Cleanup:
+    errorNumber = Err.Number
+    errorSource = Err.Source
+    errorDescription = Err.Description
+    Err.Clear
+    DeleteDownloadFile destination
+    Err.Raise errorNumber, errorSource, errorDescription
+End Sub
+
+'@Tag("integration")
+Public Sub Test_NativeTransport_CancellationPreservesDestinationAndCleansTemp()
+    Dim client As New HttpClient
+    Dim options As New HttpExecutionOptions
+    Dim token As New HttpCancellationToken
+    Dim sink As New RecordingProgressSink
+    Dim destination As String
+    Dim temporaryCountBefore As Long
+    Dim temporaryCountAfter As Long
+    Dim observedNumber As Long
+    Dim observedSource As String
+    Dim errorNumber As Long
+    Dim errorSource As String
+    Dim errorDescription As String
+
+    destination = NewDownloadDestination("cancel")
+    On Error GoTo Cleanup
+    WriteDownloadSentinel destination
+    temporaryCountBefore = CountDownloadTemporaryFiles(destination)
+    sink.CancelAfter = 65536
+    Set sink.CancellationToken = token
+    Set options.CancellationToken = token
+    client.BaseUrl = RequireBaseUrl()
+    Set client.Transport = New WinHttpNativeTransport
+
+    observedNumber = CaptureDownloadError(client, "/stream/104857600", destination, options, sink, observedSource)
+    XlflowAssert.AssertEquals HttpErrCancelled, observedNumber
+    XlflowAssert.AssertEquals "WinHttpNativeTransport.DownloadFile", observedSource
+    temporaryCountAfter = CountDownloadTemporaryFiles(destination)
+    XlflowAssert.AssertEquals temporaryCountBefore, temporaryCountAfter
+    XlflowAssert.AssertEquals 8, FileLen(destination)
+    XlflowAssert.AssertEquals 239, ReadDownloadByte(destination, 0)
+    DeleteDownloadFile destination
+    Exit Sub
+
+Cleanup:
+    errorNumber = Err.Number
+    errorSource = Err.Source
+    errorDescription = Err.Description
+    Err.Clear
+    DeleteDownloadFile destination
+    Err.Raise errorNumber, errorSource, errorDescription
+End Sub
+
+'@Tag("integration")
+Public Sub Test_NativeTransport_NonSuccessDoesNotPublishDestination()
+    Dim client As New HttpClient
+    Dim options As New HttpExecutionOptions
+    Dim sink As New RecordingProgressSink
+    Dim result As HttpDownloadResult
+    Dim destination As String
+    Dim errorNumber As Long
+    Dim errorSource As String
+    Dim errorDescription As String
+
+    destination = NewDownloadDestination("status")
+    On Error GoTo Cleanup
+    WriteDownloadSentinel destination
+    client.BaseUrl = RequireBaseUrl()
+    Set client.Transport = New WinHttpNativeTransport
+    Set result = client.DownloadFile("/status/503", destination, options, sink)
+
+    XlflowAssert.AssertEquals 503, result.StatusCode
+    XlflowAssert.AssertFalse result.IsSuccess
+    XlflowAssert.AssertFalse result.Published
+    XlflowAssert.AssertEquals 0, result.BytesWritten
+    XlflowAssert.AssertEquals 0, sink.CallCount
+    XlflowAssert.AssertEquals 8, FileLen(destination)
+    XlflowAssert.AssertEquals 239, ReadDownloadByte(destination, 0)
+    DeleteDownloadFile destination
+    Exit Sub
+
+Cleanup:
+    errorNumber = Err.Number
+    errorSource = Err.Source
+    errorDescription = Err.Description
+    Err.Clear
+    DeleteDownloadFile destination
+    Err.Raise errorNumber, errorSource, errorDescription
+End Sub
+
 Private Sub AssertTextEcho(ByVal Method As String)
     Dim client As New HttpClient
     Dim Request As New HttpRequest
@@ -153,4 +318,18 @@ Private Function RequireBaseUrl() As String
         XlflowAssert.AssertInconclusive "VBA_HTTP_TEST_BASE_URL is not set; run task test:integration."
         Exit Function
     End If
+End Function
+
+Private Function CaptureDownloadError(ByVal client As HttpClient, ByVal Url As String, ByVal DestinationPath As String, ByVal Options As HttpExecutionOptions, ByVal Progress As IHttpProgressSink, ByRef errorSource As String) As Long
+    Dim result As HttpDownloadResult
+
+    On Error GoTo Failed
+    Set result = client.DownloadFile(Url, DestinationPath, Options, Progress)
+    If result Is Nothing Then Err.Raise HttpErrProtocol, "CaptureDownloadError", "Download returned Nothing."
+    Exit Function
+
+Failed:
+    CaptureDownloadError = Err.Number
+    errorSource = Err.Source
+    Err.Clear
 End Function

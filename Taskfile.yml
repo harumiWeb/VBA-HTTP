@@ -49,6 +49,11 @@ tasks:
     cmds:
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Run-IntegrationTests.ps1
 
+  test:download-stress:
+    desc: Run the 1 GiB constant-memory download stress and hash verification
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Run-DownloadStressTests.ps1
+
   testserver:test:
     desc: Run deterministic local HTTP server tests
     cmds:
