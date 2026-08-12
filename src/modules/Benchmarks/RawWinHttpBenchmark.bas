@@ -41,7 +41,18 @@ Private Const latencyIterations As Long = 50
 Private Const downloadBytes As Long = 104857600
 
 Public Sub RunRawBaseline(ByVal baseUrl As String, ByVal outputPath As String)
-    ValidateInputs baseUrl, outputPath
+    RunBaseline baseUrl, outputPath, Nothing, "Raw WinHttpRequest", "5.1", "RawWinHttpBenchmark.RunRawBaseline"
+End Sub
+
+Public Sub RunVbaHttpBaseline(ByVal baseUrl As String, ByVal outputPath As String)
+    Dim client As New HttpClient
+
+    client.BaseUrl = baseUrl
+    RunBaseline baseUrl, outputPath, client, "VBA-HTTP", "0.2-dev", "RawWinHttpBenchmark.RunVbaHttpBaseline"
+End Sub
+
+Private Sub RunBaseline(ByVal baseUrl As String, ByVal outputPath As String, ByVal client As HttpClient, ByVal implementationName As String, ByVal implementationVersion As String, ByVal benchmarkSource As String)
+    ValidateInputs baseUrl, outputPath, benchmarkSource
 
     Dim latencyBefore As ProcessSnapshot
     Dim latencyAfter As ProcessSnapshot
@@ -53,47 +64,47 @@ Public Sub RunRawBaseline(ByVal baseUrl As String, ByVal outputPath As String)
     Dim actualDownloadBytes As Long
     Dim downloadElapsedMs As Double
 
-    WarmUp baseUrl
+    WarmUp baseUrl, client, benchmarkSource
     latencyBefore = CaptureProcessSnapshot()
-    latencyDurations = MeasureLatency(baseUrl, latencyStatus)
+    latencyDurations = MeasureLatency(baseUrl, client, benchmarkSource, latencyStatus)
     latencyAfter = CaptureProcessSnapshot()
     downloadBefore = CaptureProcessSnapshot()
-    MeasureDownload baseUrl, downloadStatus, actualDownloadBytes, downloadElapsedMs
+    MeasureDownload baseUrl, client, benchmarkSource, downloadStatus, actualDownloadBytes, downloadElapsedMs
     downloadAfter = CaptureProcessSnapshot()
 
-    WriteResult outputPath, baseUrl, latencyDurations, latencyStatus, downloadStatus, actualDownloadBytes, downloadElapsedMs, latencyBefore, latencyAfter, downloadBefore, downloadAfter
+    WriteResult outputPath, baseUrl, implementationName, implementationVersion, latencyDurations, latencyStatus, downloadStatus, actualDownloadBytes, downloadElapsedMs, latencyBefore, latencyAfter, downloadBefore, downloadAfter
 End Sub
 
-Private Sub ValidateInputs(ByVal baseUrl As String, ByVal outputPath As String)
+Private Sub ValidateInputs(ByVal baseUrl As String, ByVal outputPath As String, ByVal benchmarkSource As String)
     Const loopbackPrefix As String = "http://127.0.0.1:"
     Dim portText As String
     If Left$(baseUrl, Len(loopbackPrefix)) <> loopbackPrefix Then
-        Err.Raise 5, "RawWinHttpBenchmark.RunRawBaseline", "baseUrl must use the local test server"
+        Err.Raise 5, benchmarkSource, "baseUrl must use the local test server"
     End If
     portText = Mid$(baseUrl, Len(loopbackPrefix) + 1)
     If Len(portText) = 0 Or Not IsNumeric(portText) Then
-        Err.Raise 5, "RawWinHttpBenchmark.RunRawBaseline", "baseUrl must contain a numeric loopback port"
+        Err.Raise 5, benchmarkSource, "baseUrl must contain a numeric loopback port"
     End If
     If CLng(portText) < 1 Or CLng(portText) > 65535 Or CStr(CLng(portText)) <> portText Then
-        Err.Raise 5, "RawWinHttpBenchmark.RunRawBaseline", "baseUrl contains an invalid loopback port"
+        Err.Raise 5, benchmarkSource, "baseUrl contains an invalid loopback port"
     End If
     If Len(outputPath) = 0 Then
-        Err.Raise 5, "RawWinHttpBenchmark.RunRawBaseline", "outputPath is required"
+        Err.Raise 5, benchmarkSource, "outputPath is required"
     End If
 End Sub
 
-Private Sub WarmUp(ByVal baseUrl As String)
+Private Sub WarmUp(ByVal baseUrl As String, ByVal client As HttpClient, ByVal benchmarkSource As String)
     Dim iteration As Long
     Dim status As Long
     For iteration = 1 To warmupIterations
-        status = ExecuteGetStatus(baseUrl & "/status/204")
+        status = ExecuteGetStatus(baseUrl, "/status/204", client)
         If status <> 204 Then
-            Err.Raise vbObjectError + 700, "RawWinHttpBenchmark.WarmUp", "unexpected HTTP status"
+            Err.Raise vbObjectError + 700, benchmarkSource, "warmup returned an unexpected HTTP status"
         End If
     Next iteration
 End Sub
 
-Private Function MeasureLatency(ByVal baseUrl As String, ByRef finalStatus As Long) As Double()
+Private Function MeasureLatency(ByVal baseUrl As String, ByVal client As HttpClient, ByVal benchmarkSource As String, ByRef finalStatus As Long) As Double()
     Dim durations() As Double
     Dim iteration As Long
     Dim started As Currency
@@ -102,10 +113,10 @@ Private Function MeasureLatency(ByVal baseUrl As String, ByRef finalStatus As Lo
 
     For iteration = 0 To latencyIterations - 1
         started = CounterValue()
-        finalStatus = ExecuteGetStatus(baseUrl & "/status/204")
+        finalStatus = ExecuteGetStatus(baseUrl, "/status/204", client)
         finished = CounterValue()
         If finalStatus <> 204 Then
-            Err.Raise vbObjectError + 701, "RawWinHttpBenchmark.MeasureLatency", "unexpected HTTP status"
+            Err.Raise vbObjectError + 701, benchmarkSource, "latency request returned an unexpected HTTP status"
         End If
         durations(iteration) = ElapsedMilliseconds(started, finished)
     Next iteration
@@ -113,40 +124,54 @@ Private Function MeasureLatency(ByVal baseUrl As String, ByRef finalStatus As Lo
     MeasureLatency = durations
 End Function
 
-Private Sub MeasureDownload(ByVal baseUrl As String, ByRef status As Long, ByRef actualBytes As Long, ByRef elapsedMs As Double)
+Private Sub MeasureDownload(ByVal baseUrl As String, ByVal client As HttpClient, ByVal benchmarkSource As String, ByRef status As Long, ByRef actualBytes As Long, ByRef elapsedMs As Double)
     Dim request As Object
+    Dim response As HttpResponse
     Dim responseBody As Variant
     Dim started As Currency
     Dim finished As Currency
 
-    Set request = CreateObject("WinHttp.WinHttpRequest.5.1")
-    request.SetTimeouts 5000, 5000, 30000, 300000
-    ' baseUrl is restricted to the numeric 127.0.0.1 loopback endpoint by ValidateInputs.
-    request.Open "GET", baseUrl & "/bytes/" & CStr(downloadBytes), False ' xlflow:disable-line VBA224
     started = CounterValue()
-    request.Send
-    responseBody = request.ResponseBody
+    If client Is Nothing Then
+        Set request = CreateObject("WinHttp.WinHttpRequest.5.1")
+        request.SetTimeouts 5000, 5000, 30000, 300000
+        ' baseUrl is restricted to the numeric 127.0.0.1 loopback endpoint by ValidateInputs.
+        request.Open "GET", baseUrl & "/bytes/" & CStr(downloadBytes), False ' xlflow:disable-line VBA224
+        request.Send
+        responseBody = request.ResponseBody
+        status = request.status
+    Else
+        Set response = client.GetResponse("/bytes/" & CStr(downloadBytes))
+        responseBody = response.Body.Bytes
+        status = response.StatusCode
+    End If
     finished = CounterValue()
 
-    status = request.status
-    actualBytes = LenB(responseBody)
+    actualBytes = HttpEncoding.ByteCount(responseBody)
     elapsedMs = ElapsedMilliseconds(started, finished)
     Set request = Nothing
 
     If status <> 200 Or actualBytes <> downloadBytes Then
-        Err.Raise vbObjectError + 702, "RawWinHttpBenchmark.MeasureDownload", "download response did not match the requested size"
+        Err.Raise vbObjectError + 702, benchmarkSource, "download response did not match the requested size"
     End If
 End Sub
 
-Private Function ExecuteGetStatus(ByVal targetUrl As String) As Long
+Private Function ExecuteGetStatus(ByVal baseUrl As String, ByVal path As String, ByVal client As HttpClient) As Long
     Dim request As Object
-    Set request = CreateObject("WinHttp.WinHttpRequest.5.1")
-    request.SetTimeouts 5000, 5000, 30000, 300000
-    ' targetUrl is constructed only from the validated loopback base URL and a fixed path.
-    request.Open "GET", targetUrl, False ' xlflow:disable-line VBA224
-    request.Send
-    ExecuteGetStatus = request.status
-    Set request = Nothing
+    Dim response As HttpResponse
+
+    If client Is Nothing Then
+        Set request = CreateObject("WinHttp.WinHttpRequest.5.1")
+        request.SetTimeouts 5000, 5000, 30000, 300000
+        ' baseUrl is restricted to the numeric 127.0.0.1 loopback endpoint by ValidateInputs.
+        request.Open "GET", baseUrl & path, False ' xlflow:disable-line VBA224
+        request.Send
+        ExecuteGetStatus = request.status
+        Set request = Nothing
+    Else
+        Set response = client.GetResponse(path)
+        ExecuteGetStatus = response.StatusCode
+    End If
 End Function
 
 Private Function CounterValue() As Currency
@@ -197,7 +222,7 @@ Private Function PointerSizedValue(ByVal value As LongPtr) As Double
     #End If
 End Function
 
-Private Sub WriteResult(ByVal outputPath As String, ByVal baseUrl As String, ByRef durations() As Double, ByVal latencyStatus As Long, ByVal downloadStatus As Long, ByVal actualDownloadBytes As Long, ByVal downloadElapsedMs As Double, ByRef latencyBefore As ProcessSnapshot, ByRef latencyAfter As ProcessSnapshot, ByRef downloadBefore As ProcessSnapshot, ByRef downloadAfter As ProcessSnapshot)
+Private Sub WriteResult(ByVal outputPath As String, ByVal baseUrl As String, ByVal implementationName As String, ByVal implementationVersion As String, ByRef durations() As Double, ByVal latencyStatus As Long, ByVal downloadStatus As Long, ByVal actualDownloadBytes As Long, ByVal downloadElapsedMs As Double, ByRef latencyBefore As ProcessSnapshot, ByRef latencyAfter As ProcessSnapshot, ByRef downloadBefore As ProcessSnapshot, ByRef downloadAfter As ProcessSnapshot)
     Dim fileSystem As Object
     Dim output As Object
     Dim totalLatencyMs As Double
@@ -224,7 +249,7 @@ Private Sub WriteResult(ByVal outputPath As String, ByVal baseUrl As String, ByR
     output.WriteLine "{" ' xlflow:disable-line VBA202
     output.WriteLine "  ""schema_version"": 1,"
     output.WriteLine "  ""benchmark"": ""http-client"","
-    output.WriteLine "  ""implementation"": {""name"": ""Raw WinHttpRequest"", ""version"": ""5.1""},"
+    output.WriteLine "  ""implementation"": {""name"": """ & JsonEscape(implementationName) & """, ""version"": """ & JsonEscape(implementationVersion) & """},"
     output.WriteLine "  ""environment"": {""office_bitness"": """ & OfficeBitness() & """, ""excel_version"": """ & JsonEscape(Application.Version) & """, ""platform"": ""Windows""},"
     output.WriteLine "  ""server"": {""base_url"": """ & JsonEscape(baseUrl) & """, ""external_network"": false},"
     output.WriteLine "  ""parameters"": {""warmup_iterations"": " & CStr(warmupIterations) & ", ""latency_iterations"": " & CStr(latencyIterations) & ", ""download_bytes"": " & CStr(downloadBytes) & ", ""timeouts_ms"": {""resolve"": 5000, ""connect"": 5000, ""send"": 30000, ""receive"": 300000}},"

@@ -1,13 +1,26 @@
 [CmdletBinding()]
 param(
-    [string]$OutputPath = "benchmarks/results/raw-winhttp-baseline.json"
+    [string]$OutputPath = "",
+    [ValidateSet("Raw", "VBA-HTTP")]
+    [string]$Implementation = "Raw"
 )
 
 $ErrorActionPreference = "Stop"
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$artifactDirectory = [System.IO.Path]::GetFullPath((Join-Path $projectRoot ".xlflow\raw-benchmark"))
+$implementationKey = if ($Implementation -eq "Raw") { "raw" } else { "vba-http" }
+$macroName = if ($Implementation -eq "Raw") { "RawWinHttpBenchmark.RunRawBaseline" } else { "RawWinHttpBenchmark.RunVbaHttpBaseline" }
+$expectedImplementationName = if ($Implementation -eq "Raw") { "Raw WinHttpRequest" } else { "VBA-HTTP" }
+if ([string]::IsNullOrWhiteSpace($OutputPath)) {
+    $OutputPath = if ($Implementation -eq "Raw") {
+        "benchmarks/results/raw-winhttp-baseline.json"
+    }
+    else {
+        "benchmarks/results/vba-http-buffered.json"
+    }
+}
+$artifactDirectory = [System.IO.Path]::GetFullPath((Join-Path $projectRoot ".xlflow\$implementationKey-benchmark"))
 $executablePath = Join-Path $artifactDirectory "testserver.exe"
-$benchmarkWorkbook = Join-Path $artifactDirectory "Raw-WinHttpRequest-Benchmark.xlsm"
+$benchmarkWorkbook = Join-Path $artifactDirectory "$implementationKey-Benchmark.xlsm"
 $stdoutPath = Join-Path $artifactDirectory "stdout.jsonl"
 $stderrPath = Join-Path $artifactDirectory "stderr.log"
 $resolvedOutput = [System.IO.Path]::GetFullPath((Join-Path $projectRoot $OutputPath))
@@ -26,7 +39,7 @@ try {
     [void](New-Item -ItemType Directory -Path (Split-Path -Parent $resolvedOutput) -Force)
     $statusJson = & xlflow status --json
     if ($LASTEXITCODE -ne 0) {
-        throw "xlflow status failed before the Raw benchmark."
+        throw "xlflow status failed before the $Implementation benchmark."
     }
     $xlflowStatus = $statusJson | Out-String | ConvertFrom-Json
     if ($xlflowStatus.status -ne "ok" -or $xlflowStatus.coordination.recovery_required -or $xlflowStatus.state.src_newer_than_workbook) {
@@ -83,7 +96,7 @@ try {
     $reset.Dispose()
     $resetContent.Dispose()
 
-    $runJson = & xlflow run RawWinHttpBenchmark.RunRawBaseline `
+    $runJson = & xlflow run $macroName `
         --input $benchmarkWorkbook `
         --headless `
         --no-save `
@@ -91,30 +104,30 @@ try {
         --arg "string:$($ready.url)" `
         --arg "string:$stagingOutput"
     if ($LASTEXITCODE -ne 0) {
-        throw "Raw benchmark macro failed with exit code $LASTEXITCODE`: $($runJson | Out-String)"
+        throw "$Implementation benchmark macro failed with exit code $LASTEXITCODE`: $($runJson | Out-String)"
     }
     $runResult = $runJson | Out-String | ConvertFrom-Json
     if ($runResult.status -ne "ok") {
-        throw "Raw benchmark macro returned status '$($runResult.status)'."
+        throw "$Implementation benchmark macro returned status '$($runResult.status)'."
     }
     if (-not (Test-Path -LiteralPath $stagingOutput -PathType Leaf)) {
-        throw "Raw benchmark did not create its result file."
+        throw "$Implementation benchmark did not create its result file."
     }
 
     $result = Get-Content -LiteralPath $stagingOutput -Raw | ConvertFrom-Json
     if ($result.schema_version -ne 1 -or
-        $result.implementation.name -ne "Raw WinHttpRequest" -or
+        $result.implementation.name -ne $expectedImplementationName -or
         $result.server.external_network -ne $false -or
         $result.parameters.download_bytes -lt 104857600 -or
         @($result.results).Count -ne 2) {
-        throw "Raw benchmark result does not satisfy the baseline contract."
+        throw "$Implementation benchmark result does not satisfy the baseline contract."
     }
     $latency = @($result.results | Where-Object scenario -eq "sequential_get")
     $download = @($result.results | Where-Object scenario -eq "buffered_download")
     if ($latency.Count -ne 1 -or $latency[0].status -ne 204 -or
         $download.Count -ne 1 -or $download[0].status -ne 200 -or
         $download[0].bytes -ne 104857600) {
-        throw "Raw benchmark scenarios returned unexpected results."
+        throw "$Implementation benchmark scenarios returned unexpected results."
     }
 
     if (Test-Path -LiteralPath $resolvedOutput -PathType Leaf) {
@@ -125,7 +138,7 @@ try {
         Move-Item -LiteralPath $stagingOutput -Destination $resolvedOutput
     }
 
-    Write-Output "Raw benchmark completed: $resolvedOutput"
+    Write-Output "$Implementation benchmark completed: $resolvedOutput"
 }
 finally {
     if ($null -ne $client -and $null -ne $ready -and $ready.url) {

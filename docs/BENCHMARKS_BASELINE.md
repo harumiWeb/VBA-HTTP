@@ -35,3 +35,18 @@ VBA-Web's sequential latency was 5.09 times the Raw mean in this invocation. Its
 These immediate snapshots are baseline signals, not proof of a persistent leak or precise peak allocation. VBA-Web exposes one timeout value for all request phases; its 300-second setting preserves the Raw receive deadline but differs from Raw's stricter resolve, connect, and send settings.
 
 Authoritative machine-readable values are in `benchmarks/results/raw-winhttp-baseline.json` and `benchmarks/results/vba-web-baseline.json`. Methodology, provenance, setup, and limitations are in `docs/specs/benchmark-methodology.md`.
+
+## Phase 2 buffered VBA-HTTP evidence
+
+The Phase 2 matched run used the same 5 warmups, 50 measured `GET /status/204` requests, timeouts, and 100 MiB payload for Raw WinHttpRequest and VBA-HTTP.
+
+| Implementation | Sequential mean | Requests/s | 100 MiB download | Throughput |
+| --- | ---: | ---: | ---: | ---: |
+| Raw WinHttpRequest 5.1 | 0.499 ms | 2,003.366 | 370.777 ms | 269.704 MiB/s |
+| VBA-HTTP 0.2-dev | 0.833 ms | 1,199.849 | 797.747 ms | 125.353 MiB/s |
+
+VBA-HTTP's sequential mean was 66.934% above Raw, so it does not meet the 15% relative target. The absolute mean difference was 0.334 ms on this loopback host. The measured path includes request snapshotting, URL/default-header processing, stable error mapping, response header/body ownership, and domain-object construction that Raw does not provide. Removing these guarantees to optimize a sub-millisecond loopback case would violate the public contract, so the variance is accepted and recorded for Phase 2.
+
+Before the final implementation, a VBA per-byte defensive-copy loop limited the 100 MiB path to 12.845 MiB/s. Replacing only Byte-array copying with VBA's defensive SAFEARRAY assignment retained the ownership regression test and raised the measured result to 125.353 MiB/s. Buffered bodies still require multiple in-memory copies by contract; constant-memory transfer belongs to the native streaming phases.
+
+The machine-readable comparison is `benchmarks/results/phase2-buffered-overhead.json`; its referenced raw results are the authoritative values for this run.

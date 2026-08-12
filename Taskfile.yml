@@ -78,6 +78,18 @@ tasks:
     cmds:
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Run-RawBenchmark.ps1
 
+  benchmark:vba-http:
+    desc: Measure the buffered VBA-HTTP client on the loopback baseline
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Run-RawBenchmark.ps1 -Implementation VBA-HTTP -OutputPath benchmarks/results/vba-http-buffered.json
+
+  benchmark:phase2:
+    desc: Compare buffered VBA-HTTP with Raw WinHttpRequest under matched conditions
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Run-RawBenchmark.ps1 -Implementation Raw -OutputPath benchmarks/results/phase2-raw-winhttp.json
+      - task: benchmark:vba-http
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Compare-Phase2Benchmark.ps1
+
   benchmark:vba-web:setup:
     desc: Acquire and verify the pinned VBA-Web comparator
     cmds:

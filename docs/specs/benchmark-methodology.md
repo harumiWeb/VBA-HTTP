@@ -23,6 +23,12 @@ Benchmarks compare Raw `WinHttp.WinHttpRequest.5.1`, the pinned VBA-Web comparat
 
 Time is measured with Windows `QueryPerformanceCounter`. Process working set, peak working set, private bytes, and handle count are captured immediately before and after each scenario. These snapshots detect persistent growth but are not a substitute for sampling peak transient allocation.
 
+## Phase 2 comparison
+
+`task benchmark:phase2` runs Raw WinHttpRequest and VBA-HTTP from synchronized copies of the same development workbook, against fresh instances of the same loopback server, within one top-level task invocation. Both paths use the Phase 0 parameters above. The Raw path and VBA-HTTP path share the measurement, JSON serialization, and process-snapshot code; only the HTTP invocation differs.
+
+`benchmarks/results/phase2-buffered-overhead.json` follows `benchmarks/schema/benchmark-comparison.schema.json`, compares sequential GET mean latency, and records the 15% engineering target. Exceeding the target does not make the evidence disappear: the comparison records `within_target: false`, and the human baseline must explain the absolute difference and the cost of the documented ownership/API guarantees. The comparison is a local engineering result, not a universal performance claim.
+
 ## VBA-Web comparator provenance and isolation
 
 - Upstream: `https://github.com/VBA-tools/VBA-Web.git`
@@ -37,6 +43,7 @@ Time is measured with Windows `QueryPerformanceCounter`. Process working set, pe
 
 - Schema: `benchmarks/schema/benchmark-result.schema.json`
 - Current machine-readable baselines: `benchmarks/results/raw-winhttp-baseline.json` and `benchmarks/results/vba-web-baseline.json`
+- Phase 2 evidence: `benchmarks/results/phase2-raw-winhttp.json`, `vba-http-buffered.json`, and `phase2-buffered-overhead.json`
 - Human summary: `docs/BENCHMARKS_BASELINE.md`
 
 Result JSON uses schema version 1. Decimal numbers must use a period regardless of Windows locale. Each run writes and validates a same-directory staging file before atomic replacement, so failure preserves the previous baseline. The xlflow structured error and test-server stderr are the diagnostic evidence for failed runs. Run `task benchmark:phase0` to refresh both implementations in one top-level invocation.

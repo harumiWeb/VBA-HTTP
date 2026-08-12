@@ -163,6 +163,11 @@ Public Function CopyBytes(ByVal value As Variant) As Variant
         CopyBytes = Array()
         Exit Function
     End If
+    If VarType(value) = (vbArray Or vbByte) Then
+        ' Variant assignment performs a defensive SAFEARRAY copy without a VBA per-byte loop.
+        CopyBytes = value
+        Exit Function
+    End If
     ' HasByteArray proved that the Variant contains an allocated array.
     ReDim output(0 To UBound(value) - LBound(value))
     For sourceIndex = LBound(value) To UBound(value) ' xlflow:disable-line VBA227

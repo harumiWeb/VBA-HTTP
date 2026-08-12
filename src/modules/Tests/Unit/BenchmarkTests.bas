@@ -10,3 +10,8 @@ End Sub
 Public Sub Test_RawBenchmark_RejectsInvalidLoopbackPort()
     RawWinHttpBenchmark.RunRawBaseline "http://127.0.0.1:70000", "unused.json"
 End Sub
+
+'@ExpectedError(5, "baseUrl must use the local test server", "RawWinHttpBenchmark.RunVbaHttpBaseline")
+Public Sub Test_VbaHttpBenchmark_RejectsExternalNetwork()
+    RawWinHttpBenchmark.RunVbaHttpBaseline "https://example.com", "unused.json"
+End Sub

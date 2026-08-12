@@ -17,6 +17,7 @@
     "Sheet1",
     "ThisWorkbook",
     "Ui",
+    "VBAHttp",
     "WinHttpComTransport"
   ],
   "excluded": [
@@ -37,6 +38,7 @@
     "XlflowDebug",
     "XlflowRuntime",
     "XlflowUI",
+    "VBAHttpTests",
     "WinHttpComTransportTests"
   ]
 }

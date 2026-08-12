@@ -4,22 +4,20 @@ VBA-HTTP is a Windows Excel/VBA HTTP client designed for deterministic testing, 
 
 ## Development status
 
-Phase 1 establishes the network-independent domain model and transport contract. The public `HttpClient`, request/response, headers, query, timeout, body, encoding, and error components are implemented. A real network backend arrives in Phase 2; until then, execution requires an injected `IHttpTransport` implementation.
+Phase 2 provides a synchronous buffered HTTP client backed by late-bound `WinHttp.WinHttpRequest.5.1`. The public `HttpClient`, request/response, headers, query, timeout, body, encoding, and stable error components are implemented without requiring a WinHTTP type-library reference.
 
 ```vb
-Dim client As New HttpClient
+Dim client As HttpClient
 Dim request As New HttpRequest
 Dim response As HttpResponse
-Dim transport As IHttpTransport
+
+Set client = VBAHttp.CreateClient()
 
 request.Method = "GET"
 request.Url = "https://example.com/api"
 request.Query.Add "page", 1
 request.Headers.SetValue "Accept", "application/json"
 
-' CreateMyTransport is the consumer's IHttpTransport implementation in Phase 1.
-Set transport = CreateMyTransport()
-Set client.Transport = transport
 Set response = client.Execute(request)
 
 If response.IsSuccess Then
@@ -30,6 +28,8 @@ End If
 ```
 
 The convenience methods are named `GetResponse`, `PostResponse`, `PutResponse`, `PatchResponse`, and `DeleteResponse` because the corresponding bare HTTP verbs conflict with VBA language tokens.
+
+Use `VBAHttp.CreateClient()` when referencing the distributed workbook from another VBA project because VBA class modules are `PublicNotCreatable`. Source-vendored consumers may use `New HttpClient`. The default transport can still be replaced through `HttpClient.Transport` for tests or custom backends.
 
 ## Contributor verification
 

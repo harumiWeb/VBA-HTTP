@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vba-http.local/schemas/benchmark-comparison.schema.json",
+  "title": "VBA-HTTP benchmark comparison",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "benchmark",
+    "baseline",
+    "candidate",
+    "metric",
+    "ratio",
+    "overhead_percent",
+    "target_max_percent",
+    "within_target",
+    "conditions"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "benchmark": { "const": "phase2-buffered-com-overhead" },
+    "baseline": { "$ref": "#/$defs/implementationResult" },
+    "candidate": { "$ref": "#/$defs/implementationResult" },
+    "metric": { "const": "sequential_get_mean_ms" },
+    "ratio": { "type": "number", "exclusiveMinimum": 0 },
+    "overhead_percent": { "type": "number" },
+    "target_max_percent": { "type": "number", "minimum": 0 },
+    "within_target": { "type": "boolean" },
+    "conditions": {
+      "type": "object",
+      "required": ["office_bitness", "excel_version", "platform", "warmup_iterations", "latency_iterations", "endpoint", "external_network"],
+      "properties": {
+        "office_bitness": { "enum": ["x86", "x64"] },
+        "excel_version": { "type": "string", "minLength": 1 },
+        "platform": { "const": "Windows" },
+        "warmup_iterations": { "type": "integer", "minimum": 0 },
+        "latency_iterations": { "type": "integer", "minimum": 1 },
+        "endpoint": { "const": "/status/204" },
+        "external_network": { "const": false }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "implementationResult": {
+      "type": "object",
+      "required": ["implementation", "result_file", "mean_ms"],
+      "properties": {
+        "implementation": { "type": "string", "minLength": 1 },
+        "result_file": { "type": "string", "pattern": "^[^/\\\\]+\\.json$" },
+        "mean_ms": { "type": "number", "exclusiveMinimum": 0 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

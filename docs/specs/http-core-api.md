@@ -6,6 +6,8 @@ The public VBA component names, public procedure names, parameter order, enum va
 
 All public objects are late-bindable from consumers except VBA class interfaces used with `Implements`. The core has no dependency on `Scripting.Dictionary` or another external VBA reference.
 
+Workbook-reference consumers cannot directly instantiate VBA classes marked `PublicNotCreatable`. `VBAHttp.CreateClient()` is the stable factory boundary and returns a new `HttpClient` with the default transport. Source-vendored consumers may continue to use `New HttpClient`.
+
 ## Synchronous API
 
 ```vb

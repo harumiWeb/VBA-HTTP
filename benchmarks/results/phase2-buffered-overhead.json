@@ -1,0 +1,28 @@
+{
+    "schema_version":  1,
+    "benchmark":  "phase2-buffered-com-overhead",
+    "baseline":  {
+                     "implementation":  "Raw WinHttpRequest",
+                     "result_file":  "phase2-raw-winhttp.json",
+                     "mean_ms":  0.499
+                 },
+    "candidate":  {
+                      "implementation":  "VBA-HTTP",
+                      "result_file":  "vba-http-buffered.json",
+                      "mean_ms":  0.833
+                  },
+    "metric":  "sequential_get_mean_ms",
+    "ratio":  1.669,
+    "overhead_percent":  66.934,
+    "target_max_percent":  15,
+    "within_target":  false,
+    "conditions":  {
+                       "office_bitness":  "x64",
+                       "excel_version":  "16.0",
+                       "platform":  "Windows",
+                       "warmup_iterations":  5,
+                       "latency_iterations":  50,
+                       "endpoint":  "/status/204",
+                       "external_network":  false
+                   }
+}

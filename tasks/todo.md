@@ -268,22 +268,22 @@ dependency-freeで扱いやすい基本HTTP機能をWinHTTP COM transportで提�
 
 ### Todo
 
-- [ ] late-bound `WinHttp.WinHttpRequest.5.1` transportを実装する。
-- [ ] GET、POST、PUT、PATCH、DELETEを実装する。
-- [ ] request headers、query、text body、binary bodyを実装する。
-- [ ] resolve、connect、send、receive timeoutを適用する。
-- [ ] 基本redirect policyを実装する。
-- [ ] status、headers、text／binary response bodyを取得する。
-- [ ] COM／WinHTTP failureを統一error modelへ変換する。
-- [ ] local server integration testを追加する。
-- [ ] Raw WinHttpRequestに対するlibrary overheadを測定する。
+- [x] late-bound `WinHttp.WinHttpRequest.5.1` transportを実装する。
+- [x] GET、POST、PUT、PATCH、DELETEを実装する。
+- [x] request headers、query、text body、binary bodyを実装する。
+- [x] resolve、connect、send、receive timeoutを適用する。
+- [x] 基本redirect policyを実装する。
+- [x] status、headers、text／binary response bodyを取得する。
+- [x] COM／WinHTTP failureを統一error modelへ変換する。
+- [x] local server integration testを追加する。
+- [x] Raw WinHttpRequestに対するlibrary overheadを測定する。
 
 ### Exit Criteria
 
-- [ ] 基本HTTP操作がlocal serverで成功する。
-- [ ] transport failureが統一error modelへ変換される。
-- [ ] 小規模requestのoverheadがbaseline比15%以内、または差異の根拠が記録されている。
-- [ ] built artifactを使うconsumer GET smoke testが成功する。
+- [x] 基本HTTP操作がlocal serverで成功する。
+- [x] transport failureが統一error modelへ変換される。
+- [x] 小規模requestのoverheadがbaseline比15%以内、または差異の根拠が記録されている。
+- [x] built artifactを使うconsumer GET smoke testが成功する。
 
 ---
 

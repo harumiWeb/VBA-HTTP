@@ -98,4 +98,98 @@ if ($runResult.status -ne "ok" -or $runResult.macro.name -ne "Main.Run") {
     throw "Release consumer smoke returned an unexpected result."
 }
 
-Write-Output "Release artifact is valid: $($actualComponents.Count) components; Main.Run passed."
+$smokeDirectory = [IO.Path]::GetFullPath((Join-Path $projectRoot ".xlflow\release-consumer-smoke"))
+$serverExecutable = Join-Path $smokeDirectory "testserver.exe"
+$serverStdout = Join-Path $smokeDirectory "stdout.jsonl"
+$serverStderr = Join-Path $smokeDirectory "stderr.log"
+$serverProcess = $null
+$consumerExcel = $null
+$consumerWorkbooks = $null
+$consumerWorkbook = $null
+$client = $null
+$response = $null
+$ready = $null
+try {
+    [void](New-Item -ItemType Directory -Path $smokeDirectory -Force)
+    Push-Location (Join-Path $projectRoot "tools\testserver")
+    try {
+        & go build -o $serverExecutable .
+        if ($LASTEXITCODE -ne 0) { throw "Release smoke test-server build failed with exit code $LASTEXITCODE." }
+    }
+    finally {
+        Pop-Location
+    }
+
+    $serverProcess = Start-Process `
+        -FilePath $serverExecutable `
+        -ArgumentList "-listen", "127.0.0.1:0" `
+        -RedirectStandardOutput $serverStdout `
+        -RedirectStandardError $serverStderr `
+        -WindowStyle Hidden `
+        -PassThru
+    $deadline = [DateTime]::UtcNow.AddSeconds(10)
+    while ([DateTime]::UtcNow -lt $deadline) {
+        if ($serverProcess.HasExited) {
+            $stderr = if (Test-Path -LiteralPath $serverStderr) { Get-Content -LiteralPath $serverStderr -Raw } else { "" }
+            throw "Release smoke test server exited before readiness: $stderr"
+        }
+        if (Test-Path -LiteralPath $serverStdout) {
+            $line = Get-Content -LiteralPath $serverStdout -TotalCount 1
+            if ($line) {
+                $ready = $line | ConvertFrom-Json
+                break
+            }
+        }
+        Start-Sleep -Milliseconds 50
+    }
+    if ($null -eq $ready -or $ready.event -ne "ready" -or -not $ready.url) {
+        throw "Release smoke test server did not publish readiness."
+    }
+
+    $consumerExcel = New-Object -ComObject Excel.Application
+    $consumerExcel.Visible = $false
+    $consumerExcel.DisplayAlerts = $false
+    $consumerExcel.EnableEvents = $false
+    $consumerExcel.AutomationSecurity = 1
+    $consumerWorkbooks = $consumerExcel.Workbooks
+    $consumerWorkbook = $consumerWorkbooks.Open($resolvedArtifact, 0, $true)
+    $factoryMacro = "'$($consumerWorkbook.Name)'!VBAHttp.CreateClient"
+    $client = $consumerExcel.Run($factoryMacro)
+    if ($null -eq $client) { throw "Release factory returned no HttpClient." }
+    $client.BaseUrl = [string]$ready.url
+    $response = $client.GetResponse("/status/204")
+    if ($null -eq $response -or $response.StatusCode -ne 204 -or -not $response.IsSuccess) {
+        throw "Release HttpClient GET returned an unexpected response."
+    }
+}
+finally {
+    if ($null -ne $response -and [Runtime.InteropServices.Marshal]::IsComObject($response)) {
+        [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($response)
+    }
+    if ($null -ne $client -and [Runtime.InteropServices.Marshal]::IsComObject($client)) {
+        [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($client)
+    }
+    if ($null -ne $consumerWorkbook) {
+        try { $consumerWorkbook.Close($false) } catch { Write-Warning "Could not close consumer smoke workbook: $_" }
+        [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($consumerWorkbook)
+    }
+    if ($null -ne $consumerWorkbooks) { [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($consumerWorkbooks) }
+    if ($null -ne $consumerExcel) {
+        try { $consumerExcel.Quit() } catch { Write-Warning "Could not quit consumer smoke Excel: $_" }
+        [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($consumerExcel)
+    }
+    if ($null -ne $ready -and $ready.url) {
+        try { Invoke-WebRequest -Method Post -Uri "$($ready.url)/__admin/shutdown" -UseBasicParsing | Out-Null } catch { Write-Warning "Could not request smoke server shutdown: $_" }
+    }
+    if ($null -ne $serverProcess -and -not $serverProcess.HasExited) {
+        if (-not $serverProcess.WaitForExit(5000)) { Stop-Process -Id $serverProcess.Id -Force }
+    }
+    if ($null -ne $serverProcess) { $serverProcess.Dispose() }
+    $resolvedXlflowRoot = [IO.Path]::GetFullPath((Join-Path $projectRoot ".xlflow"))
+    if ($smokeDirectory.StartsWith($resolvedXlflowRoot + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -and
+        (Test-Path -LiteralPath $smokeDirectory)) {
+        Remove-Item -LiteralPath $smokeDirectory -Recurse -Force
+    }
+}
+
+Write-Output "Release artifact is valid: $($actualComponents.Count) components; Main.Run and external HttpClient GET passed."
