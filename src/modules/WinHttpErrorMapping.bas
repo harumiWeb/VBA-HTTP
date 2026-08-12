@@ -15,7 +15,7 @@ Public Function CategoryFromCode(ByVal code As Long) As HttpErrorCategory
         CategoryFromCode = HttpErrorTimeout
     Case 12017
         CategoryFromCode = HttpErrorCancelled
-    Case 12150, 12152, 12154, 12155, 12156
+    Case 12150, 12152, 12154, 12155, 12156, 12190
         CategoryFromCode = HttpErrorProtocol
     Case Else
         CategoryFromCode = HttpErrorIo

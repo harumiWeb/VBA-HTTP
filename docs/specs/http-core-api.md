@@ -23,6 +23,10 @@ Debug.Print response.Text
 
 `HttpResponse.ProtocolUsed` reports the native backend's negotiated protocol as
 `HTTP/1.1`, `HTTP/2`, or `HTTP/3`. The COM backend leaves this property empty.
+`HttpProtocolOptions` can be assigned to `HttpClient` or `HttpRequest` for
+native-only HTTP/2/HTTP/3 opt-in; its default has no override. The complete
+fallback, required-mode, and compatibility contract is in
+`protocol-policy.md`.
 
 `HttpClient.BaseUrl` resolves a relative request URL. An absolute request URL is used as-is. Base and relative URL joining must not discard path segments accidentally and is covered by URL unit tests before network transports are enabled.
 

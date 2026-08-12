@@ -5,7 +5,9 @@ Public Const WinHttpAccessTypeDefaultProxy As Long = 0
 Public Const WinHttpFlagSecure As Long = &H800000
 Public Const WinHttpOptionRedirectPolicy As Long = 88
 Public Const WinHttpOptionMaxAutomaticRedirects As Long = 89
+Public Const WinHttpOptionEnableHttpProtocol As Long = 133
 Public Const WinHttpOptionHttpProtocolUsed As Long = 134
+Public Const WinHttpOptionHttpProtocolRequired As Long = 145
 Public Const WinHttpProtocolFlagHttp2 As Long = 1
 Public Const WinHttpProtocolFlagHttp3 As Long = 2
 Public Const WinHttpQueryStatusCode As Long = 19
@@ -16,7 +18,7 @@ Public Const WinHttpAddRequestHeader As Long = &H20000000
 Public Const WinHttpErrorInsufficientBuffer As Long = 122
 Public Const WinHttpErrorHeaderNotFound As Long = 12150
 Public Const WinHttpErrorInvalidOption As Long = 12009
-Public Const WinHttpIgnoreRequestTotalLength As Long = -1
+Public Const WinHttpIgnoreRequestTotalLength As Long = 0
 
 #If VBA7 Then
 Private Declare PtrSafe Function WinHttpOpen Lib "winhttp.dll" (ByVal pwszUserAgent As LongPtr, ByVal dwAccessType As Long, ByVal pwszProxyName As LongPtr, ByVal pwszProxyBypass As LongPtr, ByVal dwFlags As Long) As LongPtr
@@ -109,12 +111,7 @@ End Function
 Public Function BeginUpload(ByVal HandleValue As LongPtr, ByVal TotalLength As Currency) As Boolean
     Dim totalLength32 As Long
 
-    If TotalLength < 0 Then HttpErrors.RaiseValidation "WinHttpNativeApi.BeginUpload", "Upload content length cannot be negative."
-    If TotalLength > 2147483647# Then
-        totalLength32 = WinHttpIgnoreRequestTotalLength
-    Else
-        totalLength32 = CLng(TotalLength)
-    End If
+    totalLength32 = EncodeUploadTotalLength(TotalLength)
     BeginUpload = (WinHttpSendRequest(HandleValue, 0, 0, 0, 0, totalLength32, 0) <> 0)
 End Function
 
@@ -234,12 +231,7 @@ End Function
 Public Function BeginUpload(ByVal HandleValue As Long, ByVal TotalLength As Currency) As Boolean
     Dim totalLength32 As Long
 
-    If TotalLength < 0 Then HttpErrors.RaiseValidation "WinHttpNativeApi.BeginUpload", "Upload content length cannot be negative."
-    If TotalLength > 2147483647# Then
-        totalLength32 = WinHttpIgnoreRequestTotalLength
-    Else
-        totalLength32 = CLng(TotalLength)
-    End If
+    totalLength32 = EncodeUploadTotalLength(TotalLength)
     BeginUpload = (WinHttpSendRequest(HandleValue, 0, 0, 0, 0, totalLength32, 0) <> 0)
 End Function
 
@@ -309,6 +301,17 @@ Public Sub CopyByteRange(ByRef Destination() As Byte, ByVal DestinationOffset As
     CopyMemory Destination(DestinationOffset), Source(0), ByteCount
 End Sub
 #End If
+
+Public Function EncodeUploadTotalLength(ByVal TotalLength As Currency) As Long
+    If TotalLength < 0 Then HttpErrors.RaiseValidation "WinHttpNativeApi.EncodeUploadTotalLength", "Upload content length cannot be negative."
+    If TotalLength >= 4294967296# Then
+        EncodeUploadTotalLength = WinHttpIgnoreRequestTotalLength
+    ElseIf TotalLength <= 2147483647# Then
+        EncodeUploadTotalLength = CLng(TotalLength)
+    Else
+        EncodeUploadTotalLength = CLng(TotalLength - 4294967296#)
+    End If
+End Function
 
 Public Function LastErrorCode() As Long
     LastErrorCode = Err.LastDllError

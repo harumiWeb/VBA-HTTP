@@ -2,8 +2,9 @@
 
 ## Scope
 
-`WinHttpNativeTransport` is the Phase 5 buffered native backend. It is
-Windows-only, late-bound to `winhttp.dll`, and implements `IHttpTransport`.
+`WinHttpNativeTransport` is the native backend for buffered and streaming
+operations. It is Windows-only, late-bound to `winhttp.dll`, and implements
+`IHttpTransport`.
 The default `HttpClient` transport remains `WinHttpComTransport`; consumers
 select the native backend explicitly by assigning it to `HttpClient.Transport`.
 
@@ -15,8 +16,9 @@ For every request the transport performs this sequence on the VBA thread:
    path (fragments are not sent);
 2. open a WinHTTP session using the default OS proxy configuration;
 3. connect to the host and open a request handle;
-4. apply timeout and redirect options and add validated request headers;
-5. send the buffered body with its exact byte count;
+4. apply timeout and redirect options and the optional native protocol policy;
+5. add validated request headers, then send the buffered or streaming body with
+   its exact byte count;
 6. receive the response, query status and raw CRLF headers, and read all body
    chunks using `WinHttpQueryDataAvailable`/`WinHttpReadData`;
 7. query `WINHTTP_OPTION_HTTP_PROTOCOL_USED` when supported and close all
@@ -55,9 +57,14 @@ evidence.
   by the shared WinHTTP error classifier to the ADR-0003 categories; raw URLs,
   headers, credentials, and response data never enter descriptions.
 - TLS uses OS certificate validation. No certificate-ignore flag is exposed.
-- Protocol flags are queried opportunistically. `HTTP/2` and `HTTP/3` are
-  reported when WinHTTP returns the corresponding flag; otherwise the response
-  reports the negotiated legacy protocol as `HTTP/1.1`.
+- Protocol flags are queried opportunistically. `HttpProtocolOptions` can
+  enable HTTP/2/3 and can require the selected mask; allow-fallback treats an
+  unsupported native option as a capability miss, while required mode maps
+  unsupported options and protocol mismatch to `HttpErrorProtocol`. `HTTP/2`
+  and `HTTP/3` are reported only when WinHTTP returns the corresponding flag;
+  otherwise the response reports the negotiated legacy protocol as `HTTP/1.1`.
+- Advanced protocol flags are applied only to HTTPS URLs. The default has no
+  override, and plain HTTP fallback remains HTTP/1.1.
 
 ## Resource regression gate
 

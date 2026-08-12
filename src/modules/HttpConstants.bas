@@ -26,3 +26,14 @@ Public Enum HttpBatchItemStatus
     HttpBatchFailed = 2
     HttpBatchCancelled = 3
 End Enum
+
+Public Enum HttpProtocolFlag
+    HttpProtocolHttp11 = 0
+    HttpProtocolHttp2 = 1
+    HttpProtocolHttp3 = 2
+End Enum
+
+Public Enum HttpProtocolMode
+    HttpProtocolAllowFallback = 0
+    HttpProtocolRequired = 1
+End Enum

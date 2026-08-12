@@ -46,6 +46,7 @@ Private Function ExecuteCore(ByVal Request As HttpRequest) As HttpResponse
     If Request Is Nothing Then
         HttpErrors.RaiseValidation TransportSource, "Request cannot be Nothing."
     End If
+    ValidateProtocolOptions Request
 
     Set backend = CreateObject("WinHttp.WinHttpRequest.5.1")
     backend.SetTimeouts Request.Timeouts.ResolveMilliseconds, Request.Timeouts.ConnectMilliseconds, Request.Timeouts.SendMilliseconds, Request.Timeouts.ReceiveMilliseconds
@@ -90,6 +91,7 @@ Private Function ExecuteAttemptCore(ByVal Request As HttpRequest, ByVal Options 
     On Error GoTo AttemptFailed
     If Request Is Nothing Then HttpErrors.RaiseValidation TransportSource, "Request cannot be Nothing."
     If Options Is Nothing Then HttpErrors.RaiseValidation TransportSource, "Attempt options cannot be Nothing."
+    ValidateProtocolOptions Request
     If AttemptCancellationRequested(Options) Then Err.Raise HttpErrCancelled, TransportSource, "HTTP operation was cancelled."
 
     Set operation = CreateAsyncOperation(Request, 1, Options.DeadlineMilliseconds)
@@ -420,6 +422,7 @@ Private Function CreateAsyncOperation(ByVal Request As HttpRequest, ByVal itemIn
     Dim errorDescription As String
 
     On Error GoTo TransportFailure
+    ValidateProtocolOptions Request
     Set backend = CreateObject("WinHttp.WinHttpRequest.5.1")
     backend.SetTimeouts Request.Timeouts.ResolveMilliseconds, Request.Timeouts.ConnectMilliseconds, Request.Timeouts.SendMilliseconds, Request.Timeouts.ReceiveMilliseconds
     backend.Option(WinHttpOptionEnableRedirects) = Request.FollowRedirects
@@ -440,6 +443,15 @@ TransportFailure:
     RaiseCapturedTransportFailure errorNumber, errorSource, errorDescription
     Err.Raise errorNumber, errorSource, errorDescription
 End Function
+
+Private Sub ValidateProtocolOptions(ByVal Request As HttpRequest)
+    If Request Is Nothing Then Exit Sub
+    If Request.ProtocolOptions Is Nothing Then Exit Sub
+    Request.ProtocolOptions.Validate
+    If Request.ProtocolOptions.HasOverride Then
+        HttpErrors.RaiseValidation TransportSource, "HTTP/2 and HTTP/3 protocol options require the native WinHTTP transport."
+    End If
+End Sub
 
 Private Function PollAsyncOperation(ByVal operation As WinHttpComOperation) As Boolean
     Dim errorNumber As Long

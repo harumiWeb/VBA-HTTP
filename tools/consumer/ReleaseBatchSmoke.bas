@@ -51,6 +51,25 @@ Public Sub RunReliabilitySmoke(ByVal releaseWorkbookName As String, ByVal baseUr
     End If
 End Sub
 
+Public Sub RunProtocolSmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As String)
+    Dim client As Object
+    Dim protocols As Object
+    Dim response As Object
+
+    Set client = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateNativeClient")
+    Set protocols = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateProtocolOptions")
+    protocols.AllowHttp2 = True
+    protocols.AllowHttp3 = True
+    protocols.Mode = 0
+    Set client.ProtocolOptions = protocols
+    client.BaseUrl = baseUrl
+
+    Set response = client.GetResponse("/status/204")
+    If response.StatusCode <> 204 Or Not response.IsSuccess Or response.ProtocolUsed <> "HTTP/1.1" Then
+        Err.Raise vbObjectError + 747, "ReleaseBatchSmoke.RunProtocolSmoke", "Release protocol fallback smoke returned an unexpected result."
+    End If
+End Sub
+
 Public Sub RunUploadSmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As String, ByVal sourcePath As String)
     Dim client As Object
     Dim form As Object

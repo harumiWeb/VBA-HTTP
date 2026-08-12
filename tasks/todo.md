@@ -439,24 +439,24 @@ OSが提供するmodern WinHTTP capabilityとcorporate environment対応を安�
 
 ### Todo
 
-- [ ] protocol enable／fallback／required modeをspec化する。
-- [ ] HTTP/2 opt-inとnegotiated protocol取得を実装する。
-- [ ] 対応OSでHTTP/3 opt-inを実装する。
-- [ ] unsupported optionの明確なfallback／errorを実装する。
+- [x] protocol enable／fallback／required modeをADR-0009と`docs/specs/protocol-policy.md`で確定する。
+- [x] native HTTP/2 opt-inと`HttpResponse.ProtocolUsed`によるnegotiated protocol取得を実装する。
+- [~] HTTP/3 opt-inのWinHTTP flagとvalidationを実装する（TLS/QUIC host evidenceはcompatibility matrix待ち）。
+- [x] unsupported option、plain HTTP、required mismatchのfallback／`HttpErrorProtocol`を実装する。
 - [ ] gzip／deflate decompressionを実装する。
 - [ ] OS default proxyとmanual proxyを実装する。
 - [ ] Basic、Bearer、Windows authenticationを実装する。
 - [ ] `IHttpAuthProvider` を実装する。
 - [ ] credential／secret redactionを実装する。
-- [ ] OS version／Office bitness compatibility matrixを作成する。
+- [~] OS version／Office bitness compatibility matrixを作成する（protocol host evidenceと32-bit実測は未完了）。
 
 ### Exit Criteria
 
-- [ ] HTTP/1.1、HTTP/2、対応環境のHTTP/3を識別できる。
-- [ ] unsupported環境のfallback／errorがspec通りである。
+- [~] HTTP/1.1、HTTP/2、対応環境のHTTP/3を識別できる（HTTP/1.1 fallbackとrequested-mask contractは検証済み、TLS/QUIC実測は未完了）。
+- [x] unsupported環境のfallback／errorがspec通りである。
 - [ ] proxy／authenticationのlocal integration testsが成功する。
 - [ ] secretがdiagnosticsやbenchmark outputへ出ない。
-- [ ] release artifactでprotocol／auth consumer smoke testが成功する。
+- [~] release artifactでprotocol／auth consumer smoke testが成功する（protocol fallback smokeは追加、authは未実装）。
 
 ---
 
@@ -556,7 +556,8 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 - [x] error分類とVBA error／result objectの境界
 - [ ] retry、deadline、redirect、cancellationの優先順位
 - [x] native handle lifecycleとnative callback禁止
-- [ ] protocol fallbackとOS compatibility
+- [x] protocol fallback policy（ADR-0009、`docs/specs/protocol-policy.md`）
+- [~] OS compatibility evidence（matrixを追加、TLS/HTTP2/3と32-bit実測は未完了）
 - [ ] diagnostics schemaとsecret redaction
 - [x] development-only componentへのproduction依存禁止
 - [x] development workbook、release workbook、source distributionの責務

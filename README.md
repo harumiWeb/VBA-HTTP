@@ -4,7 +4,7 @@ VBA-HTTP is a Windows Excel/VBA HTTP client designed for deterministic testing, 
 
 ## Development status
 
-Phase 6 adds constant-memory downloads and Phase 7 adds file/multipart uploads on the synchronous native WinHTTP backend. The default remains the late-bound `WinHttp.WinHttpRequest.5.1` transport; the native backend provides pointer-safe handles, negotiated protocol reporting, and bounded file streaming without a WinHTTP type-library reference.
+Phase 6 adds constant-memory downloads and Phase 7 adds file/multipart uploads on the synchronous native WinHTTP backend. Phase 8 adds an explicit native-only HTTP/2/HTTP/3 negotiation policy with deterministic fallback. The default remains the late-bound `WinHttp.WinHttpRequest.5.1` transport; the native backend provides pointer-safe handles, negotiated protocol reporting, and bounded file streaming without a WinHTTP type-library reference.
 
 ```vb
 Dim client As HttpClient
@@ -56,6 +56,28 @@ Set nativeClient = VBAHttp.CreateNativeClient()
 Set nativeResponse = nativeClient.GetResponse("https://example.com/api")
 Debug.Print nativeResponse.ProtocolUsed
 ```
+
+Modern protocol flags are opt-in on the native backend. The default leaves the
+OS/WinHTTP negotiation policy unchanged; allow-fallback mode is suitable when
+HTTP/1.1 remains acceptable:
+
+```vb
+Dim protocols As HttpProtocolOptions
+
+Set protocols = VBAHttp.CreateProtocolOptions()
+protocols.AllowHttp2 = True
+protocols.AllowHttp3 = True
+protocols.Mode = HttpProtocolAllowFallback
+Set nativeClient.ProtocolOptions = protocols
+Set nativeResponse = nativeClient.GetResponse("https://example.com/api")
+Debug.Print nativeResponse.ProtocolUsed
+```
+
+Required mode is strict and requires HTTPS; unsupported capabilities raise the
+stable `HttpErrorProtocol` category. The COM transport rejects advanced
+protocol flags because its late-bound option surface has no HTTP/2/HTTP/3
+control. See [`docs/specs/protocol-policy.md`](docs/specs/protocol-policy.md)
+for the compatibility and evidence rules.
 
 The native transport uses synchronous WinHTTP calls, OS certificate validation, and deterministic handle cleanup. Buffered native requests still reject active cancellation and total-deadline options because a blocking call cannot observe them; streaming downloads support cooperative cancellation and total-deadline checkpoints between bounded reads.
 

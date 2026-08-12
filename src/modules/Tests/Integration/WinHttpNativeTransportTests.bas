@@ -23,6 +23,48 @@ Public Sub Test_NativeTransport_GetMatchesComContract()
 End Sub
 
 '@Tag("integration")
+Public Sub Test_NativeTransport_ProtocolOptionsFallbackOnPlainHttp()
+    Dim client As New HttpClient
+    Dim options As New HttpProtocolOptions
+    Dim response As HttpResponse
+
+    client.BaseUrl = RequireBaseUrl()
+    options.AllowHttp2 = True
+    options.AllowHttp3 = True
+    options.Mode = HttpProtocolAllowFallback
+    Set client.ProtocolOptions = options
+    Set client.Transport = New WinHttpNativeTransport
+
+    Set response = client.GetResponse("/status/204")
+
+    XlflowAssert.AssertEquals 204, response.StatusCode
+    XlflowAssert.AssertEquals "HTTP/1.1", response.ProtocolUsed
+End Sub
+
+'@Tag("integration")
+Public Sub Test_NativeTransport_RequiredProtocolRejectsPlainHttp()
+    Dim client As New HttpClient
+    Dim options As New HttpProtocolOptions
+    Dim observedNumber As Long
+
+    client.BaseUrl = RequireBaseUrl()
+    options.AllowHttp2 = True
+    options.Mode = HttpProtocolRequired
+    Set client.ProtocolOptions = options
+    Set client.Transport = New WinHttpNativeTransport
+
+    On Error GoTo ExpectedFailure
+    Call client.GetResponse("/status/204")
+    XlflowAssert.AssertTrue False, "Required HTTP/2 over plain HTTP should fail."
+    Exit Sub
+
+    ExpectedFailure: ' xlflow:disable-line VBA237
+    observedNumber = Err.Number
+    Err.Clear
+    XlflowAssert.AssertEquals HttpErrorProtocol, HttpErrors.CategoryFromNumber(observedNumber)
+End Sub
+
+'@Tag("integration")
 Public Sub Test_NativeTransport_SendsBufferedMethods()
     AssertTextEcho "POST"
     AssertTextEcho "PUT"

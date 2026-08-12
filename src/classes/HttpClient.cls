@@ -15,6 +15,7 @@ Private mTransport As IHttpTransport
 Private mExecuting As Boolean
 Private mRetryPolicy As HttpRetryPolicy
 Private mReliabilityRuntime As IHttpReliabilityRuntime
+Private mProtocolOptions As New HttpProtocolOptions
 
 Public Property Get BaseUrl() As String
     BaseUrl = mBaseUrl
@@ -48,6 +49,19 @@ End Property
 Public Property Set RetryPolicy(ByVal value As HttpRetryPolicy)
     If value Is Nothing Then HttpErrors.RaiseValidation "HttpClient.RetryPolicy", "Retry policy cannot be Nothing."
     Set mRetryPolicy = value.Clone()
+End Property
+
+Public Property Get ProtocolOptions() As HttpProtocolOptions
+    Set ProtocolOptions = mProtocolOptions
+End Property
+
+Public Property Set ProtocolOptions(ByVal value As HttpProtocolOptions)
+    If value Is Nothing Then
+        Set mProtocolOptions = New HttpProtocolOptions
+    Else
+        value.Validate
+        Set mProtocolOptions = value.Clone()
+    End If
 End Property
 
 Friend Property Set ReliabilityRuntime(ByVal value As IHttpReliabilityRuntime)
@@ -311,6 +325,7 @@ Private Function PrepareRequest(ByVal Request As HttpRequest) As HttpRequest
     If Request Is Nothing Then HttpErrors.RaiseValidation "HttpClient.Execute", "Request cannot be Nothing."
     Set snapshot = Request.Clone()
     snapshot.Url = ResolveUrl(snapshot.Url)
+    If snapshot.ProtocolOptions Is Nothing Then Set snapshot.ProtocolOptions = mProtocolOptions
     ApplyQuery snapshot
     ApplyDefaultHeaders snapshot
     Set PrepareRequest = snapshot

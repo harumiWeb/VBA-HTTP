@@ -97,6 +97,24 @@ Public Sub Test_Client_ConvenienceMethodsSetMethodAndBody()
     XlflowAssert.AssertEquals "payload", transport.LastRequest.Body.Text
 End Sub
 
+Public Sub Test_Client_PropagatesDefaultProtocolOptionsToSnapshot()
+    Dim client As New HttpClient
+    Dim transport As New MockHttpTransport
+    Dim configuredResponse As New HttpResponse
+    Dim options As New HttpProtocolOptions
+
+    configuredResponse.Initialize 204
+    transport.SetResponse configuredResponse
+    Set client.Transport = transport
+    options.AllowHttp2 = True
+    Set client.ProtocolOptions = options
+
+    Call client.GetResponse("https://example.test/items")
+
+    XlflowAssert.AssertTrue transport.LastRequest.ProtocolOptions.AllowHttp2
+    XlflowAssert.AssertNotSame options, transport.LastRequest.ProtocolOptions
+End Sub
+
 '@ExpectedError(-2147200502, "URL must contain a host.", "HttpClient.Execute")
 Public Sub Test_Client_RejectsAbsoluteUrlWithoutHost()
     Dim client As New HttpClient
@@ -120,4 +138,14 @@ Public Sub Test_Client_DefaultsToComTransport()
     Dim client As New HttpClient
 
     XlflowAssert.AssertEquals "WinHttpComTransport", TypeName(client.Transport)
+End Sub
+
+'@ExpectedError(-2147200503, "HTTP/2 and HTTP/3 protocol options require the native WinHTTP transport.", "WinHttpComTransport.Execute")
+Public Sub Test_Client_ComTransportRejectsAdvancedProtocolOptions()
+    Dim client As New HttpClient
+    Dim options As New HttpProtocolOptions
+
+    options.AllowHttp2 = True
+    Set client.ProtocolOptions = options
+    Call client.GetResponse("https://example.test/")
 End Sub

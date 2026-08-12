@@ -394,6 +394,38 @@ Private Sub ApplyRequestOptions(ByVal nativeRequest As WinHttpRequestHandle, ByV
     End If
     If Not WinHttpNativeApi.SetOptionLong(nativeRequest.Value, WinHttpNativeApi.WinHttpOptionRedirectPolicy, redirectFlag) Then RaiseNativeFailure "SetRedirects", Source
     If Not WinHttpNativeApi.SetOptionLong(nativeRequest.Value, WinHttpNativeApi.WinHttpOptionMaxAutomaticRedirects, Request.MaxRedirects) Then RaiseNativeFailure "SetMaxRedirects", Source
+    ApplyProtocolOptions nativeRequest, Request.Url, Request.ProtocolOptions, Source
+End Sub
+
+Private Sub ApplyProtocolOptions(ByVal nativeRequest As WinHttpRequestHandle, ByVal Url As String, ByVal Options As HttpProtocolOptions, ByVal Source As String)
+    Dim errorCode As Long
+
+    If Options Is Nothing Then Exit Sub
+    Options.Validate
+    If Not Options.HasOverride Then Exit Sub
+    If LCase$(Left$(Url, 8)) <> "https://" Then
+        If Options.Mode = HttpProtocolRequired Then
+            HttpErrors.RaiseTransport HttpErrorProtocol, Source, "HTTP/2 or HTTP/3 requires an HTTPS request URL."
+        End If
+        Exit Sub
+    End If
+    If Not WinHttpNativeApi.SetOptionLong(nativeRequest.Value, WinHttpNativeApi.WinHttpOptionEnableHttpProtocol, Options.EnabledProtocols) Then
+        errorCode = WinHttpNativeApi.LastErrorCode()
+        If Options.Mode = HttpProtocolAllowFallback And errorCode = WinHttpNativeApi.WinHttpErrorInvalidOption Then Exit Sub
+        If Options.Mode = HttpProtocolRequired And errorCode = WinHttpNativeApi.WinHttpErrorInvalidOption Then
+            HttpErrors.RaiseTransport HttpErrorProtocol, Source, "Requested HTTP protocol is not supported by this WinHTTP runtime."
+        End If
+        RaiseNativeFailure "SetHttpProtocol", Source
+    End If
+    If Options.Mode = HttpProtocolRequired Then
+        If Not WinHttpNativeApi.SetOptionLong(nativeRequest.Value, WinHttpNativeApi.WinHttpOptionHttpProtocolRequired, 1) Then
+            errorCode = WinHttpNativeApi.LastErrorCode()
+            If errorCode = WinHttpNativeApi.WinHttpErrorInvalidOption Then
+                HttpErrors.RaiseTransport HttpErrorProtocol, Source, "Required HTTP protocol mode is not supported by this WinHTTP runtime."
+            End If
+            RaiseNativeFailure "RequireHttpProtocol", Source
+        End If
+    End If
 End Sub
 
 Private Function BuildRequestHeaders(ByVal Headers As HttpHeaders) As String

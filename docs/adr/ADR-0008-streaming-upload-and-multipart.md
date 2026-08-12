@@ -25,9 +25,10 @@ cancellation is observed.
 - Uploads use `POST` and always calculate a deterministic total content length
   before `WinHttpSendRequest`. The native call sends no optional body and then
   writes at most 64 KiB per `WinHttpWriteData` call. If the total exceeds the
-  signed VBA `Long` range, an explicit decimal `Content-Length` header is sent
-  and `WINHTTP_IGNORE_REQUEST_TOTAL_LENGTH` is passed. Transfer-Encoding
-  chunked is not exposed as a caller option in Phase 7.
+  DWORD range, an explicit decimal `Content-Length` header is sent and
+  `WINHTTP_IGNORE_REQUEST_TOTAL_LENGTH` (zero) is passed. Lengths between
+  2^31 and 2^32-1 preserve the DWORD bit pattern in the VBA `Long` declaration.
+  Transfer-Encoding chunked is not exposed as a caller option in Phase 7.
 - `HttpUploadResult` returns response status, reason, headers, negotiated
   protocol, request bytes written, request content length, elapsed time, and
   `AuthenticationChallenged` for status 401 or 407. HTTP status failures are

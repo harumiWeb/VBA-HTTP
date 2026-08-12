@@ -2,6 +2,7 @@
 
 ### Added
 
+- Added native `HttpProtocolOptions` with HTTP/2/HTTP/3 opt-in, explicit fallback or required mode, negotiated-protocol reporting, COM-backend validation, and release-consumer protocol smoke coverage.
 - Added native constant-memory `HttpClient.UploadFile` and `UploadMultipart` APIs with deterministic content lengths, bounded `WinHttpWriteData` chunks, UTF-8 multipart fields, progress/cancellation checkpoints, source-preserving failure semantics, and authentication-challenge reporting.
 - Added deterministic loopback upload endpoints, file/multipart integration coverage, a 1 GiB upload stress harness, and release-consumer upload smoke coverage.
 - Added native constant-memory `HttpClient.DownloadFile` with bounded WinHTTP reads, same-directory temporary files, atomic publication, progress callbacks, cooperative cancellation/deadlines, and external release-artifact download smoke coverage.
@@ -18,4 +19,5 @@
 
 ### Fixed
 
+- Corrected native upload `dwTotalLength` encoding across the unsigned DWORD range, including the `WINHTTP_IGNORE_REQUEST_TOTAL_LENGTH = 0` sentinel for payloads at or above 4 GiB.
 - Made exported class sources clean-importable during `xlflow build` and added a preflight check for the required CRLF representation.

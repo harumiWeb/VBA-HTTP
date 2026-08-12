@@ -37,6 +37,11 @@ Public Function CreateCancellationToken() As HttpCancellationToken
     Set CreateCancellationToken = New HttpCancellationToken
 End Function
 
+''' Creates native HTTP/2 and HTTP/3 negotiation options for consumers.
+Public Function CreateProtocolOptions() As HttpProtocolOptions
+    Set CreateProtocolOptions = New HttpProtocolOptions
+End Function
+
 ''' Creates an ordered multipart form for referenced-workbook consumers.
 Public Function CreateMultipartForm() As HttpMultipartForm
     Set CreateMultipartForm = New HttpMultipartForm

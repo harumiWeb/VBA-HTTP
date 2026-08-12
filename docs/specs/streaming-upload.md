@@ -80,3 +80,8 @@ cannot be rolled back.
   SHA-256, and records elapsed time, memory, and native handle observations.
 - The release consumer smoke calls both file and multipart APIs against the
   filtered workbook without injecting test code into it.
+
+For files at or above 4 GiB, the native transport sends the full decimal
+`Content-Length` header and passes WinHTTP's zero-valued
+`WINHTTP_IGNORE_REQUEST_TOTAL_LENGTH` sentinel. Lengths below 4 GiB preserve
+the DWORD bit pattern in the VBA `Long` declaration.

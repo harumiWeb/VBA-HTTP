@@ -17,6 +17,7 @@ Private mTimeouts As New HttpTimeouts
 Private mBody As New HttpBody
 Private mFollowRedirects As Boolean
 Private mMaxRedirects As Long
+Private mProtocolOptions As HttpProtocolOptions
 
 Public Property Get Method() As String
     Method = mMethod
@@ -106,6 +107,19 @@ Public Property Let MaxRedirects(ByVal value As Long)
     mMaxRedirects = value
 End Property
 
+Public Property Get ProtocolOptions() As HttpProtocolOptions
+    Set ProtocolOptions = mProtocolOptions
+End Property
+
+Public Property Set ProtocolOptions(ByVal value As HttpProtocolOptions)
+    If value Is Nothing Then
+        Set mProtocolOptions = Nothing
+    Else
+        value.Validate
+        Set mProtocolOptions = value.Clone()
+    End If
+End Property
+
 Public Function Clone() As HttpRequest
     Dim copy As New HttpRequest
 
@@ -117,6 +131,7 @@ Public Function Clone() As HttpRequest
     Set copy.Body = mBody.Clone()
     copy.FollowRedirects = mFollowRedirects
     copy.MaxRedirects = mMaxRedirects
+    If Not mProtocolOptions Is Nothing Then Set copy.ProtocolOptions = mProtocolOptions
     Set Clone = copy
 End Function
 
