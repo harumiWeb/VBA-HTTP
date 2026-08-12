@@ -50,10 +50,9 @@ artifact, manifest, and checksum together.
 
 ## Deferred security topics
 
-The gate does not mark the following as implemented: a deterministic TLS
-certificate-negative fixture, HTTP/2/HTTP/3 TLS/Office compatibility evidence,
-or integrated/proxy challenge authentication. These remain release-review items
-and are listed in the report and
+The gate does not mark the following as implemented: HTTP/2/HTTP/3 TLS/Office
+compatibility evidence or integrated/proxy challenge authentication. These
+remain release-review items and are listed in the report and
 `docs/verification/phase-nine-security-review.md`.
 
 ## Verification

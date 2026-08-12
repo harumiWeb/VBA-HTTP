@@ -62,6 +62,9 @@ evidence.
   by the shared WinHTTP error classifier to the ADR-0003 categories; raw URLs,
   headers, credentials, and response data never enter descriptions.
 - TLS uses OS certificate validation. No certificate-ignore flag is exposed.
+- The deterministic HTTPS fixture uses an untrusted self-signed certificate;
+  COM/native integration must reject it as `HttpErrorTls`. The fixture is never
+  installed into the OS trust store and does not authorize a caller bypass.
 - Automatic redirects use `DISALLOW_HTTPS_TO_HTTP` by default, or `NEVER` when
   `FollowRedirects` is false. `Authorization`, `Proxy-Authorization`, and
   `Cookie` headers force `NEVER` for the request snapshot.

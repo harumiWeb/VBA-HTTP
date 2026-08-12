@@ -310,6 +310,24 @@ Public Sub Test_NativeTransport_BasicAndBearerAuth()
 End Sub
 
 '@Tag("integration")
+Public Sub Test_NativeTransport_RejectsUntrustedCertificate()
+    Dim client As New HttpClient
+    Dim observedNumber As Long
+
+    client.BaseUrl = RequireHttpsBaseUrl()
+    Set client.Transport = New WinHttpNativeTransport
+    On Error GoTo ExpectedFailure
+    Call client.GetResponse("/status/204")
+    XlflowAssert.AssertTrue False, "Native transport accepted the untrusted TLS fixture."
+    Exit Sub
+
+    ExpectedFailure: ' xlflow:disable-line VBA237
+    observedNumber = Err.Number
+    Err.Clear
+    XlflowAssert.AssertEquals HttpErrorTls, HttpErrors.CategoryFromNumber(observedNumber)
+End Sub
+
+'@Tag("integration")
 Public Sub Test_NativeTransport_ExplicitCookieJarPersistsAndSuppressesRedirects()
     Dim client As New HttpClient
     Dim jar As New HttpCookieJar
@@ -844,6 +862,13 @@ Private Function RequireProxyTargetUrl() As String
     RequireProxyTargetUrl = Trim$(Environ$("VBA_HTTP_TEST_PROXY_TARGET_URL"))
     If Len(RequireProxyTargetUrl) = 0 Then
         XlflowAssert.AssertInconclusive "VBA_HTTP_TEST_PROXY_TARGET_URL is not set; run task test:integration."
+    End If
+End Function
+
+Private Function RequireHttpsBaseUrl() As String
+    RequireHttpsBaseUrl = Trim$(Environ$("VBA_HTTP_TEST_HTTPS_URL"))
+    If Len(RequireHttpsBaseUrl) = 0 Then
+        XlflowAssert.AssertInconclusive "VBA_HTTP_TEST_HTTPS_URL is not set; run task test:integration."
     End If
 End Function
 

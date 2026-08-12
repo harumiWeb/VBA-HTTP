@@ -5,6 +5,7 @@ import (
 	"compress/flate"
 	"compress/gzip"
 	"crypto/sha256"
+	"crypto/x509"
 	"encoding/hex"
 	"encoding/json"
 	"io"
@@ -17,6 +18,32 @@ import (
 	"testing"
 	"time"
 )
+
+func TestSelfSignedTLSFixtureIsLoopbackOnlyAndUntrusted(t *testing.T) {
+	config, err := newSelfSignedTLSConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(config.Certificates) != 1 || len(config.Certificates[0].Certificate) != 1 {
+		t.Fatalf("unexpected certificate chain: %#v", config.Certificates)
+	}
+	certificate, err := x509.ParseCertificate(config.Certificates[0].Certificate[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	if certificate.IsCA || certificate.Subject.CommonName != "VBA-HTTP untrusted fixture" {
+		// The fixture is self-signed but intentionally used as a server
+		// certificate; IsCA must remain false so clients cannot treat it as a
+		// trust anchor merely because it is self-signed.
+		t.Fatalf("unexpected certificate constraints or subject: is_ca=%v subject=%#v", certificate.IsCA, certificate.Subject)
+	}
+	if len(certificate.IPAddresses) != 2 || certificate.IPAddresses[0].String() != "127.0.0.1" {
+		t.Fatalf("unexpected certificate IP SANs: %#v", certificate.IPAddresses)
+	}
+	if len(certificate.DNSNames) != 2 || certificate.DNSNames[0] != "localhost" {
+		t.Fatalf("unexpected certificate DNS SANs: %#v", certificate.DNSNames)
+	}
+}
 
 func TestStatus(t *testing.T) {
 	server := httptest.NewServer(newTestServer().routes())

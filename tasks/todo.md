@@ -484,7 +484,7 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 
 - [ ] known critical bugとrelease blocker bugが0件である。
 - [x] 10,000 request測定区間後にpersistent resource growthがない（x64実測、native delta <=8／COM delta <=32）。
-- [ ] redirect、credential、certificate security testsが成功する（redirect／credentialは完了、TLS certificate-negative fixtureは残課題）。
+- [x] redirect、credential、certificate security testsが成功する（redirect／credential／untrusted TLS certificateのCOM/native loopback検証済み。HTTP/2/3 negotiated evidenceと32-bit証跡はcompatibility gateとして継続）。
 - [x] release artifactのcomponent構成がreview済みである（`task release:security`と`task release:smoke`でproduction allowlist／development denylistのmanifest・実Workbook構成を検証）。
 
 ---

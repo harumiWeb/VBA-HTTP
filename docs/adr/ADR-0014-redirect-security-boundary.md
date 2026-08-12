@@ -28,10 +28,10 @@ also need one deterministic maximum so a redirect loop cannot stall a caller.
 - HTTPS-to-HTTP redirects remain disabled by default. COM sets
   `WinHttpRequestOption_EnableHttpsToHttpRedirects` to `False`; native WinHTTP
   uses `WINHTTP_OPTION_REDIRECT_POLICY_DISALLOW_HTTPS_TO_HTTP` (value 1).
-- No cookie jar or ambient cookie persistence is introduced. Callers own
-  explicit `Cookie` headers and inspect `Set-Cookie` response fields until a
-  separate cookie-jar decision defines domain, path, expiry, secure, and clock
-  semantics.
+- No ambient cookie persistence or implicit redirect state is introduced.
+  Explicit caller-owned cookie state is defined separately by ADR-0018; a
+  caller Cookie header or jar-applied Cookie header still forces the redirect
+  boundary defined here.
 
 ## Consequences
 
@@ -42,8 +42,8 @@ also need one deterministic maximum so a redirect loop cannot stall a caller.
 - The policy is compatible with synchronous COM, async COM batch, native
   buffered, and native streaming paths because it is enforced at the request
   snapshot and transport option boundaries.
-- Cookie management, cross-origin redirect rewriting, and interactive
-  authentication remain separate future slices rather than hidden state.
+- Cookie parsing/storage is intentionally separate from this redirect decision;
+  cross-origin rewriting and interactive authentication remain out of scope.
 
 ## Rationale
 
@@ -64,4 +64,4 @@ also need one deterministic maximum so a redirect loop cannot stall a caller.
 
 ## Superseded by
 
-- None
+- ADR-0018 (cookie-state portion only)

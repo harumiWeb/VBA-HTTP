@@ -46,8 +46,9 @@ promise and must not claim stronger interruption semantics.
   native buffered operations do not promise mid-call cooperative cancellation
   and are not presented as a receive-timeout stress claim here. The existing
   single receive-timeout integration test remains the regression boundary.
-- Cookie persistence, TLS certificate fixtures, integrated authentication, and
-  process-wide memory thresholds remain separate hardening decisions.
+- Cookie persistence and TLS certificate rejection are covered by their own
+  policies and tests. Integrated authentication and process-wide memory
+  thresholds remain separate hardening decisions.
 
 ## Rationale
 

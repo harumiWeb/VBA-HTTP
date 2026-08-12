@@ -30,11 +30,11 @@ manifest describes a production-only workbook.
   An optional deterministic JSON report records artifact, manifest, policy
   hashes, checks performed, and deferred security topics without host paths or
   secrets. Reports are written atomically under `.xlflow` by the release task.
-- Keep the gate lexical and manifest-focused. It does not claim certificate
-  negative-fixture coverage, HTTP/2/HTTP/3 TLS compatibility, or integrated/
-  proxy challenge authentication; those remain explicit residual risks until
-  their dedicated fixtures and policies exist. Cookie handling is covered by
-  the separate explicit caller-owned jar policy in ADR-0018.
+- Keep the gate lexical and manifest-focused. It does not claim HTTP/2/HTTP/3
+  TLS compatibility or integrated/proxy challenge authentication; those remain
+  explicit residual risks until their dedicated fixtures and policies exist.
+  Certificate rejection is covered by the loopback fixture in the integration
+  suite, and cookie handling is covered by ADR-0018.
 
 ## Consequences
 
@@ -46,8 +46,9 @@ manifest describes a production-only workbook.
   consumer smoke harness.
 - The component policy remains a deliberate allowlist/denylist change point;
   adding a production component requires updating the policy and its tests.
-- The gate is not a full threat model or certificate test. Deferred topics are
-  reported instead of being silently treated as passed security coverage.
+- The gate is not a full threat model or protocol-compatibility test. Deferred
+  topics are reported instead of being silently treated as passed security
+  coverage.
 
 ## Rationale
 

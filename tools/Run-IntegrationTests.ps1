@@ -15,6 +15,7 @@ $proxyUrl = $null
 $previousBaseUrl = [Environment]::GetEnvironmentVariable("VBA_HTTP_TEST_BASE_URL", "Process")
 $previousProxyUrl = [Environment]::GetEnvironmentVariable("VBA_HTTP_TEST_PROXY_URL", "Process")
 $previousProxyTargetUrl = [Environment]::GetEnvironmentVariable("VBA_HTTP_TEST_PROXY_TARGET_URL", "Process")
+$previousHttpsUrl = [Environment]::GetEnvironmentVariable("VBA_HTTP_TEST_HTTPS_URL", "Process")
 
 try {
     [void](New-Item -ItemType Directory -Path $artifactDirectory -Force)
@@ -29,7 +30,7 @@ try {
 
     $process = Start-Process `
         -FilePath $executablePath `
-        -ArgumentList "-listen", "127.0.0.1:0", "-proxy-listen", "127.0.0.1:0" `
+        -ArgumentList "-listen", "127.0.0.1:0", "-tls-listen", "127.0.0.1:0", "-proxy-listen", "127.0.0.1:0" `
         -RedirectStandardOutput $stdoutPath `
         -RedirectStandardError $stderrPath `
         -WindowStyle Hidden `
@@ -50,13 +51,14 @@ try {
         }
         Start-Sleep -Milliseconds 50
     }
-    if ($null -eq $ready -or $ready.event -ne "ready" -or -not $ready.url -or -not $ready.proxy_url -or -not $ready.proxy_target_url) {
-        throw "Test server did not publish valid HTTP and proxy readiness URLs."
+    if ($null -eq $ready -or $ready.event -ne "ready" -or -not $ready.url -or -not $ready.https_url -or -not $ready.proxy_url -or -not $ready.proxy_target_url) {
+        throw "Test server did not publish valid HTTP, HTTPS, and proxy readiness URLs."
     }
 
     [Environment]::SetEnvironmentVariable("VBA_HTTP_TEST_BASE_URL", [string]$ready.url, "Process")
     [Environment]::SetEnvironmentVariable("VBA_HTTP_TEST_PROXY_URL", [string]$ready.proxy_url, "Process")
     [Environment]::SetEnvironmentVariable("VBA_HTTP_TEST_PROXY_TARGET_URL", [string]$ready.proxy_target_url, "Process")
+    [Environment]::SetEnvironmentVariable("VBA_HTTP_TEST_HTTPS_URL", [string]$ready.https_url, "Process")
     $testJson = & xlflow test --tag integration --json
     $testExitCode = $LASTEXITCODE
     $testJson | Write-Output
@@ -65,14 +67,15 @@ try {
     }
     $result = $testJson | Out-String | ConvertFrom-Json
     $tests = @($result.tests)
-    if ($result.status -ne "ok" -or $tests.Count -ne 69 -or @($tests | Where-Object status -ne "passed").Count -ne 0) {
-        throw "Integration suite did not return sixty-nine passing tests."
+    if ($result.status -ne "ok" -or $tests.Count -ne 71 -or @($tests | Where-Object status -ne "passed").Count -ne 0) {
+        throw "Integration suite did not return seventy-one passing tests."
     }
 }
 finally {
     [Environment]::SetEnvironmentVariable("VBA_HTTP_TEST_BASE_URL", $previousBaseUrl, "Process")
     [Environment]::SetEnvironmentVariable("VBA_HTTP_TEST_PROXY_URL", $previousProxyUrl, "Process")
     [Environment]::SetEnvironmentVariable("VBA_HTTP_TEST_PROXY_TARGET_URL", $previousProxyTargetUrl, "Process")
+    [Environment]::SetEnvironmentVariable("VBA_HTTP_TEST_HTTPS_URL", $previousHttpsUrl, "Process")
     if ($null -ne $ready -and $ready.url) {
         try {
             Add-Type -AssemblyName System.Net.Http

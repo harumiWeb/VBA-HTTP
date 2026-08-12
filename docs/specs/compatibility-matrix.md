@@ -9,6 +9,7 @@ the focused compile, integration, and release-consumer smoke checks.
 | Windows x64 Office, WinHTTP default HTTP/1.1 | `verified` | Native loopback integration and release consumer smoke on the current host |
 | Windows x64 Office, native protocol option unavailable | `fallback-tested` | Plain HTTP fallback test; response must report `HTTP/1.1` |
 | Windows x64 Office, required protocol on plain HTTP | `rejection-tested` | Required-mode integration must raise `HttpErrorProtocol` before a response |
+| Windows x64 Office, untrusted HTTPS certificate | `verified-rejection` | Loopback self-signed fixture must map COM/native failures to `HttpErrorTls` without a certificate-ignore option |
 | HTTPS HTTP/2 negotiation | `pending` | TLS fixture, Windows/WinHTTP version, Office bitness, requested mask, and `ProtocolUsed` |
 | HTTPS HTTP/3 negotiation | `pending` | QUIC-capable Windows/WinHTTP host, fixture, requested mask, and `ProtocolUsed` |
 | Native WinHTTP gzip/deflate decompression | `verified` | x64 loopback buffered/download tests and release consumer smoke; option 118 requires Windows 8.1+ |

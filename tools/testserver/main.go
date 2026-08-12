@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -16,6 +17,7 @@ import (
 
 func main() {
 	listenAddress := flag.String("listen", "127.0.0.1:0", "TCP address to listen on")
+	tlsListenAddress := flag.String("tls-listen", "", "Optional TCP address for an HTTPS listener with an untrusted self-signed certificate")
 	proxyListenAddress := flag.String("proxy-listen", "", "Optional loopback address for a deterministic HTTP forward proxy")
 	flag.Parse()
 
@@ -33,6 +35,32 @@ func main() {
 	server := &http.Server{
 		Handler:           testServer.routes(),
 		ReadHeaderTimeout: 10 * time.Second,
+	}
+	var tlsListener net.Listener
+	var tlsServer *http.Server
+	var httpsURL string
+	if *tlsListenAddress != "" {
+		tlsConfig, tlsErr := newSelfSignedTLSConfig()
+		if tlsErr != nil {
+			_ = listener.Close()
+			fatal(tlsErr)
+		}
+		tlsListener, tlsErr = tls.Listen("tcp", *tlsListenAddress, tlsConfig)
+		if tlsErr != nil {
+			_ = listener.Close()
+			fatal(tlsErr)
+		}
+		tlsTCPAddress, tlsOK := tlsListener.Addr().(*net.TCPAddr)
+		if !tlsOK || !tlsTCPAddress.IP.IsLoopback() {
+			_ = listener.Close()
+			_ = tlsListener.Close()
+			fatal(fmt.Errorf("test TLS server must listen on a loopback address"))
+		}
+		tlsServer = &http.Server{
+			Handler:           testServer.routes(),
+			ReadHeaderTimeout: 10 * time.Second,
+		}
+		httpsURL = "https://" + tlsListener.Addr().String()
 	}
 	var proxyListener net.Listener
 	var proxyServer *http.Server
@@ -73,17 +101,25 @@ func main() {
 		ready["proxy_url"] = proxyURL
 		ready["proxy_target_url"] = proxyTargetURL
 	}
+	if httpsURL != "" {
+		ready["https_url"] = httpsURL
+	}
 	if err := json.NewEncoder(os.Stdout).Encode(ready); err != nil {
 		fatal(err)
 	}
 
-	serveErrors := make(chan error, 2)
+	serveErrors := make(chan error, 3)
 	go func() {
 		serveErrors <- server.Serve(listener)
 	}()
 	if proxyServer != nil {
 		go func() {
 			serveErrors <- proxyServer.Serve(proxyListener)
+		}()
+	}
+	if tlsServer != nil {
+		go func() {
+			serveErrors <- tlsServer.Serve(tlsListener)
 		}()
 	}
 
@@ -107,6 +143,11 @@ func main() {
 	}
 	if proxyServer != nil {
 		if err := proxyServer.Shutdown(ctx); err != nil {
+			fatal(err)
+		}
+	}
+	if tlsServer != nil {
+		if err := tlsServer.Shutdown(ctx); err != nil {
 			fatal(err)
 		}
 	}

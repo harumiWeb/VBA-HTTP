@@ -33,6 +33,11 @@
   caller-header precedence, response `Set-Cookie` storage, redirect suppression,
   deterministic loopback integration coverage, and release-consumer smoke.
 
+- Added an optional deterministic HTTPS test-server listener with an untrusted
+  self-signed certificate, plus COM/native `HttpErrorTls` rejection tests and
+  compatibility/security evidence. The fixture is never installed or accepted
+  as a trust anchor.
+
 - Added snapshot-safe preemptive Basic/Bearer authentication providers for COM
   and native requests, deterministic loopback auth endpoints, redirect
   suppression, secret-header redaction helpers, and release consumer auth smoke.
