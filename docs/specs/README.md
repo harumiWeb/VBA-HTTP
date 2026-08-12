@@ -16,3 +16,4 @@
 - `bounded-concurrency.md`: cooperative COM async scheduling、batch results、deadlines、cancellation、reentrancy contract
 - `reliability-policy.md`: retry classification、backoff／jitter、Retry-After、total deadline、cancellation precedence
 - `streaming-download.md`: native constant-memory download、atomic publication、progress、cancellation、cleanup contract
+- `streaming-upload.md`: native constant-memory file／multipart upload、source ownership、progress、cancellation、challenge contract

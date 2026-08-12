@@ -77,3 +77,26 @@ The byte-for-byte destination hash matched the server's `/sha256/` response,
 and integration tests verified cancellation, atomic replacement, and temporary
 file cleanup. The machine-readable result is
 `benchmarks/results/phase6-download-stress.json`.
+
+## Phase 7 streaming upload evidence
+
+The Phase 7 stress run streamed a deterministic 1 GiB file to the loopback
+`POST /upload/hash` endpoint using 64 KiB source reads and native
+`WinHttpWriteData` calls. The server-side digest and the source digest matched.
+The process-memory values include the temporary Excel test workbook and are
+reported as an observation rather than a universal memory budget; the upload
+contract's invariant is that no payload-sized VBA `String` or `Byte()` is
+created.
+
+| Measure | Result |
+| --- | ---: |
+| Payload | 1,073,741,824 bytes |
+| Elapsed | 15,980.752 ms |
+| Working-set peak delta | 153,559,040 bytes |
+| Private-bytes peak delta | 182,210,560 bytes |
+| SHA-256 | `3a33d58aa8ee1e9d21fd4f510cc5d1ce8d25ba5e24363d19c28e2bf866f4185c` |
+
+The machine-readable result is `benchmarks/results/phase7-upload-stress.json`.
+Integration tests additionally verify multipart field/file reconstruction,
+source preservation after cancellation, authentication-challenge no-replay,
+and repeated native-handle cleanup.

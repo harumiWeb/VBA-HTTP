@@ -16,6 +16,7 @@ Public Const WinHttpAddRequestHeader As Long = &H20000000
 Public Const WinHttpErrorInsufficientBuffer As Long = 122
 Public Const WinHttpErrorHeaderNotFound As Long = 12150
 Public Const WinHttpErrorInvalidOption As Long = 12009
+Public Const WinHttpIgnoreRequestTotalLength As Long = -1
 
 #If VBA7 Then
 Private Declare PtrSafe Function WinHttpOpen Lib "winhttp.dll" (ByVal pwszUserAgent As LongPtr, ByVal dwAccessType As Long, ByVal pwszProxyName As LongPtr, ByVal pwszProxyBypass As LongPtr, ByVal dwFlags As Long) As LongPtr
@@ -25,6 +26,7 @@ Private Declare PtrSafe Function WinHttpOpenRequest Lib "winhttp.dll" (ByVal hCo
 Private Declare PtrSafe Function WinHttpAddRequestHeaders Lib "winhttp.dll" (ByVal hRequest As LongPtr, ByVal lpszHeaders As LongPtr, ByVal dwHeadersLength As Long, ByVal dwModifiers As Long) As Long
 Private Declare PtrSafe Function WinHttpSetTimeouts Lib "winhttp.dll" (ByVal hInternet As LongPtr, ByVal nResolveTimeout As Long, ByVal nConnectTimeout As Long, ByVal nSendTimeout As Long, ByVal nReceiveTimeout As Long) As Long
 Private Declare PtrSafe Function WinHttpSendRequest Lib "winhttp.dll" (ByVal hRequest As LongPtr, ByVal lpszHeaders As LongPtr, ByVal dwHeadersLength As Long, ByVal lpOptional As LongPtr, ByVal dwOptionalLength As Long, ByVal dwTotalLength As Long, ByVal dwContext As LongPtr) As Long
+Private Declare PtrSafe Function WinHttpWriteData Lib "winhttp.dll" (ByVal hRequest As LongPtr, ByRef lpBuffer As Any, ByVal dwNumberOfBytesToWrite As Long, ByRef lpdwNumberOfBytesWritten As Long) As Long
 Private Declare PtrSafe Function WinHttpReceiveResponse Lib "winhttp.dll" (ByVal hRequest As LongPtr, ByVal lpReserved As LongPtr) As Long
 Private Declare PtrSafe Function WinHttpQueryHeaders Lib "winhttp.dll" (ByVal hRequest As LongPtr, ByVal dwInfoLevel As Long, ByVal pwszName As LongPtr, ByVal lpBuffer As LongPtr, ByRef lpdwBufferLength As Long, ByRef lpdwIndex As Long) As Long
 Private Declare PtrSafe Function WinHttpQueryDataAvailable Lib "winhttp.dll" (ByVal hRequest As LongPtr, ByRef lpdwNumberOfBytesAvailable As Long) As Long
@@ -43,6 +45,7 @@ Private Declare Function WinHttpOpenRequest Lib "winhttp.dll" (ByVal hConnect As
 Private Declare Function WinHttpAddRequestHeaders Lib "winhttp.dll" (ByVal hRequest As Long, ByVal lpszHeaders As Long, ByVal dwHeadersLength As Long, ByVal dwModifiers As Long) As Long
 Private Declare Function WinHttpSetTimeouts Lib "winhttp.dll" (ByVal hInternet As Long, ByVal nResolveTimeout As Long, ByVal nConnectTimeout As Long, ByVal nSendTimeout As Long, ByVal nReceiveTimeout As Long) As Long
 Private Declare Function WinHttpSendRequest Lib "winhttp.dll" (ByVal hRequest As Long, ByVal lpszHeaders As Long, ByVal dwHeadersLength As Long, ByVal lpOptional As Long, ByVal dwOptionalLength As Long, ByVal dwTotalLength As Long, ByVal dwContext As Long) As Long
+Private Declare Function WinHttpWriteData Lib "winhttp.dll" (ByVal hRequest As Long, ByRef lpBuffer As Any, ByVal dwNumberOfBytesToWrite As Long, ByRef lpdwNumberOfBytesWritten As Long) As Long
 Private Declare Function WinHttpReceiveResponse Lib "winhttp.dll" (ByVal hRequest As Long, ByVal lpReserved As Long) As Long
 Private Declare Function WinHttpQueryHeaders Lib "winhttp.dll" (ByVal hRequest As Long, ByVal dwInfoLevel As Long, ByVal pwszName As Long, ByVal lpBuffer As Long, ByRef lpdwBufferLength As Long, ByRef lpdwIndex As Long) As Long
 Private Declare Function WinHttpQueryDataAvailable Lib "winhttp.dll" (ByVal hRequest As Long, ByRef lpdwNumberOfBytesAvailable As Long) As Long
@@ -101,6 +104,28 @@ Public Function SendBody(ByVal HandleValue As LongPtr, ByVal Body As Variant) As
     lowerBound = LBound(bytes) ' xlflow:disable-line VBA227
     byteCount = UBound(bytes) - lowerBound + 1 ' xlflow:disable-line VBA227
     SendBody = (WinHttpSendRequest(HandleValue, 0, 0, VarPtr(bytes(lowerBound)), byteCount, byteCount, 0) <> 0) ' xlflow:disable-line VBA227
+End Function
+
+Public Function BeginUpload(ByVal HandleValue As LongPtr, ByVal TotalLength As Currency) As Boolean
+    Dim totalLength32 As Long
+
+    If TotalLength < 0 Then HttpErrors.RaiseValidation "WinHttpNativeApi.BeginUpload", "Upload content length cannot be negative."
+    If TotalLength > 2147483647# Then
+        totalLength32 = WinHttpIgnoreRequestTotalLength
+    Else
+        totalLength32 = CLng(TotalLength)
+    End If
+    BeginUpload = (WinHttpSendRequest(HandleValue, 0, 0, 0, 0, totalLength32, 0) <> 0)
+End Function
+
+Public Function WriteData(ByVal HandleValue As LongPtr, ByRef Buffer() As Byte, ByVal Offset As Long, ByVal ByteCount As Long, ByRef WrittenBytes As Long) As Boolean
+    If Offset < 0 Or ByteCount < 0 Then HttpErrors.RaiseValidation "WinHttpNativeApi.WriteData", "Upload buffer range cannot be negative."
+    If ByteCount = 0 Then
+        WrittenBytes = 0
+        WriteData = True
+        Exit Function
+    End If
+    WriteData = (WinHttpWriteData(HandleValue, Buffer(Offset), ByteCount, WrittenBytes) <> 0)
 End Function
 
 Public Function ReceiveResponse(ByVal HandleValue As LongPtr) As Boolean
@@ -204,6 +229,28 @@ Public Function SendBody(ByVal HandleValue As Long, ByVal Body As Variant) As Bo
     lowerBound = LBound(bytes) ' xlflow:disable-line VBA227
     byteCount = UBound(bytes) - lowerBound + 1 ' xlflow:disable-line VBA227
     SendBody = (WinHttpSendRequest(HandleValue, 0, 0, VarPtr(bytes(lowerBound)), byteCount, byteCount, 0) <> 0) ' xlflow:disable-line VBA227
+End Function
+
+Public Function BeginUpload(ByVal HandleValue As Long, ByVal TotalLength As Currency) As Boolean
+    Dim totalLength32 As Long
+
+    If TotalLength < 0 Then HttpErrors.RaiseValidation "WinHttpNativeApi.BeginUpload", "Upload content length cannot be negative."
+    If TotalLength > 2147483647# Then
+        totalLength32 = WinHttpIgnoreRequestTotalLength
+    Else
+        totalLength32 = CLng(TotalLength)
+    End If
+    BeginUpload = (WinHttpSendRequest(HandleValue, 0, 0, 0, 0, totalLength32, 0) <> 0)
+End Function
+
+Public Function WriteData(ByVal HandleValue As Long, ByRef Buffer() As Byte, ByVal Offset As Long, ByVal ByteCount As Long, ByRef WrittenBytes As Long) As Boolean
+    If Offset < 0 Or ByteCount < 0 Then HttpErrors.RaiseValidation "WinHttpNativeApi.WriteData", "Upload buffer range cannot be negative."
+    If ByteCount = 0 Then
+        WrittenBytes = 0
+        WriteData = True
+        Exit Function
+    End If
+    WriteData = (WinHttpWriteData(HandleValue, Buffer(Offset), ByteCount, WrittenBytes) <> 0)
 End Function
 
 Public Function ReceiveResponse(ByVal HandleValue As Long) As Boolean

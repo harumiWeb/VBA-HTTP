@@ -15,6 +15,8 @@
     "HttpAttemptOptions",
     "HttpExecutionOptions",
     "HttpHeaders",
+    "HttpMultipartForm",
+    "HttpMultipartPart",
     "HttpParams",
     "HttpRequest",
     "HttpResponse",
@@ -22,12 +24,15 @@
     "HttpRetryAfter",
     "HttpRetryPolicy",
     "HttpSystemReliabilityRuntime",
+    "HttpUploadResult",
     "HttpTiming",
     "HttpTimeouts",
     "IHttpBatchTransport",
     "IHttpAttemptTransport",
     "IHttpDownloadTransport",
     "IHttpProgressSink",
+    "IHttpUploadSource",
+    "IHttpUploadTransport",
     "IHttpReliabilityRuntime",
     "IHttpTransport",
     "Main",
@@ -42,10 +47,17 @@
     "WinHttpNativeApi",
     "WinHttpDownloadFileSystem",
     "WinHttpDownloadFileWriter",
+    "WinHttpFileUploadSource",
+    "WinHttpMultipartEncoder",
+    "WinHttpMultipartUploadSource",
     "WinHttpNativeTransport",
     "WinHttpNativeUrl",
     "WinHttpRequestHandle",
-    "WinHttpSessionHandle"
+    "WinHttpSessionHandle",
+    "WinHttpUploadEncoding",
+    "WinHttpUploadFileReader",
+    "WinHttpUploadFileSystem",
+    "WinHttpUploadStreamWriter"
   ],
   "excluded": [
     "BenchmarkSupport",
@@ -59,6 +71,7 @@
     "HttpBatchTests",
     "HttpClientTests",
     "HttpDownloadTests",
+    "HttpUploadTests",
     "HttpHeadersTests",
     "HttpParamsTests",
     "HttpResponseTests",
@@ -70,6 +83,7 @@
     "RawWinHttpBenchmark",
     "ReentrantBatchTransport",
     "RecordingProgressSink",
+    "UploadTestSupport",
     "SequencedHttpTransport",
     "XlflowAssert",
     "XlflowDebug",
@@ -81,6 +95,7 @@
     "WinHttpReliabilityTests",
     "WinHttpNativeTests",
     "WinHttpNativeTransportTests",
-    "WinHttpDownloadStressTests"
+    "WinHttpDownloadStressTests",
+    "WinHttpUploadStressTests"
   ]
 }

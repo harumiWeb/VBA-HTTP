@@ -142,6 +142,79 @@ ExecutionFailed:
     Err.Raise errorNumber, errorSource, errorDescription
 End Function
 
+Public Function UploadFile(ByVal Url As String, ByVal SourcePath As String, Optional ByVal ContentType As String = "application/octet-stream", Optional ByVal Options As HttpExecutionOptions = Nothing, Optional ByVal Progress As IHttpProgressSink = Nothing) As HttpUploadResult
+    Dim uploadTransport As IHttpUploadTransport
+    Dim Request As New HttpRequest
+    Dim prepared As HttpRequest
+    Dim snapshotOptions As HttpExecutionOptions
+    Dim errorNumber As Long
+    Dim errorSource As String
+    Dim errorDescription As String
+
+    BeginExecution "HttpClient.UploadFile"
+    On Error GoTo ExecutionFailed
+    If Not TypeOf mTransport Is IHttpUploadTransport Then HttpErrors.RaiseValidation "HttpClient.UploadFile", "Configured transport does not support streaming uploads."
+
+    Request.Method = "POST"
+    Request.Url = Url
+    Request.FollowRedirects = False
+    Set prepared = PrepareRequest(Request)
+    If Options Is Nothing Then
+        Set snapshotOptions = New HttpExecutionOptions
+    Else
+        Set snapshotOptions = Options.Clone()
+    End If
+
+    Set uploadTransport = mTransport
+    Set UploadFile = uploadTransport.UploadFile(prepared, SourcePath, ContentType, snapshotOptions, Progress)
+    mExecuting = False
+    Exit Function
+
+ExecutionFailed:
+    errorNumber = Err.Number
+    errorSource = Err.Source
+    errorDescription = Err.Description
+    mExecuting = False
+    Err.Raise errorNumber, errorSource, errorDescription
+End Function
+
+Public Function UploadMultipart(ByVal Url As String, ByVal Form As HttpMultipartForm, Optional ByVal Options As HttpExecutionOptions = Nothing, Optional ByVal Progress As IHttpProgressSink = Nothing) As HttpUploadResult
+    Dim uploadTransport As IHttpUploadTransport
+    Dim Request As New HttpRequest
+    Dim prepared As HttpRequest
+    Dim snapshotOptions As HttpExecutionOptions
+    Dim errorNumber As Long
+    Dim errorSource As String
+    Dim errorDescription As String
+
+    BeginExecution "HttpClient.UploadMultipart"
+    On Error GoTo ExecutionFailed
+    If Form Is Nothing Then HttpErrors.RaiseValidation "HttpClient.UploadMultipart", "Multipart form cannot be Nothing."
+    If Not TypeOf mTransport Is IHttpUploadTransport Then HttpErrors.RaiseValidation "HttpClient.UploadMultipart", "Configured transport does not support streaming uploads."
+
+    Request.Method = "POST"
+    Request.Url = Url
+    Request.FollowRedirects = False
+    Set prepared = PrepareRequest(Request)
+    If Options Is Nothing Then
+        Set snapshotOptions = New HttpExecutionOptions
+    Else
+        Set snapshotOptions = Options.Clone()
+    End If
+
+    Set uploadTransport = mTransport
+    Set UploadMultipart = uploadTransport.UploadMultipart(prepared, Form, snapshotOptions, Progress)
+    mExecuting = False
+    Exit Function
+
+ExecutionFailed:
+    errorNumber = Err.Number
+    errorSource = Err.Source
+    errorDescription = Err.Description
+    mExecuting = False
+    Err.Raise errorNumber, errorSource, errorDescription
+End Function
+
 Public Function GetMany(ByVal Urls As Collection, Optional ByVal Options As HttpBatchOptions = Nothing) As HttpBatchResult
     Dim Requests As New Collection
     Dim index As Long

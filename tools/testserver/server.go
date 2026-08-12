@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -52,6 +53,10 @@ func (s *testServer) routes() http.Handler {
 	mux.HandleFunc("PUT /echo", s.echo)
 	mux.HandleFunc("PATCH /echo", s.echo)
 	mux.HandleFunc("DELETE /echo", s.echo)
+	mux.HandleFunc("POST /upload/hash", s.uploadHash)
+	mux.HandleFunc("POST /upload/slow/{milliseconds}", s.uploadSlow)
+	mux.HandleFunc("POST /upload/multipart", s.uploadMultipart)
+	mux.HandleFunc("POST /upload/challenge", s.uploadChallenge)
 	mux.HandleFunc("GET /redirect/{count}", s.redirect)
 	mux.HandleFunc("GET /flaky/{failCount}", s.flaky)
 	mux.HandleFunc("GET /rate-limit/{count}", s.rateLimit)
@@ -189,6 +194,120 @@ func (s *testServer) echo(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	_, _ = io.Copy(w, r.Body)
+}
+
+func (s *testServer) uploadHash(w http.ResponseWriter, r *http.Request) {
+	writeUploadHash(w, r, r.Body)
+}
+
+func (s *testServer) uploadSlow(w http.ResponseWriter, r *http.Request) {
+	milliseconds, ok := parseBoundedInt(w, r.PathValue("milliseconds"), 0, 10_000, "milliseconds")
+	if !ok {
+		return
+	}
+	delayed := &delayedReader{reader: r.Body, delay: time.Duration(milliseconds) * time.Millisecond, context: r.Context()}
+	writeUploadHash(w, r, delayed)
+}
+
+func (s *testServer) uploadChallenge(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("WWW-Authenticate", `Basic realm="vba-http-test"`)
+	w.WriteHeader(http.StatusUnauthorized)
+}
+
+func (s *testServer) uploadMultipart(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, maximumBodySize)
+	reader, err := r.MultipartReader()
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid multipart body"})
+		return
+	}
+	fields := make(map[string]string)
+	type uploadedFile struct {
+		Name        string `json:"name"`
+		Filename    string `json:"filename"`
+		ContentType string `json:"content_type"`
+		Bytes       int64  `json:"bytes"`
+		Digest      string `json:"sha256"`
+	}
+	files := make([]uploadedFile, 0)
+	for {
+		part, nextErr := reader.NextPart()
+		if nextErr == io.EOF {
+			break
+		}
+		if nextErr != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid multipart part"})
+			return
+		}
+		if part.FileName() == "" {
+			value, readErr := io.ReadAll(io.LimitReader(part, 1<<20))
+			part.Close()
+			if readErr != nil {
+				writeJSON(w, http.StatusBadRequest, map[string]string{"error": "could not read multipart field"})
+				return
+			}
+			fields[part.FormName()] = string(value)
+			continue
+		}
+		hash := sha256.New()
+		bytesRead, copyErr := io.Copy(hash, part)
+		part.Close()
+		if copyErr != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "could not read multipart file"})
+			return
+		}
+		files = append(files, uploadedFile{
+			Name:        part.FormName(),
+			Filename:    part.FileName(),
+			ContentType: part.Header.Get("Content-Type"),
+			Bytes:       bytesRead,
+			Digest:      hex.EncodeToString(hash.Sum(nil)),
+		})
+	}
+	if len(files) == 1 {
+		w.Header().Set("X-Multipart-File-Digest", files[0].Digest)
+		w.Header().Set("X-Multipart-File-Bytes", strconv.FormatInt(files[0].Bytes, 10))
+		w.Header().Set("X-Multipart-Filename", files[0].Filename)
+	}
+	if value, exists := fields["title"]; exists {
+		w.Header().Set("X-Multipart-Field-Title-UTF8", hex.EncodeToString([]byte(value)))
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"fields": fields, "files": files})
+}
+
+func writeUploadHash(w http.ResponseWriter, r *http.Request, body io.Reader) {
+	hash := sha256.New()
+	bytesRead, err := io.Copy(hash, io.LimitReader(body, maximumBodySize+1))
+	if err != nil {
+		return
+	}
+	if bytesRead > maximumBodySize {
+		writeJSON(w, http.StatusRequestEntityTooLarge, map[string]string{"error": "body too large"})
+		return
+	}
+	w.Header().Set("X-Upload-Digest", hex.EncodeToString(hash.Sum(nil)))
+	w.Header().Set("X-Upload-Bytes", strconv.FormatInt(bytesRead, 10))
+	writeJSON(w, http.StatusOK, map[string]any{
+		"algorithm":      "sha256",
+		"bytes":          bytesRead,
+		"digest":         hex.EncodeToString(hash.Sum(nil)),
+		"content_length": r.ContentLength,
+	})
+}
+
+type delayedReader struct {
+	reader  io.Reader
+	delay   time.Duration
+	context context.Context
+}
+
+func (d *delayedReader) Read(buffer []byte) (int, error) {
+	select {
+	case <-d.context.Done():
+		return 0, d.context.Err()
+	case <-time.After(d.delay):
+	}
+	return d.reader.Read(buffer)
 }
 
 func (s *testServer) redirect(w http.ResponseWriter, r *http.Request) {

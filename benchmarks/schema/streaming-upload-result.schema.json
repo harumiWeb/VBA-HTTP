@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vba-http.local/schemas/streaming-upload-result.schema.json",
+  "title": "VBA-HTTP streaming upload stress result",
+  "type": "object",
+  "required": ["schema_version", "benchmark", "server", "parameters", "result"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "benchmark": { "const": "vba-http-phase7-upload-stress" },
+    "server": {
+      "type": "object",
+      "required": ["base_url", "external_network"],
+      "properties": {
+        "base_url": { "type": "string", "pattern": "^http://(127\\.0\\.0\\.1|localhost)(:[0-9]+)?$" },
+        "external_network": { "const": false }
+      },
+      "additionalProperties": false
+    },
+    "parameters": {
+      "type": "object",
+      "required": ["payload_bytes", "endpoint", "chunk_bytes"],
+      "properties": {
+        "payload_bytes": { "type": "integer", "minimum": 1073741824 },
+        "endpoint": { "const": "/upload/hash" },
+        "chunk_bytes": { "const": 65536 }
+      },
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "required": ["status", "bytes", "sha256", "elapsed_ms", "process_memory"],
+      "properties": {
+        "status": { "const": 200 },
+        "bytes": { "type": "integer", "minimum": 1073741824 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "elapsed_ms": { "type": "number", "exclusiveMinimum": 0 },
+        "process_memory": {
+          "type": "object",
+          "required": ["observed_excel", "working_set_before", "working_set_peak", "working_set_after", "private_bytes_before", "private_bytes_peak", "private_bytes_after", "peak_delta", "private_peak_delta"],
+          "properties": {
+            "observed_excel": { "type": "boolean" },
+            "working_set_before": { "type": "integer", "minimum": 0 },
+            "working_set_peak": { "type": "integer", "minimum": 0 },
+            "working_set_after": { "type": "integer", "minimum": 0 },
+            "private_bytes_before": { "type": "integer", "minimum": 0 },
+            "private_bytes_peak": { "type": "integer", "minimum": 0 },
+            "private_bytes_after": { "type": "integer", "minimum": 0 },
+            "peak_delta": { "type": "integer", "minimum": 0 },
+            "private_peak_delta": { "type": "integer", "minimum": 0 }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

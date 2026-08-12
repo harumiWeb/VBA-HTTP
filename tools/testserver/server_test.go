@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -164,6 +165,93 @@ func TestHeadersAndEcho(t *testing.T) {
 		if response.StatusCode != http.StatusOK || !bytes.Equal(actual, echoBody) {
 			t.Fatalf("%s echo = status %d body %q", method, response.StatusCode, actual)
 		}
+	}
+}
+
+func TestUploadHashAndChallenge(t *testing.T) {
+	server := httptest.NewServer(newTestServer().routes())
+	defer server.Close()
+
+	body := bytes.Repeat([]byte{0x2a}, 100_000)
+	request, err := http.NewRequest(http.MethodPost, server.URL+"/upload/hash", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+	}
+	request.Header.Set("Content-Type", "application/octet-stream")
+	response, err := http.DefaultClient.Do(request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		t.Fatalf("upload hash status = %d", response.StatusCode)
+	}
+	var payload struct {
+		Algorithm string `json:"algorithm"`
+		Bytes     int64  `json:"bytes"`
+		Digest    string `json:"digest"`
+	}
+	if err := json.NewDecoder(response.Body).Decode(&payload); err != nil {
+		t.Fatal(err)
+	}
+	expected := sha256.Sum256(body)
+	if payload.Algorithm != "sha256" || payload.Bytes != int64(len(body)) || payload.Digest != hex.EncodeToString(expected[:]) {
+		t.Fatalf("unexpected upload hash payload: %#v", payload)
+	}
+
+	challenge, err := http.Post(server.URL+"/upload/challenge", "application/octet-stream", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer challenge.Body.Close()
+	if challenge.StatusCode != http.StatusUnauthorized || challenge.Header.Get("WWW-Authenticate") == "" {
+		t.Fatalf("challenge status/header = %d %q", challenge.StatusCode, challenge.Header.Get("WWW-Authenticate"))
+	}
+}
+
+func TestUploadMultipartParsesFieldsAndFiles(t *testing.T) {
+	server := httptest.NewServer(newTestServer().routes())
+	defer server.Close()
+
+	var body bytes.Buffer
+	writer := multipart.NewWriter(&body)
+	if err := writer.WriteField("title", "日本語"); err != nil {
+		t.Fatal(err)
+	}
+	file, err := writer.CreateFormFile("payload", "payload.bin")
+	if err != nil {
+		t.Fatal(err)
+	}
+	fileBytes := bytes.Repeat([]byte{0x7f}, 80_000)
+	if _, err := file.Write(fileBytes); err != nil {
+		t.Fatal(err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatal(err)
+	}
+	response, err := http.Post(server.URL+"/upload/multipart", writer.FormDataContentType(), &body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		t.Fatalf("multipart status = %d", response.StatusCode)
+	}
+	var payload struct {
+		Fields map[string]string `json:"fields"`
+		Files  []struct {
+			Name     string `json:"name"`
+			Filename string `json:"filename"`
+			Bytes    int64  `json:"bytes"`
+			Digest   string `json:"sha256"`
+		} `json:"files"`
+	}
+	if err := json.NewDecoder(response.Body).Decode(&payload); err != nil {
+		t.Fatal(err)
+	}
+	expected := sha256.Sum256(fileBytes)
+	if payload.Fields["title"] != "日本語" || len(payload.Files) != 1 || payload.Files[0].Name != "payload" || payload.Files[0].Filename != "payload.bin" || payload.Files[0].Bytes != int64(len(fileBytes)) || payload.Files[0].Digest != hex.EncodeToString(expected[:]) {
+		t.Fatalf("unexpected multipart payload: %#v", payload)
 	}
 }
 

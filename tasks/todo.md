@@ -412,20 +412,22 @@ fileとmultipart bodyをmemoryへ全展開せず送信する。
 
 ### Todo
 
-- [ ] `WinHttpWriteData` を使うfile upload loopを実装する。
-- [ ] field／fileを逐次送信するmultipart encoderを実装する。
-- [ ] content lengthとchunk handling policyを定義する。
-- [ ] upload progressとcancellationを実装する。
-- [ ] authentication challenge中のupload failure policyを定義する。
-- [ ] hash、memory、multipart parsing、cleanup testsを追加する。
+- [x] `IHttpUploadTransport` と `HttpUploadResult` の公開境界を実装し、COM-only clientのcapability failureをnetwork前に検証する。
+- [x] `WinHttpWriteData` を使うfile upload loopを実装する。
+- [x] field／fileを逐次送信するmultipart encoderを実装する。
+- [x] content lengthとchunk handling policyをADR-0008／specへ記録する。
+- [x] upload progressとcancellationを実装する。
+- [x] authentication challenge中のupload failure policyをADR-0008／specへ記録する。
+- [x] deterministic serverのhash、memory、multipart parsing、cleanup testsを追加する。
+- [x] release artifactをtest codeへ戻さずfile／multipart APIを呼ぶexternal consumer smoke harnessを追加する。
 
 ### Exit Criteria
 
-- [ ] 1GB uploadのserver-side hashが一致する。
-- [ ] multipart uploadの各field／fileが正しく復元される。
-- [ ] payload全体をByte配列や巨大Stringへ展開しない。
-- [ ] cancellation後にfile／native resourceが残らない。
-- [ ] built artifactからupload consumer smoke testが成功する。
+- [x] 1GB uploadのserver-side hashが一致する（loopback stress結果を `docs/BENCHMARKS_BASELINE.md` に保存する）。
+- [x] multipart uploadの各field／fileが正しく復元される。
+- [x] payload全体をByte配列や巨大Stringへ展開しない（64 KiB write/read upper boundをunit testと実装で固定する）。
+- [x] cancellation後にsource file／native resourceが残らない。
+- [x] built artifactからfile／multipart upload consumer smoke testが成功する。
 
 ---
 
@@ -547,10 +549,10 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 実装前に、少なくとも次の判断をADRまたはspecとして確定する。
 
 - [x] dual transportとtransport selection policy
-- [ ] public `HttpClient` の同期、batch、download、upload API
+- [x] public `HttpClient` の同期、batch、download、upload API（Phase 1〜7で実装済み）
 - [x] `IHttpTransport` と `IHttpProgressSink` の契約（auth providerとは分離）
 - [ ] `IHttpAuthProvider` の契約（Phase 8で確定する）。
-- [x] buffered／streaming request・response bodyのownership（buffered bodyはPhase 1、download streamingはADR-0007/specで確定）
+- [x] buffered／streaming request・response bodyのownership（buffered bodyはPhase 1、downloadはADR-0007、uploadはADR-0008/specで確定）
 - [x] error分類とVBA error／result objectの境界
 - [ ] retry、deadline、redirect、cancellationの優先順位
 - [x] native handle lifecycleとnative callback禁止

@@ -294,6 +294,200 @@ Cleanup:
     Err.Raise errorNumber, errorSource, errorDescription
 End Sub
 
+'@Tag("integration")
+Public Sub Test_NativeTransport_UploadsFileAndMatchesServerHash()
+    Dim client As New HttpClient
+    Dim options As New HttpExecutionOptions
+    Dim result As HttpUploadResult
+    Dim sourcePath As String
+    Dim expectedDigest As String
+    Dim expectedResponse As HttpResponse
+    Dim errorNumber As Long
+    Dim errorSource As String
+    Dim errorDescription As String
+
+    sourcePath = NewUploadSource("file")
+    On Error GoTo Cleanup
+    WriteUploadPattern sourcePath, 1048576
+    client.BaseUrl = RequireBaseUrl()
+    Set client.Transport = New WinHttpNativeTransport
+    Set expectedResponse = client.GetResponse("/sha256/1048576")
+    expectedDigest = ExtractJsonString(expectedResponse.Text, "digest")
+    Set result = client.UploadFile("/upload/hash", sourcePath, "application/octet-stream", options)
+
+    XlflowAssert.AssertEquals 200, result.StatusCode
+    XlflowAssert.AssertTrue result.IsSuccess
+    XlflowAssert.AssertFalse result.AuthenticationChallenged
+    XlflowAssert.AssertEquals CCur(1048576), result.BytesWritten
+    XlflowAssert.AssertEquals CCur(1048576), result.ContentLength
+    XlflowAssert.AssertEquals expectedDigest, result.Headers.GetValue("X-Upload-Digest")
+    XlflowAssert.AssertEquals "1048576", result.Headers.GetValue("X-Upload-Bytes")
+    DeleteUploadFile sourcePath
+    Exit Sub
+
+Cleanup:
+    errorNumber = Err.Number
+    errorSource = Err.Source
+    errorDescription = Err.Description
+    Err.Clear
+    DeleteUploadFile sourcePath
+    Err.Raise errorNumber, errorSource, errorDescription
+End Sub
+
+'@Tag("integration")
+Public Sub Test_NativeTransport_UploadsMultipartWithUnicodeAndFile()
+    Dim client As New HttpClient
+    Dim options As New HttpExecutionOptions
+    Dim form As New HttpMultipartForm
+    Dim result As HttpUploadResult
+    Dim sourcePath As String
+    Dim expectedResponse As HttpResponse
+    Dim expectedDigest As String
+    Dim encoder As New WinHttpMultipartEncoder
+    Dim errorNumber As Long
+    Dim errorSource As String
+    Dim errorDescription As String
+
+    sourcePath = NewUploadSource("multipart")
+    On Error GoTo Cleanup
+    WriteUploadPattern sourcePath, 65536
+    form.Boundary = "----vba-http-integration-boundary"
+    form.AddField "title", "日本語"
+    form.AddFile "payload", sourcePath, "payload.bin", "application/octet-stream"
+    client.BaseUrl = RequireBaseUrl()
+    Set client.Transport = New WinHttpNativeTransport
+    Set expectedResponse = client.GetResponse("/sha256/65536")
+    expectedDigest = ExtractJsonString(expectedResponse.Text, "digest")
+    Set result = client.UploadMultipart("/upload/multipart", form, options)
+
+    XlflowAssert.AssertEquals 200, result.StatusCode
+    encoder.Initialize form
+    XlflowAssert.AssertEquals encoder.ContentLength, result.ContentLength
+    XlflowAssert.AssertEquals expectedDigest, result.Headers.GetValue("X-Multipart-File-Digest")
+    XlflowAssert.AssertEquals "e697a5e69cace8aa9e", result.Headers.GetValue("X-Multipart-Field-Title-UTF8")
+    XlflowAssert.AssertEquals "payload.bin", result.Headers.GetValue("X-Multipart-Filename")
+    DeleteUploadFile sourcePath
+    Exit Sub
+
+Cleanup:
+    errorNumber = Err.Number
+    errorSource = Err.Source
+    errorDescription = Err.Description
+    Err.Clear
+    DeleteUploadFile sourcePath
+    Err.Raise errorNumber, errorSource, errorDescription
+End Sub
+
+'@Tag("integration")
+Public Sub Test_NativeTransport_ReturnsAuthenticationChallengeWithoutReplay()
+    Dim client As New HttpClient
+    Dim options As New HttpExecutionOptions
+    Dim result As HttpUploadResult
+    Dim sourcePath As String
+    Dim errorNumber As Long
+    Dim errorSource As String
+    Dim errorDescription As String
+
+    sourcePath = NewUploadSource("challenge")
+    On Error GoTo Cleanup
+    WriteUploadRepeatedByte sourcePath, 42, 65536
+    client.BaseUrl = RequireBaseUrl()
+    Set client.Transport = New WinHttpNativeTransport
+    Set result = client.UploadFile("/upload/challenge", sourcePath, "application/octet-stream", options)
+
+    XlflowAssert.AssertEquals 401, result.StatusCode
+    XlflowAssert.AssertFalse result.IsSuccess
+    XlflowAssert.AssertTrue result.AuthenticationChallenged
+    XlflowAssert.AssertEquals CCur(65536), result.BytesWritten
+    DeleteUploadFile sourcePath
+    Exit Sub
+
+Cleanup:
+    errorNumber = Err.Number
+    errorSource = Err.Source
+    errorDescription = Err.Description
+    Err.Clear
+    DeleteUploadFile sourcePath
+    Err.Raise errorNumber, errorSource, errorDescription
+End Sub
+
+'@Tag("integration")
+Public Sub Test_NativeTransport_UploadCancellationPreservesSource()
+    Dim client As New HttpClient
+    Dim options As New HttpExecutionOptions
+    Dim token As New HttpCancellationToken
+    Dim sink As New RecordingProgressSink
+    Dim sourcePath As String
+    Dim observedNumber As Long
+    Dim observedSource As String
+    Dim errorNumber As Long
+    Dim errorSource As String
+    Dim errorDescription As String
+
+    sourcePath = NewUploadSource("cancel")
+    On Error GoTo Cleanup
+    WriteUploadPattern sourcePath, 4194304
+    sink.CancelAfter = 65536
+    Set sink.CancellationToken = token
+    Set options.CancellationToken = token
+    client.BaseUrl = RequireBaseUrl()
+    Set client.Transport = New WinHttpNativeTransport
+    observedNumber = CaptureUploadError(client, "/upload/slow/20", sourcePath, options, sink, observedSource)
+
+    XlflowAssert.AssertEquals HttpErrCancelled, observedNumber
+    XlflowAssert.AssertEquals "WinHttpNativeTransport.Upload", observedSource
+    XlflowAssert.AssertEquals 4194304, FileLen(sourcePath)
+    XlflowAssert.AssertTrue sink.CallCount > 0
+    DeleteUploadFile sourcePath
+    Exit Sub
+
+Cleanup:
+    errorNumber = Err.Number
+    errorSource = Err.Source
+    errorDescription = Err.Description
+    Err.Clear
+    DeleteUploadFile sourcePath
+    Err.Raise errorNumber, errorSource, errorDescription
+End Sub
+
+'@Tag("integration")
+Public Sub Test_NativeTransport_UploadReleasesHandles()
+    Dim client As New HttpClient
+    Dim options As New HttpExecutionOptions
+    Dim result As HttpUploadResult
+    Dim sourcePath As String
+    Dim beforeCount As Long
+    Dim afterCount As Long
+    Dim index As Long
+
+    sourcePath = NewUploadSource("handles")
+    On Error GoTo Cleanup
+    WriteUploadRepeatedByte sourcePath, 7, 65536
+    If Not WinHttpNativeApi.ProcessHandleCount(beforeCount) Then
+        XlflowAssert.AssertInconclusive "GetProcessHandleCount is unavailable on this host."
+        DeleteUploadFile sourcePath
+        Exit Sub
+    End If
+    client.BaseUrl = RequireBaseUrl()
+    Set client.Transport = New WinHttpNativeTransport
+    For index = 1 To 5
+        Set result = client.UploadFile("/upload/hash", sourcePath, "application/octet-stream", options)
+        XlflowAssert.AssertEquals 200, result.StatusCode
+    Next index
+    If Not WinHttpNativeApi.ProcessHandleCount(afterCount) Then
+        XlflowAssert.AssertInconclusive "GetProcessHandleCount is unavailable after uploads."
+        DeleteUploadFile sourcePath
+        Exit Sub
+    End If
+    XlflowAssert.AssertTrue afterCount - beforeCount <= 8, "Native upload handles grew persistently."
+    DeleteUploadFile sourcePath
+    Exit Sub
+
+Cleanup:
+    DeleteUploadFile sourcePath
+    Err.Raise Err.Number, Err.Source, Err.Description
+End Sub
+
 Private Sub AssertTextEcho(ByVal Method As String)
     Dim client As New HttpClient
     Dim Request As New HttpRequest
@@ -332,4 +526,32 @@ Failed:
     CaptureDownloadError = Err.Number
     errorSource = Err.Source
     Err.Clear
+End Function
+
+Private Function CaptureUploadError(ByVal client As HttpClient, ByVal Url As String, ByVal SourcePath As String, ByVal Options As HttpExecutionOptions, ByVal Progress As IHttpProgressSink, ByRef errorSource As String) As Long
+    Dim result As HttpUploadResult
+
+    On Error GoTo Failed
+    Set result = client.UploadFile(Url, SourcePath, "application/octet-stream", Options, Progress)
+    If result Is Nothing Then Err.Raise HttpErrProtocol, "CaptureUploadError", "Upload returned Nothing."
+    Exit Function
+
+Failed:
+    CaptureUploadError = Err.Number
+    errorSource = Err.Source
+    Err.Clear
+End Function
+
+Private Function ExtractJsonString(ByVal Text As String, ByVal Name As String) As String
+    Dim marker As String
+    Dim startIndex As Long
+    Dim endIndex As Long
+
+    marker = Chr$(34) & Name & Chr$(34) & ":" & Chr$(34)
+    startIndex = InStr(1, Text, marker, vbBinaryCompare)
+    If startIndex = 0 Then Err.Raise HttpErrProtocol, "WinHttpNativeTransportTests", "JSON field was not found: " & Name
+    startIndex = startIndex + Len(marker)
+    endIndex = InStr(startIndex, Text, """", vbBinaryCompare)
+    If endIndex <= startIndex Then Err.Raise HttpErrProtocol, "WinHttpNativeTransportTests", "JSON field was malformed: " & Name
+    ExtractJsonString = Mid$(Text, startIndex, endIndex - startIndex)
 End Function

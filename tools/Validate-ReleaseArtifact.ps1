@@ -42,6 +42,14 @@ if ($null -ne (Compare-Object $expectedExcluded $manifestExcluded)) {
     throw "Release manifest excluded components differ from policy."
 }
 
+function New-UploadSmokeFile([string]$Path) {
+    $buffer = New-Object byte[] 65536
+    for ($index = 0; $index -lt $buffer.Length; $index++) { $buffer[$index] = [byte]($index % 251) }
+    $stream = [IO.File]::Create($Path)
+    try { $stream.Write($buffer, 0, $buffer.Length) }
+    finally { $stream.Dispose() }
+}
+
 $excel = $null
 $workbooks = $null
 $workbook = $null
@@ -117,6 +125,7 @@ $nativeClient = $null
 $nativeResponse = $null
 $downloadResult = $null
 $downloadPath = $null
+$uploadPath = $null
 $ready = $null
 try {
     [void](New-Item -ItemType Directory -Path $smokeDirectory -Force)
@@ -188,6 +197,9 @@ try {
         throw "Release native HttpClient download did not publish the expected file."
     }
 
+    $uploadPath = Join-Path $smokeDirectory "consumer-upload.bin"
+    New-UploadSmokeFile $uploadPath
+
     $harnessWorkbook = $consumerWorkbooks.Add()
     $harnessComponent = $harnessWorkbook.VBProject.VBComponents.Import((Join-Path $PSScriptRoot "consumer\ReleaseBatchSmoke.bas"))
     if ($harnessComponent.Name -ne "ReleaseBatchSmoke") { throw "External batch smoke module import failed." }
@@ -195,6 +207,8 @@ try {
     [void]$consumerExcel.Run($batchMacro, $consumerWorkbook.Name, [string]$ready.url)
     $reliabilityMacro = "'$($harnessWorkbook.Name)'!ReleaseBatchSmoke.RunReliabilitySmoke"
     [void]$consumerExcel.Run($reliabilityMacro, $consumerWorkbook.Name, [string]$ready.url)
+    $uploadMacro = "'$($harnessWorkbook.Name)'!ReleaseBatchSmoke.RunUploadSmoke"
+    [void]$consumerExcel.Run($uploadMacro, $consumerWorkbook.Name, [string]$ready.url, $uploadPath)
 }
 finally {
     if ($null -ne $response -and [Runtime.InteropServices.Marshal]::IsComObject($response)) {
@@ -240,4 +254,4 @@ finally {
     }
 }
 
-Write-Output "Release artifact is valid: $($actualComponents.Count) components; external COM/native GET, download, batch, retry, and deadline smoke passed."
+Write-Output "Release artifact is valid: $($actualComponents.Count) components; external COM/native GET, download, batch, retry, deadline, file-upload, and multipart-upload smoke passed."

@@ -59,8 +59,9 @@ unchanged.
 ## Scope
 
 This transport is buffered and synchronous. Bounded asynchronous scheduling is
-defined in Phase 3. Constant-memory download/upload and advanced protocol
-selection use the native transport defined by later specs.
+defined in Phase 3. Constant-memory download and upload use the native
+transport defined by `streaming-download.md` and `streaming-upload.md`;
+advanced protocol selection remains a later phase.
 
 ## Evidence
 

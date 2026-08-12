@@ -54,6 +54,11 @@ tasks:
     cmds:
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Run-DownloadStressTests.ps1
 
+  test:upload-stress:
+    desc: Run the 1 GiB constant-memory upload and server hash verification
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Run-UploadStressTests.ps1
+
   testserver:test:
     desc: Run deterministic local HTTP server tests
     cmds:

@@ -11,9 +11,11 @@ Option Explicit
 
 Implements IHttpTransport
 Implements IHttpDownloadTransport
+Implements IHttpUploadTransport
 
 Private Const TransportSource As String = "WinHttpNativeTransport.Execute"
 Private Const DownloadSource As String = "WinHttpNativeTransport.DownloadFile"
+Private Const UploadSource As String = "WinHttpNativeTransport.Upload"
 Private Const UserAgent As String = "VBA-HTTP/0.5"
 Private Const ReadChunkBytes As Long = 65536
 
@@ -23,6 +25,14 @@ End Function
 
 Private Function IHttpDownloadTransport_DownloadFile(ByVal Request As HttpRequest, ByVal DestinationPath As String, ByVal Options As HttpExecutionOptions, Optional ByVal Progress As IHttpProgressSink = Nothing) As HttpDownloadResult
     Set IHttpDownloadTransport_DownloadFile = DownloadCore(Request, DestinationPath, Options, Progress)
+End Function
+
+Private Function IHttpUploadTransport_UploadFile(ByVal Request As HttpRequest, ByVal SourcePath As String, ByVal ContentType As String, ByVal Options As HttpExecutionOptions, Optional ByVal Progress As IHttpProgressSink = Nothing) As HttpUploadResult
+    Set IHttpUploadTransport_UploadFile = UploadFileCore(Request, SourcePath, ContentType, Options, Progress)
+End Function
+
+Private Function IHttpUploadTransport_UploadMultipart(ByVal Request As HttpRequest, ByVal Form As HttpMultipartForm, ByVal Options As HttpExecutionOptions, Optional ByVal Progress As IHttpProgressSink = Nothing) As HttpUploadResult
+    Set IHttpUploadTransport_UploadMultipart = UploadMultipartCore(Request, Form, Options, Progress)
 End Function
 
 Private Function IHttpTransport_Execute(ByVal Request As HttpRequest) As HttpResponse
@@ -246,6 +256,122 @@ CleanupFinished:
     End If
 End Function
 
+Private Function UploadFileCore(ByVal Request As HttpRequest, ByVal SourcePath As String, ByVal ContentType As String, ByVal Options As HttpExecutionOptions, Optional ByVal Progress As IHttpProgressSink = Nothing) As HttpUploadResult
+    Dim concreteSource As New WinHttpFileUploadSource
+    Dim source As IHttpUploadSource
+
+    concreteSource.Initialize SourcePath, ContentType
+    Set source = concreteSource
+    Set UploadFileCore = UploadCore(Request, source, Options, Progress, UploadSource)
+End Function
+
+Private Function UploadMultipartCore(ByVal Request As HttpRequest, ByVal Form As HttpMultipartForm, ByVal Options As HttpExecutionOptions, Optional ByVal Progress As IHttpProgressSink = Nothing) As HttpUploadResult
+    Dim concreteSource As New WinHttpMultipartUploadSource
+    Dim source As IHttpUploadSource
+
+    concreteSource.Initialize Form
+    Set source = concreteSource
+    Set UploadMultipartCore = UploadCore(Request, source, Options, Progress, UploadSource)
+End Function
+
+Private Function UploadCore(ByVal Request As HttpRequest, ByVal Source As IHttpUploadSource, ByVal Options As HttpExecutionOptions, Optional ByVal Progress As IHttpProgressSink = Nothing, Optional ByVal SourceName As String = "") As HttpUploadResult
+    Dim Url As WinHttpNativeUrl
+    Dim session As WinHttpSessionHandle
+    Dim connection As WinHttpConnectionHandle
+    Dim nativeRequest As WinHttpRequestHandle
+    Dim writer As WinHttpUploadStreamWriter
+    Dim result As HttpUploadResult
+    Dim headers As HttpHeaders
+    Dim statusCode As Long
+    Dim reasonPhrase As String
+    Dim responseHeaders As HttpHeaders
+    Dim protocolUsed As String
+    Dim contentLength As Currency
+    Dim started As Currency
+    Dim errorNumber As Long
+    Dim errorSource As String
+    Dim errorDescription As String
+    #If VBA7 Then
+    Dim handleValue As LongPtr
+    #Else
+    Dim handleValue As Long
+    #End If
+
+    If Len(SourceName) = 0 Then SourceName = UploadSource
+    On Error GoTo UploadFailure
+    If Request Is Nothing Then HttpErrors.RaiseValidation SourceName, "Request cannot be Nothing."
+    If Source Is Nothing Then HttpErrors.RaiseValidation SourceName, "Upload source cannot be Nothing."
+    If Options Is Nothing Then HttpErrors.RaiseValidation SourceName, "Execution options cannot be Nothing."
+    If Request.Method <> "POST" Then HttpErrors.RaiseValidation SourceName, "Streaming uploads require the POST method."
+    If Request.FollowRedirects Then HttpErrors.RaiseValidation SourceName, "Streaming uploads do not follow redirects."
+    If Request.Headers.Contains("Transfer-Encoding") Then HttpErrors.RaiseValidation SourceName, "Streaming uploads manage transfer encoding internally."
+
+    contentLength = Source.ContentLength
+    If contentLength < 0 Then HttpErrors.RaiseValidation SourceName, "Upload content length cannot be negative."
+    CheckUploadControls Options, 0, SourceName
+    started = HttpTiming.CounterValue()
+    Set Url = New WinHttpNativeUrl
+    Url.Initialize Request.Url
+    Set session = New WinHttpSessionHandle
+    handleValue = WinHttpNativeApi.OpenSession(UserAgent)
+    If handleValue = 0 Then RaiseNativeFailure "OpenSession", SourceName
+    session.Initialize handleValue
+
+    Set connection = New WinHttpConnectionHandle
+    handleValue = WinHttpNativeApi.Connect(session.Value, Url.Host, Url.Port)
+    If handleValue = 0 Then RaiseNativeFailure "Connect", SourceName
+    connection.Initialize handleValue, session
+
+    Set nativeRequest = New WinHttpRequestHandle
+    If Url.IsSecure Then
+        handleValue = WinHttpNativeApi.OpenRequest(connection.Value, Request.Method, Url.PathAndQuery, WinHttpNativeApi.WinHttpFlagSecure)
+    Else
+        handleValue = WinHttpNativeApi.OpenRequest(connection.Value, Request.Method, Url.PathAndQuery, 0)
+    End If
+    If handleValue = 0 Then RaiseNativeFailure "OpenRequest", SourceName
+    nativeRequest.Initialize handleValue, connection
+
+    ApplyRequestOptions nativeRequest, Request, SourceName
+    Set headers = Request.Headers.Clone()
+    headers.SetValue "Content-Length", WinHttpUploadEncoding.ByteCountText(contentLength)
+    headers.SetValue "Content-Type", Source.ContentType
+    If Not WinHttpNativeApi.AddRequestHeaders(nativeRequest.Value, BuildRequestHeaders(headers)) Then RaiseNativeFailure "AddRequestHeaders", SourceName
+    If Not WinHttpNativeApi.BeginUpload(nativeRequest.Value, contentLength) Then RaiseNativeFailure "SendRequest", SourceName
+
+    Set writer = New WinHttpUploadStreamWriter
+    writer.Initialize nativeRequest, Options, Progress, contentLength, SourceName
+    writer.SetStarted started
+    NotifyUploadProgress Progress, 0, contentLength
+    Source.WriteTo writer
+    If writer.BytesWritten <> contentLength Then HttpErrors.RaiseTransport HttpErrorIo, SourceName, "Upload source length changed while writing."
+    CheckUploadControls Options, started, SourceName
+    If Not WinHttpNativeApi.ReceiveResponse(nativeRequest.Value) Then RaiseNativeFailure "ReceiveResponse", SourceName
+    ReadResponseMetadata nativeRequest, statusCode, reasonPhrase, responseHeaders, protocolUsed, SourceName
+
+    Set result = New HttpUploadResult
+    result.Initialize statusCode, reasonPhrase, responseHeaders, protocolUsed, writer.BytesWritten, contentLength, HttpTiming.ElapsedMilliseconds(started, HttpTiming.CounterValue())
+    Set UploadCore = result
+    CloseNativeHandles nativeRequest, connection, session
+    Exit Function
+
+UploadFailure:
+    errorNumber = Err.Number
+    errorSource = Err.Source
+    errorDescription = Err.Description
+    Err.Clear
+    CloseNativeHandles nativeRequest, connection, session
+    If errorNumber <> 0 Then
+        If HttpErrors.CategoryFromNumber(errorNumber) <> HttpErrorNone Then
+            Err.Raise errorNumber, errorSource, errorDescription
+        Else
+            WinHttpErrorMapping.RaiseMappedWinHttpFailure errorNumber, SourceName
+        End If
+        Err.Raise errorNumber, errorSource, errorDescription
+    Else
+        Err.Raise HttpErrIo, SourceName, "Native streaming upload failed without an error number."
+    End If
+End Function
+
 Private Sub CloseNativeHandles(ByVal nativeRequest As WinHttpRequestHandle, ByVal connection As WinHttpConnectionHandle, ByVal session As WinHttpSessionHandle)
     If Not nativeRequest Is Nothing Then nativeRequest.ReleaseHandle
     If Not connection Is Nothing Then connection.ReleaseHandle
@@ -421,9 +547,23 @@ Private Sub CheckDownloadControls(ByVal Options As HttpExecutionOptions, ByVal s
     End If
 End Sub
 
+Private Sub CheckUploadControls(ByVal Options As HttpExecutionOptions, ByVal started As Currency, ByVal Source As String)
+    If Options Is Nothing Then Exit Sub
+    If Not Options.CancellationToken Is Nothing Then
+        If Options.CancellationToken.IsCancellationRequested Then Err.Raise HttpErrCancelled, Source, "HTTP upload was cancelled."
+    End If
+    If Options.TotalDeadlineMilliseconds > 0 And started <> 0 Then
+        If HttpTiming.ElapsedMilliseconds(started, HttpTiming.CounterValue()) >= Options.TotalDeadlineMilliseconds Then Err.Raise HttpErrTimeout, Source, "HTTP upload total deadline expired."
+    End If
+End Sub
+
 Private Sub NotifyProgress(ByVal Progress As IHttpProgressSink, ByVal bytesWritten As Currency, ByVal totalBytes As Currency)
     If Progress Is Nothing Then Exit Sub
     Progress.OnProgress bytesWritten, totalBytes
+End Sub
+
+Private Sub NotifyUploadProgress(ByVal Progress As IHttpProgressSink, ByVal bytesWritten As Currency, ByVal totalBytes As Currency)
+    If Not Progress Is Nothing Then Progress.OnProgress bytesWritten, totalBytes
 End Sub
 
 Private Function ProgressTotal(ByVal contentLength As Currency, ByVal contentLengthKnown As Boolean) As Currency

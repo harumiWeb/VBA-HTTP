@@ -4,7 +4,7 @@ VBA-HTTP is a Windows Excel/VBA HTTP client designed for deterministic testing, 
 
 ## Development status
 
-Phase 6 adds constant-memory downloads on the synchronous native WinHTTP backend. The default remains the late-bound `WinHttp.WinHttpRequest.5.1` transport; the native backend provides pointer-safe handles, negotiated protocol reporting, and bounded file streaming without a WinHTTP type-library reference.
+Phase 6 adds constant-memory downloads and Phase 7 adds file/multipart uploads on the synchronous native WinHTTP backend. The default remains the late-bound `WinHttp.WinHttpRequest.5.1` transport; the native backend provides pointer-safe handles, negotiated protocol reporting, and bounded file streaming without a WinHTTP type-library reference.
 
 ```vb
 Dim client As HttpClient
@@ -73,6 +73,22 @@ download.RaiseForStatus
 Debug.Print download.BytesWritten, download.Published
 ```
 
+File and multipart uploads use the same bounded native transport. The source file remains caller-owned and is never replayed automatically after cancellation, timeout, or a 401/407 challenge.
+
+```vb
+Dim upload As HttpUploadResult
+Dim form As HttpMultipartForm
+
+Set upload = nativeClient.UploadFile("/upload/hash", "C:\Temp\payload.bin")
+upload.RaiseForStatus
+
+Set form = VBAHttp.CreateMultipartForm()
+form.AddField "title", "日本語"
+form.AddFile "payload", "C:\Temp\payload.bin"
+Set upload = nativeClient.UploadMultipart("/upload/multipart", form)
+upload.RaiseForStatus
+```
+
 `DownloadFile` reads at most 64 KiB at a time, writes beside the destination, and atomically replaces the destination after a successful response. Existing destinations remain unchanged on HTTP failure, cancellation, timeout, or write failure. Implement `IHttpProgressSink` to receive integral byte counters; an unknown `Content-Length` is reported as `-1`.
 
 GET, HEAD, PUT, DELETE, OPTIONS, and TRACE retry 408, 429, 500, 502, 503, 504 and transient DNS, connection, timeout, and I/O failures by default. POST, PATCH, and extension methods require explicit opt-in:
@@ -104,4 +120,4 @@ task release:build
 
 Tests and benchmarks use only the deterministic loopback server. Release workbooks are generated with `xlflow build` and exclude tests, benchmarks, xlflow helpers, development modules, and test-only classes.
 
-Current contracts are documented in [`docs/specs/http-core-api.md`](docs/specs/http-core-api.md), [`docs/specs/native-winhttp-transport.md`](docs/specs/native-winhttp-transport.md), [`docs/specs/streaming-download.md`](docs/specs/streaming-download.md), [`docs/specs/bounded-concurrency.md`](docs/specs/bounded-concurrency.md), and [`docs/specs/reliability-policy.md`](docs/specs/reliability-policy.md), with architectural decisions under [`docs/adr/`](docs/adr/).
+Current contracts are documented in [`docs/specs/http-core-api.md`](docs/specs/http-core-api.md), [`docs/specs/native-winhttp-transport.md`](docs/specs/native-winhttp-transport.md), [`docs/specs/streaming-download.md`](docs/specs/streaming-download.md), [`docs/specs/streaming-upload.md`](docs/specs/streaming-upload.md), [`docs/specs/bounded-concurrency.md`](docs/specs/bounded-concurrency.md), and [`docs/specs/reliability-policy.md`](docs/specs/reliability-policy.md), with architectural decisions under [`docs/adr/`](docs/adr/).

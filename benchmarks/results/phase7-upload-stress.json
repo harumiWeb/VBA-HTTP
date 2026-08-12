@@ -1,0 +1,30 @@
+{
+    "schema_version":  1,
+    "benchmark":  "vba-http-phase7-upload-stress",
+    "server":  {
+                   "base_url":  "http://127.0.0.1:60648",
+                   "external_network":  false
+               },
+    "parameters":  {
+                       "payload_bytes":  1073741824,
+                       "endpoint":  "/upload/hash",
+                       "chunk_bytes":  65536
+                   },
+    "result":  {
+                   "status":  200,
+                   "bytes":  1073741824,
+                   "sha256":  "3a33d58aa8ee1e9d21fd4f510cc5d1ce8d25ba5e24363d19c28e2bf866f4185c",
+                   "elapsed_ms":  15980.752,
+                   "process_memory":  {
+                                          "observed_excel":  true,
+                                          "working_set_before":  9211904,
+                                          "working_set_peak":  162770944,
+                                          "working_set_after":  0,
+                                          "private_bytes_before":  4259840,
+                                          "private_bytes_peak":  186470400,
+                                          "private_bytes_after":  0,
+                                          "peak_delta":  153559040,
+                                          "private_peak_delta":  182210560
+                                      }
+               }
+}

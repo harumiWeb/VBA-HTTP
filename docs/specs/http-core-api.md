@@ -19,7 +19,7 @@ Debug.Print response.StatusCode
 Debug.Print response.Text
 ```
 
-`HttpClient.Execute(request)` is the primitive buffered operation. `GetResponse`, `PostResponse`, `PutResponse`, `PatchResponse`, and `DeleteResponse` are convenience methods that construct a request and delegate to `Execute`. The `Response` suffix is required because VBA reserves `Get`, `Put`, and related tokens; this keeps ordinary early-bound calls compilable. Batch execution is defined by `bounded-concurrency.md`; constant-memory downloads are defined by `streaming-download.md` and are available on transports that implement `IHttpDownloadTransport`. Upload remains a later additive contract.
+`HttpClient.Execute(request)` is the primitive buffered operation. `GetResponse`, `PostResponse`, `PutResponse`, `PatchResponse`, and `DeleteResponse` are convenience methods that construct a request and delegate to `Execute`. The `Response` suffix is required because VBA reserves `Get`, `Put`, and related tokens; this keeps ordinary early-bound calls compilable. Batch execution is defined by `bounded-concurrency.md`; constant-memory downloads are defined by `streaming-download.md` and are available on transports that implement `IHttpDownloadTransport`. Constant-memory file and multipart uploads are defined by `streaming-upload.md` and are available on transports that implement `IHttpUploadTransport`.
 
 `HttpResponse.ProtocolUsed` reports the native backend's negotiated protocol as
 `HTTP/1.1`, `HTTP/2`, or `HTTP/3`. The COM backend leaves this property empty.
@@ -45,7 +45,7 @@ Core buffered bodies use `HttpBody` with one of three kinds: empty, text, or byt
 - Text is copied into the request snapshot as a VBA `String`.
 - Bytes are copied into a private `Byte()` owned by `HttpBody`; getters return a copy.
 - A response owns its buffered body independently of request and transport objects.
-- File and stream bodies are not represented by a giant `String` or `Byte()`. `DownloadFile` owns its bounded read buffer and same-directory temporary file as defined by `streaming-download.md`; upload ownership remains unspecified until its streaming contract is accepted.
+- File and stream bodies are not represented by a giant `String` or `Byte()`. `DownloadFile` owns its bounded read buffer and same-directory temporary file as defined by `streaming-download.md`. `UploadFile` and `UploadMultipart` keep the caller-owned source read-only and emit bounded `WinHttpWriteData` chunks as defined by `streaming-upload.md`.
 
 ## Response text decoding
 
@@ -82,3 +82,4 @@ The authoritative decision is ADR-0003. `HttpErrors` reserves the public namespa
 - Batch API and scheduler contract: `docs/specs/bounded-concurrency.md`
 - Retry, total deadline, and cancellation: `docs/specs/reliability-policy.md`
 - Constant-memory download, publication, progress, and cleanup: `docs/specs/streaming-download.md`
+- Constant-memory file/multipart upload, source ownership, progress, cancellation, and challenge handling: `docs/specs/streaming-upload.md`

@@ -50,3 +50,32 @@ Public Sub RunReliabilitySmoke(ByVal releaseWorkbookName As String, ByVal baseUr
         Err.Raise vbObjectError + 742, "ReleaseBatchSmoke.RunReliabilitySmoke", "Release total-deadline smoke did not return HttpErrTimeout."
     End If
 End Sub
+
+Public Sub RunUploadSmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As String, ByVal sourcePath As String)
+    Dim client As Object
+    Dim form As Object
+    Dim result As Object
+
+    Set client = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateNativeClient")
+    client.BaseUrl = baseUrl
+
+    Set result = client.UploadFile("/upload/hash", sourcePath, "application/octet-stream")
+    If result.StatusCode <> 200 Or result.BytesWritten <> 65536 Or result.ContentLength <> 65536 Then
+        Err.Raise vbObjectError + 743, "ReleaseBatchSmoke.RunUploadSmoke", "Release file upload smoke returned an unexpected result."
+    End If
+    If result.Headers.GetValue("X-Upload-Bytes") <> "65536" Then
+        Err.Raise vbObjectError + 744, "ReleaseBatchSmoke.RunUploadSmoke", "Release file upload byte header was not verified."
+    End If
+
+    Set form = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateMultipartForm")
+    form.Boundary = "----vba-http-release-smoke"
+    form.AddField "title", "外部consumer"
+    form.AddFile "payload", sourcePath, "consumer.bin", "application/octet-stream"
+    Set result = client.UploadMultipart("/upload/multipart", form)
+    If result.StatusCode <> 200 Or result.BytesWritten <> result.ContentLength Then
+        Err.Raise vbObjectError + 745, "ReleaseBatchSmoke.RunUploadSmoke", "Release multipart upload smoke returned an unexpected result."
+    End If
+    If result.Headers.GetValue("X-Multipart-File-Bytes") <> "65536" Or result.Headers.GetValue("X-Multipart-Filename") <> "consumer.bin" Then
+        Err.Raise vbObjectError + 746, "ReleaseBatchSmoke.RunUploadSmoke", "Release multipart response was not verified."
+    End If
+End Sub

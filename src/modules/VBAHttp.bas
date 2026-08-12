@@ -36,3 +36,8 @@ End Function
 Public Function CreateCancellationToken() As HttpCancellationToken
     Set CreateCancellationToken = New HttpCancellationToken
 End Function
+
+''' Creates an ordered multipart form for referenced-workbook consumers.
+Public Function CreateMultipartForm() As HttpMultipartForm
+    Set CreateMultipartForm = New HttpMultipartForm
+End Function
