@@ -1,6 +1,20 @@
 Attribute VB_Name = "HttpEncoding"
 Option Explicit
 
+Private Const UnicodeBmpMax As Long = 65535
+Private Const UnicodeSupplementaryBase As Long = 65536
+Private Const Utf16HighSurrogateMin As Long = 55296
+Private Const Utf16HighSurrogateMax As Long = 56319
+Private Const Utf16LowSurrogateMin As Long = 56320
+Private Const Utf16LowSurrogateMax As Long = 57343
+Private Const Utf16PayloadRange As Long = 1024
+Private Const Utf8ContinuationPayloadMask As Long = 63
+Private Const Utf8ContinuationMarker As Long = 128
+Private Const Utf8ContinuationMarkerMask As Long = 192
+Private Const Utf8TwoByteMarker As Long = 192
+Private Const Utf8ThreeByteMarker As Long = 224
+Private Const Utf8FourByteMarker As Long = 240
+
 Public Function PercentEncode(ByVal value As String) As String
     Dim bytes As Variant
     Dim index As Long
@@ -44,18 +58,18 @@ Public Function EncodeUtf8(ByVal value As String) As Variant
         firstUnit = AscW(Mid$(value, index, 1))
         If firstUnit < 0 Then firstUnit = firstUnit + 65536
 
-        If firstUnit >= &HD800& And firstUnit <= &HDBFF& Then
+        If firstUnit >= Utf16HighSurrogateMin And firstUnit <= Utf16HighSurrogateMax Then
             If index = Len(value) Then
                 HttpErrors.RaiseValidation "HttpEncoding.EncodeUtf8", "Text contains an unmatched UTF-16 high surrogate."
             End If
             secondUnit = AscW(Mid$(value, index + 1, 1))
             If secondUnit < 0 Then secondUnit = secondUnit + 65536
-            If secondUnit < &HDC00& Or secondUnit > &HDFFF& Then
+            If secondUnit < Utf16LowSurrogateMin Or secondUnit > Utf16LowSurrogateMax Then
                 HttpErrors.RaiseValidation "HttpEncoding.EncodeUtf8", "Text contains an unmatched UTF-16 high surrogate."
             End If
-            codePoint = &H10000 + (firstUnit - &HD800&) * &H400 + (secondUnit - &HDC00&)
+            codePoint = UnicodeSupplementaryBase + (firstUnit - Utf16HighSurrogateMin) * Utf16PayloadRange + (secondUnit - Utf16LowSurrogateMin)
             index = index + 2
-        ElseIf firstUnit >= &HDC00& And firstUnit <= &HDFFF& Then
+        ElseIf firstUnit >= Utf16LowSurrogateMin And firstUnit <= Utf16LowSurrogateMax Then
             HttpErrors.RaiseValidation "HttpEncoding.EncodeUtf8", "Text contains an unmatched UTF-16 low surrogate."
         Else
             codePoint = firstUnit
@@ -83,24 +97,24 @@ Public Function DecodeUtf8(ByVal bytes As Variant) As String
 
     Do While index <= upperBound ' xlflow:disable-line VBA227
         firstByte = CLng(bytes(index)) ' xlflow:disable-line VBA227
-        If firstByte <= &H7F Then
+        If firstByte <= 127 Then
             codePoint = firstByte
             index = index + 1
-        ElseIf firstByte >= &HC2 And firstByte <= &HDF Then
+        ElseIf firstByte >= 194 And firstByte <= 223 Then
             RequireContinuation bytes, index, upperBound, 1
-            codePoint = (firstByte And &H1F) * &H40 + (CLng(bytes(index + 1)) And &H3F) ' xlflow:disable-line VBA227
+            codePoint = (firstByte And 31) * 64 + (CLng(bytes(index + 1)) And Utf8ContinuationPayloadMask) ' xlflow:disable-line VBA227
             index = index + 2
-        ElseIf firstByte >= &HE0 And firstByte <= &HEF Then
+        ElseIf firstByte >= 224 And firstByte <= 239 Then
             RequireContinuation bytes, index, upperBound, 2
-            If firstByte = &HE0 And CLng(bytes(index + 1)) < &HA0 Then RaiseMalformedUtf8 ' xlflow:disable-line VBA227
-            If firstByte = &HED And CLng(bytes(index + 1)) >= &HA0 Then RaiseMalformedUtf8 ' xlflow:disable-line VBA227
-            codePoint = (firstByte And &HF) * &H1000 + (CLng(bytes(index + 1)) And &H3F) * &H40 + (CLng(bytes(index + 2)) And &H3F) ' xlflow:disable-line VBA227
+            If firstByte = 224 And CLng(bytes(index + 1)) < 160 Then RaiseMalformedUtf8 ' xlflow:disable-line VBA227
+            If firstByte = 237 And CLng(bytes(index + 1)) >= 160 Then RaiseMalformedUtf8 ' xlflow:disable-line VBA227
+            codePoint = (firstByte And 15) * 4096 + (CLng(bytes(index + 1)) And Utf8ContinuationPayloadMask) * 64 + (CLng(bytes(index + 2)) And Utf8ContinuationPayloadMask) ' xlflow:disable-line VBA227
             index = index + 3
-        ElseIf firstByte >= &HF0 And firstByte <= &HF4 Then
+        ElseIf firstByte >= 240 And firstByte <= 244 Then
             RequireContinuation bytes, index, upperBound, 3
-            If firstByte = &HF0 And CLng(bytes(index + 1)) < &H90 Then RaiseMalformedUtf8 ' xlflow:disable-line VBA227
-            If firstByte = &HF4 And CLng(bytes(index + 1)) > &H8F Then RaiseMalformedUtf8 ' xlflow:disable-line VBA227
-            codePoint = (firstByte And &H7) * &H40000 + (CLng(bytes(index + 1)) And &H3F) * &H1000 + (CLng(bytes(index + 2)) And &H3F) * &H40 + (CLng(bytes(index + 3)) And &H3F) ' xlflow:disable-line VBA227
+            If firstByte = 240 And CLng(bytes(index + 1)) < 144 Then RaiseMalformedUtf8 ' xlflow:disable-line VBA227
+            If firstByte = 244 And CLng(bytes(index + 1)) > 143 Then RaiseMalformedUtf8 ' xlflow:disable-line VBA227
+            codePoint = (firstByte And 7) * 262144 + (CLng(bytes(index + 1)) And Utf8ContinuationPayloadMask) * 4096 + (CLng(bytes(index + 2)) And Utf8ContinuationPayloadMask) * 64 + (CLng(bytes(index + 3)) And Utf8ContinuationPayloadMask) ' xlflow:disable-line VBA227
             index = index + 4
         Else
             RaiseMalformedUtf8
@@ -159,23 +173,23 @@ Public Function CopyBytes(ByVal value As Variant) As Variant
 End Function
 
 Private Sub AppendCodePoint(ByRef output() As Byte, ByRef byteCount As Long, ByVal codePoint As Long)
-    If codePoint <= &H7F Then
+    If codePoint <= 127 Then
         output(byteCount) = CByte(codePoint)
         byteCount = byteCount + 1
-    ElseIf codePoint <= &H7FF Then
-        output(byteCount) = CByte(&HC0 Or (codePoint \ &H40))
-        output(byteCount + 1) = CByte(&H80 Or (codePoint And &H3F))
+    ElseIf codePoint <= 2047 Then
+        output(byteCount) = CByte(Utf8TwoByteMarker Or (codePoint \ 64))
+        output(byteCount + 1) = CByte(Utf8ContinuationMarker Or (codePoint And Utf8ContinuationPayloadMask))
         byteCount = byteCount + 2
-    ElseIf codePoint <= &HFFFF& Then
-        output(byteCount) = CByte(&HE0 Or (codePoint \ &H1000))
-        output(byteCount + 1) = CByte(&H80 Or ((codePoint \ &H40) And &H3F))
-        output(byteCount + 2) = CByte(&H80 Or (codePoint And &H3F))
+    ElseIf codePoint <= UnicodeBmpMax Then
+        output(byteCount) = CByte(Utf8ThreeByteMarker Or (codePoint \ 4096))
+        output(byteCount + 1) = CByte(Utf8ContinuationMarker Or ((codePoint \ 64) And Utf8ContinuationPayloadMask))
+        output(byteCount + 2) = CByte(Utf8ContinuationMarker Or (codePoint And Utf8ContinuationPayloadMask))
         byteCount = byteCount + 3
     Else
-        output(byteCount) = CByte(&HF0 Or (codePoint \ &H40000))
-        output(byteCount + 1) = CByte(&H80 Or ((codePoint \ &H1000) And &H3F))
-        output(byteCount + 2) = CByte(&H80 Or ((codePoint \ &H40) And &H3F))
-        output(byteCount + 3) = CByte(&H80 Or (codePoint And &H3F))
+        output(byteCount) = CByte(Utf8FourByteMarker Or (codePoint \ 262144))
+        output(byteCount + 1) = CByte(Utf8ContinuationMarker Or ((codePoint \ 4096) And Utf8ContinuationPayloadMask))
+        output(byteCount + 2) = CByte(Utf8ContinuationMarker Or ((codePoint \ 64) And Utf8ContinuationPayloadMask))
+        output(byteCount + 3) = CByte(Utf8ContinuationMarker Or (codePoint And Utf8ContinuationPayloadMask))
         byteCount = byteCount + 4
     End If
 End Sub
@@ -186,7 +200,7 @@ Private Sub RequireContinuation(ByVal bytes As Variant, ByVal index As Long, ByV
     If index + count > upperBound Then RaiseMalformedUtf8
     For offset = 1 To count ' xlflow:disable-line VBA227
         ' DecodeUtf8 proved bounds and RequireContinuation proved this offset.
-        If (CLng(bytes(index + offset)) And &HC0) <> &H80 Then RaiseMalformedUtf8 ' xlflow:disable-line VBA227
+        If (CLng(bytes(index + offset)) And Utf8ContinuationMarkerMask) <> Utf8ContinuationMarker Then RaiseMalformedUtf8 ' xlflow:disable-line VBA227
     Next offset
 End Sub
 
@@ -222,11 +236,11 @@ End Sub
 Private Function CodePointToString(ByVal codePoint As Long) As String
     Dim adjusted As Long
 
-    If codePoint <= &HFFFF& Then
+    If codePoint <= UnicodeBmpMax Then
         CodePointToString = ChrW$(codePoint)
     Else
-        adjusted = codePoint - &H10000
-        CodePointToString = ChrW$(&HD800& Or (adjusted \ &H400)) & ChrW$(&HDC00& Or (adjusted And &H3FF))
+        adjusted = codePoint - UnicodeSupplementaryBase
+        CodePointToString = ChrW$(Utf16HighSurrogateMin Or (adjusted \ Utf16PayloadRange)) & ChrW$(Utf16LowSurrogateMin Or (adjusted And 1023))
     End If
 End Function
 

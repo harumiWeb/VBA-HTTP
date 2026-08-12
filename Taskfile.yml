@@ -21,12 +21,23 @@ tasks:
     cmds:
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Check-Format.ps1
 
+  class-source:check:
+    desc: Verify class exports are clean-importable by the VBIDE
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Validate-ClassSource.ps1
+
+  class-source:normalize:
+    desc: Normalize class exports to the VBIDE-required UTF-8 CRLF form
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Normalize-ClassSource.ps1
+
   check:
     desc: Run all pre-commit quality gates
     cmds:
       - task: lint
       - task: analyze
       - task: format
+      - task: class-source:check
 
   test:
     desc: Run the complete xlflow test suite

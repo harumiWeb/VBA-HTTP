@@ -1,5 +1,6 @@
 *.bas text eol=lf
-*.cls text eol=lf
+# VBIDE clean import recognizes exported class metadata only with CRLF records.
+*.cls text eol=crlf
 *.frm text eol=lf
 *.toml text eol=lf
 *.yml text eol=lf

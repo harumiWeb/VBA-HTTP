@@ -9,6 +9,7 @@
 - Benchmark modules live in `src/modules/Benchmarks/`; temporary development helpers live in `src/modules/Dev/`.
 - `build/VBA-HTTP.xlsm` is the tracked development workbook. It is synchronized from source and used to compile and execute VBA; it is not the editing authority.
 - Git does not preserve empty directories. `task bootstrap:dirs` restores configured empty `src/classes/` and `src/forms/` roots before release planning or build; do not add non-VBA placeholder files to source roots.
+- Exported `.cls` files use UTF-8 without BOM and CRLF records. The VBIDE can treat an otherwise valid LF-only class export as a standard module during a clean import, leaving the `VERSION 1.0 CLASS` header as executable text. `.gitattributes` enforces CRLF and `task class-source:check` rejects a non-importable worktree before build. Run `task class-source:normalize` after changing this policy in an existing checkout. Because the current xlflow formatter renders LF, `task format` checks content-equivalent temporary LF projections of every class while the original CRLF files are independently checked by `task class-source:check`; class formatting is not excluded.
 
 If VBA is changed directly in the VBE during exceptional diagnosis or recovery, stop source editing, run `xlflow status --json`, pull the workbook source, and reconcile the resulting source diff before continuing.
 

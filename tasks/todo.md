@@ -239,24 +239,24 @@ network実装から独立したpublic APIとdomain modelを確立する。
 
 ### Todo
 
-- [ ] dual transportとtransport abstractionのADRを作成する。
-- [ ] public API shapeとcompatibility policyのspecを作成する。
-- [ ] error modelのADRを作成する。
-- [ ] `IHttpTransport` とmock transportを実装する。
-- [ ] `HttpClient`、`HttpRequest`、`HttpResponse` を実装する。
-- [ ] `HttpHeaders`、`HttpParams`、`HttpTimeouts` を実装する。
-- [ ] HTTP method、URL encoding、query constructionを実装する。
-- [ ] text／binary body表現とownershipを定義する。
-- [ ] response text decodingとcharset failure policyを定義する。
-- [ ] error category、VBA error number、response failureの境界を実装する。
-- [ ] network-free unit test matrixを実装する。
+- [x] dual transportとtransport abstractionのADRを作成する。
+- [x] public API shapeとcompatibility policyのspecを作成する。
+- [x] error modelのADRを作成する。
+- [x] `IHttpTransport` とmock transportを実装する。
+- [x] `HttpClient`、`HttpRequest`、`HttpResponse` を実装する。
+- [x] `HttpHeaders`、`HttpParams`、`HttpTimeouts` を実装する。
+- [x] HTTP method、URL encoding、query constructionを実装する。
+- [x] text／binary body表現とownershipを定義する。
+- [x] response text decodingとcharset failure policyを定義する。
+- [x] error category、VBA error number、response failureの境界を実装する。
+- [x] network-free unit test matrixを実装する。
 
 ### Exit Criteria
 
-- [ ] networkアクセス0で全domain testが成功する。
-- [ ] requestからtransport、response／errorまでmockで検証できる。
-- [ ] public API例とcompatibility policyがspec化されている。
-- [ ] production componentだけのrelease buildが成功する。
+- [x] networkアクセス0で全domain testが成功する。
+- [x] requestからtransport、response／errorまでmockで検証できる。
+- [x] public API例とcompatibility policyがspec化されている。
+- [x] production componentだけのrelease buildが成功する。
 
 ---
 
@@ -546,17 +546,17 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 
 実装前に、少なくとも次の判断をADRまたはspecとして確定する。
 
-- [ ] dual transportとtransport selection policy
+- [x] dual transportとtransport selection policy
 - [ ] public `HttpClient` の同期、batch、download、upload API
 - [ ] `IHttpTransport`、`IHttpAuthProvider`、`IHttpProgressSink`
 - [ ] buffered／streaming request・response bodyのownership
-- [ ] error分類とVBA error／result objectの境界
+- [x] error分類とVBA error／result objectの境界
 - [ ] retry、deadline、redirect、cancellationの優先順位
 - [ ] native handle lifecycleとnative callback禁止
 - [ ] protocol fallbackとOS compatibility
 - [ ] diagnostics schemaとsecret redaction
-- [ ] development-only componentへのproduction依存禁止
-- [ ] development workbook、release workbook、source distributionの責務
+- [x] development-only componentへのproduction依存禁止
+- [x] development workbook、release workbook、source distributionの責務
 
 ADRは判断理由とtrade-offを保持し、現行のinterface、validation、compatibility contractは
 `docs/specs/` に保持する。既存ADRと重複する場合は新規作成せず、更新またはsupersedeする。

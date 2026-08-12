@@ -16,8 +16,8 @@ Public Sub Test_Body_TextProducesUtf8Bytes()
     bytes = Body.Bytes
 
     XlflowAssert.AssertEquals HttpBodyText, Body.Kind
-    XlflowAssert.AssertEquals &HC3, HttpEncoding.ByteAt(bytes, 0)
-    XlflowAssert.AssertEquals &HA9, HttpEncoding.ByteAt(bytes, 1)
+    XlflowAssert.AssertEquals 195, HttpEncoding.ByteAt(bytes, 0)
+    XlflowAssert.AssertEquals 169, HttpEncoding.ByteAt(bytes, 1)
 End Sub
 
 Public Sub Test_Body_BytesUsesDefensiveCopies()
