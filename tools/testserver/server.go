@@ -55,6 +55,9 @@ func (s *testServer) routes() http.Handler {
 	mux.HandleFunc("GET /redirect/{count}", s.redirect)
 	mux.HandleFunc("GET /flaky/{failCount}", s.flaky)
 	mux.HandleFunc("GET /rate-limit/{count}", s.rateLimit)
+	mux.HandleFunc("GET /retry-status/{code}/{count}", s.retryStatus)
+	mux.HandleFunc("POST /retry-status/{code}/{count}", s.retryStatus)
+	mux.HandleFunc("PATCH /retry-status/{code}/{count}", s.retryStatus)
 	return mux
 }
 
@@ -231,6 +234,23 @@ func (s *testServer) rateLimit(w http.ResponseWriter, r *http.Request) {
 	if attempt <= limitCount {
 		w.Header().Set("Retry-After", retryAfter)
 		writeJSON(w, http.StatusTooManyRequests, map[string]int{"attempt": attempt})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]int{"attempt": attempt})
+}
+
+func (s *testServer) retryStatus(w http.ResponseWriter, r *http.Request) {
+	code, ok := parseBoundedInt(w, r.PathValue("code"), 400, 599, "code")
+	if !ok {
+		return
+	}
+	failCount, ok := parseBoundedInt(w, r.PathValue("count"), 0, 10_000, "count")
+	if !ok {
+		return
+	}
+	attempt := s.nextAttempt("retry-status-"+strconv.Itoa(code), failCount, r.URL.Query())
+	if attempt <= failCount {
+		writeJSON(w, code, map[string]int{"attempt": attempt})
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]int{"attempt": attempt})

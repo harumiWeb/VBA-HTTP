@@ -11,6 +11,7 @@ Option Explicit
 
 Implements IHttpTransport
 Implements IHttpBatchTransport
+Implements IHttpAttemptTransport
 
 Private Const TransportSource As String = "WinHttpComTransport.Execute"
 Private Const WinHttpOptionEnableRedirects As Long = 6
@@ -26,6 +27,10 @@ End Function
 
 Private Function IHttpBatchTransport_ExecuteMany(ByVal Requests As Collection, ByVal Options As HttpBatchOptions) As HttpBatchResult
     Set IHttpBatchTransport_ExecuteMany = ExecuteManyCore(Requests, Options)
+End Function
+
+Private Function IHttpAttemptTransport_ExecuteAttempt(ByVal Request As HttpRequest, ByVal Options As HttpAttemptOptions) As HttpResponse
+    Set IHttpAttemptTransport_ExecuteAttempt = ExecuteAttemptCore(Request, Options)
 End Function
 
 Private Function ExecuteCore(ByVal Request As HttpRequest) As HttpResponse
@@ -68,6 +73,65 @@ TransportFailure:
         Err.Raise errorNumber, errorSource, errorDescription
     End If
     RaiseMappedFailure errorNumber
+End Function
+
+Private Function ExecuteAttemptCore(ByVal Request As HttpRequest, ByVal Options As HttpAttemptOptions) As HttpResponse
+    Dim operation As WinHttpComOperation
+    Dim response As HttpResponse
+    Dim lastYield As Currency
+    Dim errorNumber As Long
+    Dim errorSource As String
+    Dim errorDescription As String
+    Dim abortNumber As Long
+    Dim abortSource As String
+    Dim abortDescription As String
+
+    On Error GoTo AttemptFailed
+    If Request Is Nothing Then HttpErrors.RaiseValidation TransportSource, "Request cannot be Nothing."
+    If Options Is Nothing Then HttpErrors.RaiseValidation TransportSource, "Attempt options cannot be Nothing."
+    If AttemptCancellationRequested(Options) Then Err.Raise HttpErrCancelled, TransportSource, "HTTP operation was cancelled."
+
+    Set operation = CreateAsyncOperation(Request, 1, Options.DeadlineMilliseconds)
+    lastYield = HttpTiming.CounterValue()
+    Do
+        If AttemptCancellationRequested(Options) Then
+            If Not TryAbortOperation(operation, abortNumber, abortSource, abortDescription) Then Err.Raise abortNumber, abortSource, abortDescription
+            Err.Raise HttpErrCancelled, TransportSource, "HTTP operation was cancelled."
+        End If
+        If operation.DeadlineExceeded(HttpTiming.CounterValue()) Then
+            If Not TryAbortOperation(operation, abortNumber, abortSource, abortDescription) Then Err.Raise abortNumber, abortSource, abortDescription
+            Err.Raise HttpErrTimeout, TransportSource, "HTTP attempt deadline expired."
+        End If
+        If PollAsyncOperation(operation) Then
+            Set response = FinishAsyncOperation(operation)
+            Set ExecuteAttemptCore = response
+            Exit Function
+        End If
+        If Options.YieldToHost And HttpTiming.ElapsedMilliseconds(lastYield, HttpTiming.CounterValue()) >= Options.YieldIntervalMilliseconds Then
+            ' Cooperative host yielding is an explicit ADR-0005 attempt boundary.
+            DoEvents ' xlflow:disable-line VB007
+            lastYield = HttpTiming.CounterValue()
+        End If
+        HttpTiming.Pause Options.PollIntervalMilliseconds
+    Loop
+
+AttemptFailed:
+    errorNumber = Err.Number
+    errorSource = Err.Source
+    errorDescription = Err.Description
+    If Not operation Is Nothing Then
+        If Not operation.Backend Is Nothing Then
+            If Not TryAbortOperation(operation, abortNumber, abortSource, abortDescription) Then
+                errorDescription = errorDescription & " WinHTTP abort cleanup also failed."
+            End If
+        End If
+    End If
+    Err.Raise errorNumber, errorSource, errorDescription
+End Function
+
+Private Function AttemptCancellationRequested(ByVal Options As HttpAttemptOptions) As Boolean
+    If Options.CancellationToken Is Nothing Then Exit Function
+    AttemptCancellationRequested = Options.CancellationToken.IsCancellationRequested
 End Function
 
 Private Function ExecuteManyCore(ByVal Requests As Collection, ByVal Options As HttpBatchOptions) As HttpBatchResult

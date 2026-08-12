@@ -13,6 +13,8 @@ Private mBaseUrl As String
 Private mDefaultHeaders As New HttpHeaders
 Private mTransport As IHttpTransport
 Private mExecuting As Boolean
+Private mRetryPolicy As HttpRetryPolicy
+Private mReliabilityRuntime As IHttpReliabilityRuntime
 
 Public Property Get BaseUrl() As String
     BaseUrl = mBaseUrl
@@ -39,14 +41,28 @@ Public Property Set Transport(ByVal value As IHttpTransport)
     Set mTransport = value
 End Property
 
-Public Function Execute(ByVal Request As HttpRequest) As HttpResponse
+Public Property Get RetryPolicy() As HttpRetryPolicy
+    Set RetryPolicy = mRetryPolicy
+End Property
+
+Public Property Set RetryPolicy(ByVal value As HttpRetryPolicy)
+    If value Is Nothing Then HttpErrors.RaiseValidation "HttpClient.RetryPolicy", "Retry policy cannot be Nothing."
+    Set mRetryPolicy = value.Clone()
+End Property
+
+Friend Property Set ReliabilityRuntime(ByVal value As IHttpReliabilityRuntime)
+    If value Is Nothing Then HttpErrors.RaiseValidation "HttpClient.ReliabilityRuntime", "Reliability runtime cannot be Nothing."
+    Set mReliabilityRuntime = value
+End Property
+
+Public Function Execute(ByVal Request As HttpRequest, Optional ByVal Options As HttpExecutionOptions = Nothing) As HttpResponse
     Dim errorNumber As Long
     Dim errorSource As String
     Dim errorDescription As String
 
     BeginExecution "HttpClient.Execute"
     On Error GoTo ExecutionFailed
-    Set Execute = ExecuteCore(Request)
+    Set Execute = ExecuteCore(Request, Options)
     mExecuting = False
     Exit Function
 
@@ -77,6 +93,7 @@ Public Function ExecuteMany(ByVal Requests As Collection, Optional ByVal Options
     Else
         Set snapshotOptions = Options.Clone()
     End If
+    If snapshotOptions.RetryPolicy Is Nothing Then Set snapshotOptions.RetryPolicy = mRetryPolicy
     Set batchTransport = mTransport
     Set ExecuteMany = batchTransport.ExecuteMany(prepared, snapshotOptions)
     mExecuting = False
@@ -114,9 +131,11 @@ Public Function GetMany(ByVal Urls As Collection, Optional ByVal Options As Http
     Set GetMany = ExecuteMany(Requests, Options)
 End Function
 
-Private Function ExecuteCore(ByVal Request As HttpRequest) As HttpResponse
+Private Function ExecuteCore(ByVal Request As HttpRequest, ByVal Options As HttpExecutionOptions) As HttpResponse
     Dim snapshot As HttpRequest
-    Dim response As HttpResponse
+    Dim snapshotOptions As HttpExecutionOptions
+    Dim policy As HttpRetryPolicy
+    Dim engine As New HttpReliabilityEngine
 
     If Request Is Nothing Then
         HttpErrors.RaiseValidation "HttpClient.Execute", "Request cannot be Nothing."
@@ -126,49 +145,56 @@ Private Function ExecuteCore(ByVal Request As HttpRequest) As HttpResponse
     End If
 
     Set snapshot = PrepareRequest(Request)
-    Set response = mTransport.Execute(snapshot)
-    If response Is Nothing Then
-        Err.Raise HttpErrProtocol, "HttpClient.Execute", "Transport returned Nothing instead of an HttpResponse."
+    If Options Is Nothing Then
+        Set snapshotOptions = New HttpExecutionOptions
+    Else
+        Set snapshotOptions = Options.Clone()
     End If
-    Set ExecuteCore = response
+    If snapshotOptions.RetryPolicy Is Nothing Then
+        Set policy = mRetryPolicy.Clone()
+    Else
+        Set policy = snapshotOptions.RetryPolicy.Clone()
+    End If
+    engine.Initialize mReliabilityRuntime
+    Set ExecuteCore = engine.Execute(mTransport, snapshot, policy, snapshotOptions)
 End Function
 
-Public Function GetResponse(ByVal Url As String, Optional ByVal Query As HttpParams = Nothing) As HttpResponse
+Public Function GetResponse(ByVal Url As String, Optional ByVal Query As HttpParams = Nothing, Optional ByVal Options As HttpExecutionOptions = Nothing) As HttpResponse
     Dim Request As New HttpRequest
 
     Request.Method = "GET"
     Request.Url = Url
     If Not Query Is Nothing Then Set Request.Query = Query
-    Set GetResponse = Execute(Request)
+    Set GetResponse = Execute(Request, Options)
 End Function
 
-Public Function PostResponse(ByVal Url As String, Optional ByVal Body As HttpBody = Nothing) As HttpResponse
-    Set PostResponse = ExecuteWithBody("POST", Url, Body)
+Public Function PostResponse(ByVal Url As String, Optional ByVal Body As HttpBody = Nothing, Optional ByVal Options As HttpExecutionOptions = Nothing) As HttpResponse
+    Set PostResponse = ExecuteWithBody("POST", Url, Body, Options)
 End Function
 
-Public Function PutResponse(ByVal Url As String, Optional ByVal Body As HttpBody = Nothing) As HttpResponse
-    Set PutResponse = ExecuteWithBody("PUT", Url, Body)
+Public Function PutResponse(ByVal Url As String, Optional ByVal Body As HttpBody = Nothing, Optional ByVal Options As HttpExecutionOptions = Nothing) As HttpResponse
+    Set PutResponse = ExecuteWithBody("PUT", Url, Body, Options)
 End Function
 
-Public Function PatchResponse(ByVal Url As String, Optional ByVal Body As HttpBody = Nothing) As HttpResponse
-    Set PatchResponse = ExecuteWithBody("PATCH", Url, Body)
+Public Function PatchResponse(ByVal Url As String, Optional ByVal Body As HttpBody = Nothing, Optional ByVal Options As HttpExecutionOptions = Nothing) As HttpResponse
+    Set PatchResponse = ExecuteWithBody("PATCH", Url, Body, Options)
 End Function
 
-Public Function DeleteResponse(ByVal Url As String) As HttpResponse
+Public Function DeleteResponse(ByVal Url As String, Optional ByVal Options As HttpExecutionOptions = Nothing) As HttpResponse
     Dim Request As New HttpRequest
 
     Request.Method = "DELETE"
     Request.Url = Url
-    Set DeleteResponse = Execute(Request)
+    Set DeleteResponse = Execute(Request, Options)
 End Function
 
-Private Function ExecuteWithBody(ByVal Method As String, ByVal Url As String, ByVal Body As HttpBody) As HttpResponse
+Private Function ExecuteWithBody(ByVal Method As String, ByVal Url As String, ByVal Body As HttpBody, ByVal Options As HttpExecutionOptions) As HttpResponse
     Dim Request As New HttpRequest
 
     Request.Method = Method
     Request.Url = Url
     If Not Body Is Nothing Then Set Request.Body = Body
-    Set ExecuteWithBody = Execute(Request)
+    Set ExecuteWithBody = Execute(Request, Options)
 End Function
 
 Private Function PrepareRequest(ByVal Request As HttpRequest) As HttpRequest
@@ -305,4 +331,6 @@ End Function
 
 Private Sub Class_Initialize()
     Set mTransport = New WinHttpComTransport
+    Set mRetryPolicy = New HttpRetryPolicy
+    Set mReliabilityRuntime = New HttpSystemReliabilityRuntime
 End Sub

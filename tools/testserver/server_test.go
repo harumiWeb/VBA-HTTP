@@ -241,6 +241,29 @@ func TestRateLimit(t *testing.T) {
 	}
 }
 
+func TestRetryStatusSupportsMethodAndStatusMatrix(t *testing.T) {
+	server := httptest.NewServer(newTestServer().routes())
+	defer server.Close()
+
+	for _, method := range []string{http.MethodGet, http.MethodPost, http.MethodPatch} {
+		target := server.URL + "/retry-status/502/1?id=" + method
+		for attempt, want := range []int{http.StatusBadGateway, http.StatusOK} {
+			request, err := http.NewRequest(method, target, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			response, err := http.DefaultClient.Do(request)
+			if err != nil {
+				t.Fatal(err)
+			}
+			response.Body.Close()
+			if response.StatusCode != want {
+				t.Fatalf("%s attempt %d status = %d, want %d", method, attempt+1, response.StatusCode, want)
+			}
+		}
+	}
+}
+
 type urlValues map[string][]string
 
 func (v urlValues) Get(key string) string {
