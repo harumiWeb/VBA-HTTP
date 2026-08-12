@@ -132,42 +132,42 @@ fresh cloneから同じ開発・test・release buildを再現できるclean base
 
 ### Repository and source authority
 
-- [ ] `.gitignore` を更新し、`build/VBA-HTTP.xlsm` を開発用workbookとしてGit追跡対象にする。
-- [ ] `build/Release/**`、一時staging、generated manifestは通常の開発差分へ混入しないignore規則を定義する。
-- [ ] VBA sourceを編集の正本、開発用xlsmを同期・実行対象とする規約をspec化する。
-- [ ] VBEでのproduction VBA直接編集を禁止し、例外時のpull／reconcile手順を文書化する。
+- [x] `.gitignore` を更新し、`build/VBA-HTTP.xlsm` を開発用workbookとしてGit追跡対象にする。
+- [x] `build/Release/**`、一時staging、generated manifestは通常の開発差分へ混入しないignore規則を定義する。
+- [x] VBA sourceを編集の正本、開発用xlsmを同期・実行対象とする規約をspec化する。
+- [x] VBEでのproduction VBA直接編集を禁止し、例外時のpull／reconcile手順を文書化する。
 - [ ] fresh cloneで `xlflow status --json` が設定済みworkbookを解決できることを確認する。
-- [ ] sourceと追跡workbookの初期差分を解消する。
+- [x] sourceと追跡workbookの初期差分を解消する。
 
 ### Clean xlflow baseline
 
-- [ ] `src/modules/Tests/SampleTests.bas` のsample／TODO testを製品向けbootstrap smoke testへ置き換える。
+- [x] `src/modules/Tests/SampleTests.bas` のsample／TODO testを製品向けbootstrap smoke testへ置き換える。
 - [ ] 現在format checkで報告されるscaffold 7ファイルを正規化する。
-- [ ] `XlflowDebug` の既存analyzer finding 5件を、修正または根拠付き局所抑制で解消する。
-- [ ] `XlflowUI` のunused inline suppression warningを解消する。
+- [x] `XlflowDebug` の既存analyzer finding 5件を、修正または根拠付き局所抑制で解消する。
+- [x] `XlflowUI` のunused inline suppression warningを解消する。
 - [ ] lint、analyze、format check、testのclean baseline結果を記録する。
 - [ ] analyzer／lintのproject-wide suppressionは、個別対応が不可能な場合だけADRまたはspecへ根拠を残して追加する。
 
 ### Test and benchmark conventions
 
-- [ ] unit testを `src/modules/Tests/Unit/` に配置する規約を定義する。
-- [ ] integration testを `src/modules/Tests/Integration/` に配置し、`integration` tagを付ける規約を定義する。
-- [ ] stress testを `src/modules/Tests/Stress/` に配置し、通常suiteから分離する規約を定義する。
-- [ ] VBA benchmark moduleを `src/modules/Benchmarks/` に配置する規約を定義する。
+- [x] unit testを `src/modules/Tests/Unit/` に配置する規約を定義する。
+- [x] integration testを `src/modules/Tests/Integration/` に配置し、`integration` tagを付ける規約を定義する。
+- [x] stress testを `src/modules/Tests/Stress/` に配置し、通常suiteから分離する規約を定義する。
+- [x] VBA benchmark moduleを `src/modules/Benchmarks/` に配置する規約を定義する。
 - [ ] deterministic testで使用するclock、random、transportの差し替え方針をspec化する。
-- [ ] x64 Officeのsmoke test証跡を取得する。
-- [ ] 32-bit Officeのcompile／smoke testを行う環境と証跡保存方法を文書化する。
+- [x] x64 Officeのsmoke test証跡を取得する。
+- [x] 32-bit Officeのcompile／smoke testを行う環境と証跡保存方法を文書化する。
 
 ### Release build foundation
 
-- [ ] `xlflow.toml` に `[build].exclude` を追加する。
-- [ ] `src/modules/Benchmarks/` と `src/modules/Dev/` のdirectory規約を作成する。
-- [ ] production sourceからTests、Benchmarks、Xlflow、Dev componentへの依存を禁止するspecを作成する。
-- [ ] `xlflow build --dry-run --json` のmanifestを検査するscriptまたは自動checkを作成する。
-- [ ] exclude globが1件もmatchしない場合をwarningとして失敗させるrelease checkを定義する。
-- [ ] production component allowlistとdry-run結果を照合する。
-- [ ] `xlflow build --json` で `build/Release/VBA-HTTP.xlsm` を生成する。
-- [ ] build manifestからVBE compile、save、close、publication結果を検証する。
+- [x] `xlflow.toml` に `[build].exclude` を追加する。
+- [x] `src/modules/Benchmarks/` と `src/modules/Dev/` のdirectory規約を作成する。
+- [x] production sourceからTests、Benchmarks、Xlflow、Dev componentへの依存を禁止するspecを作成する。
+- [x] `xlflow build --dry-run --json` のmanifestを検査するscriptまたは自動checkを作成する。
+- [x] exclude globが1件もmatchしない場合をwarningとして失敗させるrelease checkを定義する。
+- [x] production component allowlistとdry-run結果を照合する。
+- [x] `xlflow build --json` で `build/Release/VBA-HTTP.xlsm` を生成する。
+- [x] build manifestからVBE compile、save、close、publication結果を検証する。
 - [ ] release artifactのVBA component一覧をinspectする。
 - [ ] release artifactにexcluded componentが存在しないことを自動検証する。
 - [ ] release artifactを呼び出す外部consumer smoke harnessの構成を決定・作成する。
@@ -175,24 +175,24 @@ fresh cloneから同じ開発・test・release buildを再現できるclean base
 
 ### Governance and contributor workflow
 
-- [ ] `docs/adr/` の命名、status、template、supersede規約を定義する。
-- [ ] `docs/specs/` に現行仕様だけを置く規約を定義する。
+- [x] `docs/adr/` の命名、status、template、supersede規約を定義する。
+- [x] `docs/specs/` に現行仕様だけを置く規約を定義する。
 - [ ] benchmark結果のJSON schemaと保存先を定義する。
-- [ ] contributor向けに標準xlflow proof loopを文書化する。
-- [ ] contributor向けにrelease build loopを文書化する。
-- [ ] public API、bug fix、performance変更ごとのdocumentation gateをチェックリスト化する。
+- [x] contributor向けに標準xlflow proof loopを文書化する。
+- [x] contributor向けにrelease build loopを文書化する。
+- [x] public API、bug fix、performance変更ごとのdocumentation gateをチェックリスト化する。
 
 ### Exit Criteria
 
 - [ ] fresh cloneで追跡workbookを使って `xlflow test --json` を実行できる。
 - [ ] lint、analyze、format checkがcleanである。
-- [ ] sample testとTODO testが残っていない。
-- [ ] sourceと開発用workbookに意図しない差分がない。
-- [ ] build dry-runが意図したproduction componentだけをincludeする。
-- [ ] release buildがVBE compileに成功する。
-- [ ] release artifactにexcluded componentが存在しない。
+- [x] sample testとTODO testが残っていない。
+- [x] sourceと開発用workbookに意図しない差分がない。
+- [x] build dry-runが意図したproduction componentだけをincludeする。
+- [x] release buildがVBE compileに成功する。
+- [x] release artifactにexcluded componentが存在しない。
 - [ ] 外部consumer smoke harnessがrelease artifactに対して成功する。
-- [ ] x64の実行証跡と32-bitの検証経路が存在する。
+- [x] x64の実行証跡と32-bitの検証経路が存在する。
 
 ---
 

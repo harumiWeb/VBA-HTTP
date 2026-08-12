@@ -2,5 +2,5 @@ Attribute VB_Name = "Ui"
 Option Explicit
 
 Public Sub RunFromButton()
-  Main.Run
+    Main.Run
 End Sub

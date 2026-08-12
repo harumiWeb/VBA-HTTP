@@ -16,11 +16,34 @@ tasks:
     cmds:
       - xlflow analyze --json
 
+  format:
+    desc: Check VBA source formatting with xlflow
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Check-Format.ps1
+
   check:
     desc: Run all pre-commit quality gates
     cmds:
       - task: lint
       - task: analyze
+      - task: format
+
+  test:
+    desc: Run the complete xlflow test suite
+    cmds:
+      - xlflow test --json
+
+  build:plan:
+    desc: Validate the production-only release build plan
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Validate-BuildPlan.ps1
+
+  verify:
+    desc: Run source, test, and release-plan verification
+    cmds:
+      - task: check
+      - task: test
+      - task: build:plan
 
   hooks:install:
     desc: Install the repository Git hooks with Lefthook

@@ -1,0 +1,18 @@
+{
+  "included": [
+    "App",
+    "Main",
+    "Sheet1",
+    "ThisWorkbook",
+    "Ui"
+  ],
+  "excluded": [
+    "BenchmarkSupport",
+    "BootstrapTests",
+    "DevSupport",
+    "XlflowAssert",
+    "XlflowDebug",
+    "XlflowRuntime",
+    "XlflowUI"
+  ]
+}

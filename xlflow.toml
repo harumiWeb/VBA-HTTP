@@ -27,6 +27,16 @@ forms = "src/forms"
 # Directory for workbook document module text.
 workbook = "src/workbook"
 
+# Release workbooks contain production components only. These exclusions do not
+# affect normal push or the tracked development workbook.
+[build]
+exclude = [
+  "src/modules/Tests/**",
+  "src/modules/Benchmarks/**",
+  "src/modules/Xlflow/**",
+  "src/modules/Dev/**",
+]
+
 # VBE component folder support (Rubberduck-style).
 [vba]
 # Enable @Folder("A.B") annotations and nested source paths.
@@ -133,4 +143,3 @@ disabled_rules = []
 # Optional dataflow-sensitive analyzer rules are disabled by default.
 # Uncomment the following setting to check Function and Property Get return paths.
 # detect_function_return_path = true # VBA210
-

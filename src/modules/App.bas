@@ -6,5 +6,5 @@ Option Explicit
 ''' Args:
 '''     wb: Workbook that xlflow passes from Main.Run.
 Public Sub RunCore(ByVal wb As Workbook)
-  ' Put workbook automation here.
+    ' Put workbook automation here.
 End Sub

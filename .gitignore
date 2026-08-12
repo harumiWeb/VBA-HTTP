@@ -5,7 +5,10 @@
 
 # xlflow
 .xlflow/
-build/
+build/*
+!build/VBA-HTTP.xlsm
+build/Release/
+build/Staging/
 
 references/
 docs/design.md
