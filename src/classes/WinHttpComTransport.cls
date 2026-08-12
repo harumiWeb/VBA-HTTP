@@ -137,13 +137,13 @@ End Function
 Private Function ExecuteManyCore(ByVal Requests As Collection, ByVal Options As HttpBatchOptions) As HttpBatchResult
     Dim result As New HttpBatchResult
     Dim running As New Collection
-    Dim items() As HttpBatchItem
+    Dim workItems() As HttpBatchWorkItem
+    Dim work As HttpBatchWorkItem
     Dim operation As WinHttpComOperation
     Dim response As HttpResponse
-    Dim item As HttpBatchItem
-    Dim nextIndex As Long
     Dim index As Long
     Dim completed As Boolean
+    Dim completedCount As Long
     Dim errorNumber As Long
     Dim errorSource As String
     Dim errorDescription As String
@@ -153,6 +153,11 @@ Private Function ExecuteManyCore(ByVal Requests As Collection, ByVal Options As 
     Dim abortSucceeded As Boolean
     Dim now As Currency
     Dim lastYield As Currency
+    Dim totalStarted As Currency
+    Dim elapsed As Double
+    Dim attemptDeadline As Long
+    Dim policy As HttpRetryPolicy
+    Dim runtime As IHttpReliabilityRuntime
 
     If Requests Is Nothing Then
         HttpErrors.RaiseValidation TransportSource, "Requests cannot be Nothing."
@@ -162,68 +167,82 @@ Private Function ExecuteManyCore(ByVal Requests As Collection, ByVal Options As 
         HttpErrors.RaiseValidation TransportSource, "Batch options cannot be Nothing."
         Exit Function
     End If
+    If Options.RetryPolicy Is Nothing Then
+        HttpErrors.RaiseValidation TransportSource, "Batch retry policy cannot be Nothing."
+        Exit Function
+    End If
     If Requests.Count = 0 Then
         Set ExecuteManyCore = result
         Exit Function
     End If
 
-    ReDim items(1 To Requests.Count)
-    nextIndex = 1
-    lastYield = HttpTiming.CounterValue()
+    Set policy = Options.RetryPolicy.Clone()
+    Set runtime = New HttpSystemReliabilityRuntime
+    ReDim workItems(1 To Requests.Count)
+    For index = 1 To Requests.Count
+        Set work = New HttpBatchWorkItem
+        work.Initialize index, Requests(index)
+        Set workItems(index) = work
+    Next index
+    totalStarted = HttpTiming.CounterValue()
+    lastYield = totalStarted
 
-    Do While nextIndex <= Requests.Count Or running.Count > 0
+    Do While completedCount < Requests.Count
         If CancellationRequested(Options) Then
-            CancelOutstanding running, items, nextIndex, Requests.Count
+            CompleteOutstanding running, workItems, True, "HTTP batch operation was cancelled."
             Exit Do
         End If
 
-        Do While nextIndex <= Requests.Count And running.Count < Options.MaxConcurrency
-            Set operation = Nothing
-            If TryStartOperation(Requests(nextIndex), nextIndex, Options.RequestDeadlineMilliseconds, operation, errorNumber, errorSource, errorDescription) Then
-                running.Add operation
-            Else
-                Set item = New HttpBatchItem
-                item.InitializeFailure nextIndex, errorNumber, errorSource, errorDescription
-                Set items(nextIndex) = item
-            End If
-            nextIndex = nextIndex + 1
-        Loop
-
         now = HttpTiming.CounterValue()
+        elapsed = HttpTiming.ElapsedMilliseconds(totalStarted, now)
+        If Options.TotalDeadlineMilliseconds > 0 And elapsed >= Options.TotalDeadlineMilliseconds Then
+            CompleteOutstanding running, workItems, False, "HTTP batch total deadline expired."
+            Exit Do
+        End If
+
         For index = running.Count To 1 Step - 1
             Set operation = running(index)
+            Set work = workItems(operation.Index)
             completed = False
             If operation.DeadlineExceeded(now) Then
                 abortSucceeded = TryAbortOperation(operation, abortNumber, abortSource, abortDescription)
-                Set item = New HttpBatchItem
-                If abortSucceeded Then
-                    item.InitializeFailure operation.Index, HttpErrTimeout, TransportSource, "HTTP batch request deadline exceeded."
-                Else
-                    item.InitializeFailure operation.Index, abortNumber, abortSource, abortDescription
-                End If
-                Set items(operation.Index) = item
                 running.Remove index
+                If abortSucceeded Then
+                    HandleBatchFailure work, policy, HttpErrTimeout, TransportSource, "HTTP batch request deadline exceeded.", elapsed, runtime, completedCount
+                Else
+                    HandleBatchFailure work, policy, abortNumber, abortSource, abortDescription, elapsed, runtime, completedCount
+                End If
             ElseIf Not TryPollOperation(operation, completed, errorNumber, errorSource, errorDescription) Then
                 abortSucceeded = TryAbortOperation(operation, abortNumber, abortSource, abortDescription)
                 If Not abortSucceeded Then errorDescription = errorDescription & " WinHTTP abort cleanup also failed."
-                Set item = New HttpBatchItem
-                item.InitializeFailure operation.Index, errorNumber, errorSource, errorDescription
-                Set items(operation.Index) = item
                 running.Remove index
+                HandleBatchFailure work, policy, errorNumber, errorSource, errorDescription, elapsed, runtime, completedCount
             ElseIf completed Then
-                If TryFinishOperation(operation, response, errorNumber, errorSource, errorDescription) Then
-                    Set item = New HttpBatchItem
-                    item.InitializeSuccess operation.Index, response
-                Else
-                    Set item = New HttpBatchItem
-                    item.InitializeFailure operation.Index, errorNumber, errorSource, errorDescription
-                End If
-                Set items(operation.Index) = item
                 running.Remove index
+                If TryFinishOperation(operation, response, errorNumber, errorSource, errorDescription) Then
+                    HandleBatchResponse work, policy, response, elapsed, runtime, completedCount
+                Else
+                    HandleBatchFailure work, policy, errorNumber, errorSource, errorDescription, elapsed, runtime, completedCount
+                End If
             End If
         Next index
 
-        If running.Count > 0 Then
+        For index = 1 To Requests.Count
+            If running.Count >= Options.MaxConcurrency Then Exit For
+            Set work = workItems(index)
+            If work.IsEligible(elapsed) Then
+                work.BeginAttempt
+                attemptDeadline = EffectiveAttemptDeadline(Options, elapsed)
+                Set operation = Nothing
+                If TryStartOperation(work.RequestSnapshot, work.Index, attemptDeadline, operation, errorNumber, errorSource, errorDescription) Then
+                    running.Add operation
+                Else
+                    HandleBatchFailure work, policy, errorNumber, errorSource, errorDescription, elapsed, runtime, completedCount
+                End If
+            End If
+        Next index
+
+        If completedCount < Requests.Count Then
             If Options.YieldToHost And HttpTiming.ElapsedMilliseconds(lastYield, HttpTiming.CounterValue()) >= Options.YieldIntervalMilliseconds Then
                 ' Cooperative host yielding is an explicit ADR-0004 scheduler boundary.
                 DoEvents ' xlflow:disable-line VB007
@@ -234,15 +253,74 @@ Private Function ExecuteManyCore(ByVal Requests As Collection, ByVal Options As 
     Loop
 
     For index = 1 To Requests.Count
-        If items(index) Is Nothing Then Err.Raise HttpErrProtocol, TransportSource, "Batch scheduler left an item incomplete."
-        result.Add items(index)
+        Set work = workItems(index)
+        If work.TerminalItem Is Nothing Then Err.Raise HttpErrProtocol, TransportSource, "Batch scheduler left an item incomplete."
+        result.Add work.TerminalItem
     Next index
     Set ExecuteManyCore = result
 End Function
 
-Private Sub CancelOutstanding(ByVal running As Collection, ByRef items() As HttpBatchItem, ByRef nextIndex As Long, ByVal requestCount As Long)
+Private Sub HandleBatchResponse(ByVal work As HttpBatchWorkItem, ByVal policy As HttpRetryPolicy, ByVal response As HttpResponse, ByVal elapsed As Double, ByVal runtime As IHttpReliabilityRuntime, ByRef completedCount As Long)
+    Dim delayMilliseconds As Long
+
+    If policy.AllowsMethod(work.RequestSnapshot.Method) And policy.AllowsStatus(response.StatusCode) And work.Attempt < policy.MaxAttempts Then
+        delayMilliseconds = BatchResponseDelay(policy, response, work.Attempt, runtime)
+        work.ScheduleRetry elapsed, delayMilliseconds
+    Else
+        work.CompleteSuccess response
+        completedCount = completedCount + 1
+    End If
+End Sub
+
+Private Sub HandleBatchFailure(ByVal work As HttpBatchWorkItem, ByVal policy As HttpRetryPolicy, ByVal errorNumber As Long, ByVal errorSource As String, ByVal errorDescription As String, ByVal elapsed As Double, ByVal runtime As IHttpReliabilityRuntime, ByRef completedCount As Long)
+    Dim category As HttpErrorCategory
+    Dim delayMilliseconds As Long
+
+    category = HttpErrors.CategoryFromNumber(errorNumber)
+    If policy.AllowsMethod(work.RequestSnapshot.Method) And policy.AllowsError(category) And work.Attempt < policy.MaxAttempts Then
+        delayMilliseconds = policy.BackoffMilliseconds(work.Attempt, runtime.NextJitterUnit())
+        work.ScheduleRetry elapsed, delayMilliseconds
+    Else
+        work.CompleteFailure errorNumber, errorSource, errorDescription
+        completedCount = completedCount + 1
+    End If
+End Sub
+
+Private Function BatchResponseDelay(ByVal policy As HttpRetryPolicy, ByVal response As HttpResponse, ByVal completedAttempt As Long, ByVal runtime As IHttpReliabilityRuntime) As Long
+    Dim serverDelay As Long
+
+    If policy.RespectRetryAfter Then
+        If HttpRetryAfter.TryParse(response.Headers.GetValue("Retry-After"), runtime.UtcNow(), serverDelay) Then
+            If serverDelay > policy.MaxDelayMilliseconds Then serverDelay = policy.MaxDelayMilliseconds
+            BatchResponseDelay = serverDelay
+            Exit Function
+        End If
+    End If
+    BatchResponseDelay = policy.BackoffMilliseconds(completedAttempt, runtime.NextJitterUnit())
+End Function
+
+Private Function EffectiveAttemptDeadline(ByVal Options As HttpBatchOptions, ByVal elapsed As Double) As Long
+    Dim remaining As Double
+
+    If Options.TotalDeadlineMilliseconds > 0 Then
+        remaining = CDbl(Options.TotalDeadlineMilliseconds) - elapsed
+        If remaining <= 0 Then Exit Function
+        If remaining > 2147483647# Then
+            EffectiveAttemptDeadline = 2147483647
+        Else
+            EffectiveAttemptDeadline = CLng(Fix(remaining + 0.999999))
+        End If
+    End If
+    If Options.RequestDeadlineMilliseconds > 0 Then
+        If EffectiveAttemptDeadline = 0 Or Options.RequestDeadlineMilliseconds < EffectiveAttemptDeadline Then
+            EffectiveAttemptDeadline = Options.RequestDeadlineMilliseconds
+        End If
+    End If
+End Function
+
+Private Sub CompleteOutstanding(ByVal running As Collection, ByRef workItems() As HttpBatchWorkItem, ByVal cancelled As Boolean, ByVal description As String)
     Dim operation As WinHttpComOperation
-    Dim item As HttpBatchItem
+    Dim work As HttpBatchWorkItem
     Dim index As Long
     Dim abortNumber As Long
     Dim abortSource As String
@@ -254,21 +332,28 @@ Private Sub CancelOutstanding(ByVal running As Collection, ByRef items() As Http
     End If
     For index = running.Count To 1 Step - 1
         Set operation = running(index)
-        Set item = New HttpBatchItem
+        Set work = workItems(operation.Index)
         If TryAbortOperation(operation, abortNumber, abortSource, abortDescription) Then
-            item.InitializeCancelled operation.Index
+            If cancelled Then
+                work.CompleteCancelled
+            Else
+                work.CompleteFailure HttpErrTimeout, TransportSource, description
+            End If
         Else
-            item.InitializeFailure operation.Index, abortNumber, abortSource, abortDescription
+            work.CompleteFailure abortNumber, abortSource, abortDescription
         End If
-        Set items(operation.Index) = item
         running.Remove index
     Next index
-    Do While nextIndex <= requestCount
-        Set item = New HttpBatchItem
-        item.InitializeCancelled nextIndex
-        Set items(nextIndex) = item
-        nextIndex = nextIndex + 1
-    Loop
+    For index = LBound(workItems) To UBound(workItems)
+        Set work = workItems(index)
+        If Not work.IsComplete Then
+            If cancelled Then
+                work.CompleteCancelled
+            Else
+                work.CompleteFailure HttpErrTimeout, TransportSource, description
+            End If
+        End If
+    Next index
 End Sub
 
 Private Function CancellationRequested(ByVal Options As HttpBatchOptions) As Boolean

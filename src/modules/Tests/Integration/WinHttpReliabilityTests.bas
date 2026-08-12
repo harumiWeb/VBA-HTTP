@@ -116,6 +116,89 @@ ExpectedFailure:
     Err.Raise Err.Number, Err.Source, Err.Description
 End Sub
 
+'@Tag("integration")
+Public Sub Test_BatchRetry_RetriesItemsIndependently()
+    Dim client As New HttpClient
+    Dim Options As New HttpBatchOptions
+    Dim policy As New HttpRetryPolicy
+    Dim Requests As New Collection
+    Dim result As HttpBatchResult
+    Dim Request As HttpRequest
+
+    client.BaseUrl = RequireBaseUrl()
+    policy.BaseDelayMilliseconds = 0
+    policy.MaxDelayMilliseconds = 0
+    Set Options.RetryPolicy = policy
+
+    Set Request = New HttpRequest
+    Request.Method = "GET"
+    Request.Url = "/retry-status/503/1?id=batch-status"
+    Requests.Add Request
+    Set Request = New HttpRequest
+    Request.Method = "GET"
+    Request.Url = "/flaky/2?id=batch-flaky"
+    Requests.Add Request
+
+    Set result = client.ExecuteMany(Requests, Options)
+
+    XlflowAssert.AssertEquals 2, result.SuccessCount
+    XlflowAssert.AssertEquals 200, result.ItemAt(1).Response.StatusCode
+    XlflowAssert.AssertContains """attempt"":2", result.ItemAt(1).Response.Text
+    XlflowAssert.AssertContains """attempt"":3", result.ItemAt(2).Response.Text
+End Sub
+
+'@Tag("integration")
+Public Sub Test_BatchRetry_TotalDeadlineStopsAllUnfinishedItems()
+    Dim client As New HttpClient
+    Dim Options As New HttpBatchOptions
+    Dim Requests As New Collection
+    Dim result As HttpBatchResult
+    Dim Request As HttpRequest
+    Dim index As Long
+
+    client.BaseUrl = RequireBaseUrl()
+    Options.TotalDeadlineMilliseconds = 100
+    Options.YieldToHost = False
+    For index = 1 To 3
+        Set Request = New HttpRequest
+        Request.Method = "GET"
+        Request.Url = "/delay/2000"
+        Requests.Add Request
+    Next index
+
+    Set result = client.ExecuteMany(Requests, Options)
+
+    XlflowAssert.AssertEquals 3, result.FailureCount
+    For index = 1 To result.Count
+        XlflowAssert.AssertEquals HttpErrorTimeout, result.ItemAt(index).ErrorCategory
+    Next index
+End Sub
+
+'@Tag("integration")
+Public Sub Test_BatchRetry_CancellationStopsRetryWait()
+    Dim client As New HttpClient
+    Dim Options As New HttpBatchOptions
+    Dim token As New HttpCancellationToken
+    Dim Requests As New Collection
+    Dim result As HttpBatchResult
+    Dim Request As New HttpRequest
+
+    client.BaseUrl = RequireBaseUrl()
+    Options.YieldToHost = True
+    Options.YieldIntervalMilliseconds = 20
+    Set Options.CancellationToken = token
+    Set mScheduledCancellation = token
+    Request.Method = "GET"
+    Request.Url = "/rate-limit/10?id=batch-cancel-wait&retry_after=5"
+    Requests.Add Request
+    Application.OnTime Now + TimeSerial(0, 0, 1), "WinHttpReliabilityTests.CancelScheduledRequest"
+
+    Set result = client.ExecuteMany(Requests, Options)
+    Set mScheduledCancellation = Nothing
+
+    XlflowAssert.AssertEquals 1, result.CancelledCount
+End Sub
+
 Public Sub CancelScheduledRequest()
     If Not mScheduledCancellation Is Nothing Then mScheduledCancellation.Cancel
 End Sub

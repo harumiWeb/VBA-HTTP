@@ -4,6 +4,7 @@
     "HttpBatchItem",
     "HttpBatchOptions",
     "HttpBatchResult",
+    "HttpBatchWorkItem",
     "HttpBody",
     "HttpCancellationToken",
     "HttpClient",

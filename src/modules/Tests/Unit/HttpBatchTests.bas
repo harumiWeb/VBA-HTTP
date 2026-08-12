@@ -90,3 +90,25 @@ Public Sub Test_ExecuteMany_RejectsSameClientReentrancy()
     Set client.Transport = transport
     Call client.ExecuteMany(Requests)
 End Sub
+
+Public Sub Test_BatchWorkItem_TracksRetryAndTerminalState()
+    Dim work As New HttpBatchWorkItem
+    Dim Request As New HttpRequest
+    Dim response As New HttpResponse
+
+    Request.Url = "http://127.0.0.1/status/204"
+    work.Initialize 2, Request
+    XlflowAssert.AssertTrue work.IsEligible(0)
+    work.BeginAttempt
+    XlflowAssert.AssertEquals 1, work.Attempt
+    XlflowAssert.AssertTrue work.IsRunning
+    work.ScheduleRetry 10, 50
+    XlflowAssert.AssertFalse work.IsEligible(59)
+    XlflowAssert.AssertTrue work.IsEligible(60)
+    work.BeginAttempt
+    response.Initialize 204
+    work.CompleteSuccess response
+    XlflowAssert.AssertTrue work.IsComplete
+    XlflowAssert.AssertEquals 2, work.Attempt
+    XlflowAssert.AssertEquals 2, work.TerminalItem.Index
+End Sub
