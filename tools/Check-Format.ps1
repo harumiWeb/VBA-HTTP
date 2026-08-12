@@ -10,8 +10,9 @@ $sourceRoots = @(
     (Join-Path $projectRoot "src\workbook")
 )
 
+$existingSourceRoots = @($sourceRoots | Where-Object { Test-Path -LiteralPath $_ -PathType Container })
 $sourceFiles = @(
-    Get-ChildItem -LiteralPath $sourceRoots -Recurse -File |
+    Get-ChildItem -LiteralPath $existingSourceRoots -Recurse -File |
         Where-Object { $_.Extension -in ".bas", ".cls" -and $_.FullName -ne $excludedPath } |
         ForEach-Object { $_.FullName }
 )
