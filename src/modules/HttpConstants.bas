@@ -48,3 +48,9 @@ Public Enum HttpDecompressionMode
     HttpDecompressionAllowFallback = 0
     HttpDecompressionRequired = 1
 End Enum
+
+Public Enum HttpProxyMode
+    HttpProxyDefault = 0
+    HttpProxyNoProxy = 1
+    HttpProxyManual = 2
+End Enum

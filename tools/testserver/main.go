@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"syscall"
@@ -15,6 +16,7 @@ import (
 
 func main() {
 	listenAddress := flag.String("listen", "127.0.0.1:0", "TCP address to listen on")
+	proxyListenAddress := flag.String("proxy-listen", "", "Optional loopback address for a deterministic HTTP forward proxy")
 	flag.Parse()
 
 	listener, err := net.Listen("tcp", *listenAddress)
@@ -32,19 +34,58 @@ func main() {
 		Handler:           testServer.routes(),
 		ReadHeaderTimeout: 10 * time.Second,
 	}
+	var proxyListener net.Listener
+	var proxyServer *http.Server
+	var proxyURL string
+	readyURL := "http://" + listener.Addr().String()
+	proxyTargetURL := ""
+	if *proxyListenAddress != "" {
+		proxyListener, err = net.Listen("tcp", *proxyListenAddress)
+		if err != nil {
+			_ = listener.Close()
+			fatal(err)
+		}
+		proxyTCPAddress, proxyOK := proxyListener.Addr().(*net.TCPAddr)
+		if !proxyOK || !proxyTCPAddress.IP.IsLoopback() {
+			_ = listener.Close()
+			_ = proxyListener.Close()
+			fatal(fmt.Errorf("test proxy must listen on a loopback address"))
+		}
+		// WinHTTP deliberately bypasses proxies for literal loopback hosts.  A
+		// loopback-only DNS alias keeps the fixture local while exercising the
+		// named-proxy path instead of silently connecting directly.
+		targetURL, parseErr := url.Parse(fmt.Sprintf("http://vba-http.localhost:%d", tcpAddress.Port))
+		if parseErr != nil {
+			_ = listener.Close()
+			_ = proxyListener.Close()
+			fatal(parseErr)
+		}
+		proxyServer = &http.Server{Handler: newLoopbackProxy(targetURL), ReadHeaderTimeout: 10 * time.Second}
+		proxyURL = "http://" + proxyListener.Addr().String()
+		proxyTargetURL = targetURL.String()
+	}
 
 	ready := map[string]any{
 		"event": "ready",
-		"url":   "http://" + listener.Addr().String(),
+		"url":   readyURL,
+	}
+	if proxyURL != "" {
+		ready["proxy_url"] = proxyURL
+		ready["proxy_target_url"] = proxyTargetURL
 	}
 	if err := json.NewEncoder(os.Stdout).Encode(ready); err != nil {
 		fatal(err)
 	}
 
-	serveErrors := make(chan error, 1)
+	serveErrors := make(chan error, 2)
 	go func() {
 		serveErrors <- server.Serve(listener)
 	}()
+	if proxyServer != nil {
+		go func() {
+			serveErrors <- proxyServer.Serve(proxyListener)
+		}()
+	}
 
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
@@ -63,6 +104,11 @@ func main() {
 	defer cancel()
 	if err := server.Shutdown(ctx); err != nil {
 		fatal(err)
+	}
+	if proxyServer != nil {
+		if err := proxyServer.Shutdown(ctx); err != nil {
+			fatal(err)
+		}
 	}
 }
 

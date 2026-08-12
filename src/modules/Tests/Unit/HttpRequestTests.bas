@@ -46,6 +46,21 @@ Public Sub Test_Request_CloneCopiesDecompressionOptions()
     XlflowAssert.AssertNotSame options, copy.DecompressionOptions
 End Sub
 
+Public Sub Test_Request_CloneCopiesProxyOptions()
+    Dim Request As New HttpRequest
+    Dim options As New HttpProxyOptions
+    Dim copy As HttpRequest
+
+    options.Mode = HttpProxyManual
+    options.ProxyUrl = "http://127.0.0.1:18080"
+    Set Request.ProxyOptions = options
+    Set copy = Request.Clone()
+
+    XlflowAssert.AssertEquals HttpProxyManual, copy.ProxyOptions.Mode
+    XlflowAssert.AssertEquals "http://127.0.0.1:18080", copy.ProxyOptions.ProxyUrl
+    XlflowAssert.AssertNotSame options, copy.ProxyOptions
+End Sub
+
 '@ExpectedError(-2147200503, "Maximum redirects must be between 1 and 100.", "HttpRequest.MaxRedirects")
 Public Sub Test_Request_RejectsZeroRedirectLimit()
     Dim Request As New HttpRequest

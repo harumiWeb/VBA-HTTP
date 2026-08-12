@@ -2,6 +2,8 @@ Attribute VB_Name = "WinHttpNativeApi"
 Option Explicit
 
 Public Const WinHttpAccessTypeDefaultProxy As Long = 0
+Public Const WinHttpAccessTypeNoProxy As Long = 1
+Public Const WinHttpAccessTypeNamedProxy As Long = 3
 Public Const WinHttpFlagSecure As Long = &H800000
 Public Const WinHttpOptionRedirectPolicy As Long = 88
 Public Const WinHttpOptionMaxAutomaticRedirects As Long = 89
@@ -65,8 +67,15 @@ Private Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (ByRef Desti
 #End If
 
 #If VBA7 Then
-Public Function OpenSession(ByVal UserAgent As String) As LongPtr
-    OpenSession = WinHttpOpen(StrPtr(UserAgent), WinHttpAccessTypeDefaultProxy, 0, 0, 0)
+Public Function OpenSession(ByVal UserAgent As String, Optional ByVal AccessType As Long = 0, Optional ByVal ProxyName As String = "", Optional ByVal ProxyBypass As String = "") As LongPtr
+    Dim proxyNamePointer As LongPtr
+    Dim proxyBypassPointer As LongPtr
+
+    If AccessType = WinHttpAccessTypeNamedProxy Then
+        proxyNamePointer = StrPtr(ProxyName)
+        If Len(ProxyBypass) > 0 Then proxyBypassPointer = StrPtr(ProxyBypass)
+    End If
+    OpenSession = WinHttpOpen(StrPtr(UserAgent), AccessType, proxyNamePointer, proxyBypassPointer, 0)
 End Function
 
 Public Function Connect(ByVal SessionHandle As LongPtr, ByVal ServerName As String, ByVal ServerPort As Long) As LongPtr
@@ -185,8 +194,15 @@ Public Sub CopyByteRange(ByRef Destination() As Byte, ByVal DestinationOffset As
     CopyMemory Destination(DestinationOffset), Source(0), ByteCount
 End Sub
 #Else
-Public Function OpenSession(ByVal UserAgent As String) As Long
-    OpenSession = WinHttpOpen(StrPtr(UserAgent), WinHttpAccessTypeDefaultProxy, 0, 0, 0)
+Public Function OpenSession(ByVal UserAgent As String, Optional ByVal AccessType As Long = 0, Optional ByVal ProxyName As String = "", Optional ByVal ProxyBypass As String = "") As Long
+    Dim proxyNamePointer As Long
+    Dim proxyBypassPointer As Long
+
+    If AccessType = WinHttpAccessTypeNamedProxy Then
+        proxyNamePointer = StrPtr(ProxyName)
+        If Len(ProxyBypass) > 0 Then proxyBypassPointer = StrPtr(ProxyBypass)
+    End If
+    OpenSession = WinHttpOpen(StrPtr(UserAgent), AccessType, proxyNamePointer, proxyBypassPointer, 0)
 End Function
 
 Public Function Connect(ByVal SessionHandle As Long, ByVal ServerName As String, ByVal ServerPort As Long) As Long

@@ -14,7 +14,8 @@ For every request the transport performs this sequence on the VBA thread:
 
 1. parse the absolute HTTP or HTTPS URL into scheme, host, port, and origin
    path (fragments are not sent);
-2. open a WinHTTP session using the default OS proxy configuration;
+2. validate the request proxy snapshot and open a WinHTTP session using the
+   requested OS/default, direct, or named-proxy configuration;
 3. connect to the host and open a request handle;
 4. apply timeout and redirect options, the optional native protocol policy,
    and optional response decompression;
@@ -73,6 +74,9 @@ evidence.
   required mode raises `HttpErrorProtocol`. The COM transport rejects active
   decompression options. Streaming downloads report unknown content length
   while decoding is active because wire length may not equal bytes written.
+- `HttpProxyOptions` maps to the WinHTTP session access type and preserves the
+  same default/no-proxy/manual semantics as the COM backend. Manual proxy
+  credentials and HTTPS CONNECT are outside the current contract.
 
 ## Resource regression gate
 

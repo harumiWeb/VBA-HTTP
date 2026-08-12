@@ -77,6 +77,11 @@ tasks:
     cmds:
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-TestServerLifecycle.ps1
 
+  test:release-checksum:
+    desc: Verify deterministic release artifact checksum generation and validation
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-ReleaseChecksums.ps1
+
   testserver:run:
     desc: Start the local HTTP server on an OS-selected port
     dir: tools/testserver
@@ -131,11 +136,18 @@ tasks:
     cmds:
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Validate-BuildPlan.ps1
 
+  release:checksum:
+    desc: Generate an atomic checksum sidecar for the release artifact and manifest
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Write-ReleaseChecksums.ps1 -ArtifactPath build/Release/VBA-HTTP.xlsm
+
   release:build:
     desc: Build and validate the release workbook
     cmds:
       - task: bootstrap:dirs
+      - task: build:plan
       - xlflow build --json --out build/Release/VBA-HTTP.xlsm
+      - task: release:checksum
       - task: release:smoke
 
   release:smoke:
@@ -150,6 +162,7 @@ tasks:
       - task: test
       - task: test:integration
       - task: testserver:test
+      - task: test:release-checksum
       - task: build:plan
 
   hooks:install:

@@ -105,7 +105,7 @@ Release buildの原則：
 - [x] build manifestがartifactと共に生成された。
 - [x] release workbookのcomponent inspectionでdevelopment-only codeが存在しないことを確認した。
 - [x] 外部consumer smoke harnessがrelease artifactのpublic APIを実行できた。
-- [ ] artifactとmanifestのchecksumを保存した。
+- [x] artifactとmanifestのchecksumを保存するsidecar生成・検証を自動化した。
 
 ## Milestones
 
@@ -444,7 +444,7 @@ OSが提供するmodern WinHTTP capabilityとcorporate environment対応を安�
 - [~] HTTP/3 opt-inのWinHTTP flagとvalidationを実装する（TLS/QUIC host evidenceはcompatibility matrix待ち）。
 - [x] unsupported option、plain HTTP、required mismatchのfallback／`HttpErrorProtocol`を実装する。
 - [x] gzip／deflate decompressionをADR-0010と`docs/specs/decompression-policy.md`で確定し、native WinHTTP option 118、COM拒否、loopback／release smokeを実装する。
-- [ ] OS default proxyとmanual proxyを実装する。
+- [x] OS default、no-proxy、manual HTTP proxyをADR-0012と`docs/specs/proxy-policy.md`で確定し、COM/native transportとloopback fixtureで検証する。
 - [ ] Basic、Bearer、Windows authenticationを実装する。
 - [ ] `IHttpAuthProvider` を実装する。
 - [ ] credential／secret redactionを実装する。
@@ -454,7 +454,7 @@ OSが提供するmodern WinHTTP capabilityとcorporate environment対応を安�
 
 - [~] HTTP/1.1、HTTP/2、対応環境のHTTP/3を識別できる（HTTP/1.1 fallbackとrequested-mask contractは検証済み、TLS/QUIC実測は未完了）。
 - [x] unsupported環境のfallback／errorがspec通りである。
-- [ ] proxy／authenticationのlocal integration testsが成功する。
+- [x] HTTP forwarding proxyのlocal integration testsがCOM/nativeで成功する（proxy authentication/HTTPS CONNECTは後続auth sliceの対象）。
 - [ ] secretがdiagnosticsやbenchmark outputへ出ない。
 - [~] release artifactでprotocol／auth consumer smoke testが成功する（protocol fallback smokeは追加、authは未実装）。
 
@@ -499,7 +499,7 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 - [ ] README、API reference、examplesを完成させる。
 - [ ] xlflow-based contributor guideを完成させる。
 - [ ] `xlflow build` によるrelease workbook生成を自動化する。
-- [ ] build manifest検証とartifact checksum生成を自動化する。
+- [x] build manifest検証とartifact checksum生成を自動化する。
 - [ ] external consumer smoke harnessをrelease pipelineへ統合する。
 - [ ] source distributionとworkbook distributionの責務を分離する。
 - [ ] source vendoring、install、upgrade手順を文書化する。
@@ -512,7 +512,7 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 - [ ] 全public APIに例とerror behaviorの説明がある。
 - [ ] development-only codeを含まない配布workbookを生成できる。
 - [ ] build失敗時に既存release artifactが破壊されない。
-- [ ] release manifestとchecksumが保存される。
+- [x] release manifestとchecksum sidecarが保存される。
 
 ---
 

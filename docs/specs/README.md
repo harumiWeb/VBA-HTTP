@@ -19,4 +19,6 @@
 - `streaming-upload.md`: native constant-memory file／multipart upload、source ownership、progress、cancellation、challenge contract
 - `protocol-policy.md`: native HTTP/2／HTTP/3 opt-in、fallback／required behavior、transport boundary、compatibility evidence
 - `decompression-policy.md`: native gzip／deflate response decoding, header ownership, fallback, and streaming length contract
+- `proxy-policy.md`: OS/default, direct, and manual proxy routing, validation, and transport mapping
+- `release-checksum.md`: deterministic SHA-256 sidecar generation, validation, and atomic evidence publication
 - `compatibility-matrix.md`: observed Windows/Office/protocol evidence and promotion requirements

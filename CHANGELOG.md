@@ -1,7 +1,15 @@
 ## Unreleased
 
+- Added shared default, direct, and manual HTTP proxy routing via
+  `HttpProxyOptions` for COM and native transports, with deterministic loopback
+  forwarding tests. Proxy credentials and CONNECT authentication remain
+  deferred to the authentication policy.
+
 ### Added
 
+- Added deterministic SHA-256 release checksum sidecars for the filtered
+  workbook and xlflow build manifest, with atomic sidecar publication,
+  tamper-detecting validation, and a release smoke gate.
 - Added native `HttpDecompressionOptions` for bounded WinHTTP gzip/deflate
   response decoding, deterministic fallback/required behavior, COM validation,
   loopback integration coverage, and release-consumer decompression smoke.

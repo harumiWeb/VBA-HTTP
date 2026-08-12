@@ -133,6 +133,24 @@ Public Sub Test_Client_PropagatesDefaultDecompressionOptionsToSnapshot()
     XlflowAssert.AssertNotSame options, transport.LastRequest.DecompressionOptions
 End Sub
 
+Public Sub Test_Client_PropagatesDefaultProxyOptionsToSnapshot()
+    Dim client As New HttpClient
+    Dim transport As New MockHttpTransport
+    Dim configuredResponse As New HttpResponse
+    Dim options As New HttpProxyOptions
+
+    configuredResponse.Initialize 204
+    transport.SetResponse configuredResponse
+    Set client.Transport = transport
+    options.Mode = HttpProxyNoProxy
+    Set client.ProxyOptions = options
+
+    Call client.GetResponse("https://example.test/items")
+
+    XlflowAssert.AssertEquals HttpProxyNoProxy, transport.LastRequest.ProxyOptions.Mode
+    XlflowAssert.AssertNotSame options, transport.LastRequest.ProxyOptions
+End Sub
+
 '@ExpectedError(-2147200502, "URL must contain a host.", "HttpClient.Execute")
 Public Sub Test_Client_RejectsAbsoluteUrlWithoutHost()
     Dim client As New HttpClient

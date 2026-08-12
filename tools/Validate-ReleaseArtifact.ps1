@@ -30,6 +30,10 @@ if ($manifest.publication.method -ne "atomic_replace") {
     throw "Release publication was not atomic."
 }
 
+& (Join-Path $PSScriptRoot "Verify-ReleaseChecksums.ps1") `
+    -ArtifactPath $resolvedArtifact `
+    -ManifestPath $manifestPath
+
 $expectedIncluded = @($policy.included | Sort-Object)
 $expectedExcluded = @($policy.excluded | Sort-Object)
 $manifestIncluded = @($manifest.included_components.name | Sort-Object)
@@ -140,7 +144,7 @@ try {
 
     $serverProcess = Start-Process `
         -FilePath $serverExecutable `
-        -ArgumentList "-listen", "127.0.0.1:0" `
+        -ArgumentList "-listen", "127.0.0.1:0", "-proxy-listen", "127.0.0.1:0" `
         -RedirectStandardOutput $serverStdout `
         -RedirectStandardError $serverStderr `
         -WindowStyle Hidden `
@@ -160,8 +164,8 @@ try {
         }
         Start-Sleep -Milliseconds 50
     }
-    if ($null -eq $ready -or $ready.event -ne "ready" -or -not $ready.url) {
-        throw "Release smoke test server did not publish readiness."
+    if ($null -eq $ready -or $ready.event -ne "ready" -or -not $ready.url -or -not $ready.proxy_url -or -not $ready.proxy_target_url) {
+        throw "Release smoke test server did not publish HTTP and proxy readiness."
     }
 
     $consumerExcel = New-Object -ComObject Excel.Application
@@ -211,6 +215,8 @@ try {
     [void]$consumerExcel.Run($protocolMacro, $consumerWorkbook.Name, [string]$ready.url)
     $decompressionMacro = "'$($harnessWorkbook.Name)'!ReleaseBatchSmoke.RunDecompressionSmoke"
     [void]$consumerExcel.Run($decompressionMacro, $consumerWorkbook.Name, [string]$ready.url)
+    $proxyMacro = "'$($harnessWorkbook.Name)'!ReleaseBatchSmoke.RunProxySmoke"
+    [void]$consumerExcel.Run($proxyMacro, $consumerWorkbook.Name, [string]$ready.proxy_target_url, [string]$ready.proxy_url)
     $uploadMacro = "'$($harnessWorkbook.Name)'!ReleaseBatchSmoke.RunUploadSmoke"
     [void]$consumerExcel.Run($uploadMacro, $consumerWorkbook.Name, [string]$ready.url, $uploadPath)
 }
@@ -258,4 +264,4 @@ finally {
     }
 }
 
-Write-Output "Release artifact is valid: $($actualComponents.Count) components; external COM/native GET, protocol fallback, decompression, download, batch, retry, deadline, file-upload, and multipart-upload smoke passed."
+Write-Output "Release artifact is valid: $($actualComponents.Count) components; external COM/native GET, protocol fallback, decompression, proxy, download, batch, retry, deadline, file-upload, and multipart-upload smoke passed."

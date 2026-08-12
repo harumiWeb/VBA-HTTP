@@ -11,6 +11,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strconv"
 	"sync"
 	"testing"
@@ -135,6 +136,40 @@ func TestCompressedEndpointsUseDeterministicWireEncoding(t *testing.T) {
 				t.Fatalf("decoded body = %q, want %q", body, compressionFixture)
 			}
 		})
+	}
+}
+
+func TestLoopbackProxyForwardsOnlyToTarget(t *testing.T) {
+	target := httptest.NewServer(newTestServer().routes())
+	defer target.Close()
+	targetURL, err := url.Parse(target.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	proxy := httptest.NewServer(newLoopbackProxy(targetURL))
+	defer proxy.Close()
+	proxyURL, err := url.Parse(proxy.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	client := &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(proxyURL)}}
+	response, err := client.Get(target.URL + "/headers")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK || response.Header.Get("X-Test-Proxy-Forwarded") != "1" {
+		t.Fatalf("proxy response = %d, forwarded = %q", response.StatusCode, response.Header.Get("X-Test-Proxy-Forwarded"))
+	}
+
+	badResponse, err := client.Get("http://127.0.0.1:1/should-not-forward")
+	if err != nil {
+		return
+	}
+	defer badResponse.Body.Close()
+	if badResponse.StatusCode != http.StatusBadGateway {
+		t.Fatalf("non-target status = %d, want %d", badResponse.StatusCode, http.StatusBadGateway)
 	}
 }
 

@@ -47,6 +47,11 @@ Public Function CreateDecompressionOptions() As HttpDecompressionOptions
     Set CreateDecompressionOptions = New HttpDecompressionOptions
 End Function
 
+''' Creates proxy routing options for referenced-workbook consumers.
+Public Function CreateProxyOptions() As HttpProxyOptions
+    Set CreateProxyOptions = New HttpProxyOptions
+End Function
+
 ''' Creates an ordered multipart form for referenced-workbook consumers.
 Public Function CreateMultipartForm() As HttpMultipartForm
     Set CreateMultipartForm = New HttpMultipartForm

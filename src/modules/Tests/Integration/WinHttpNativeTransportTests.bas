@@ -42,6 +42,25 @@ Public Sub Test_NativeTransport_ProtocolOptionsFallbackOnPlainHttp()
 End Sub
 
 '@Tag("integration")
+Public Sub Test_NativeTransport_UsesManualProxy()
+    Dim client As New HttpClient
+    Dim options As New HttpProxyOptions
+    Dim response As HttpResponse
+
+    client.BaseUrl = RequireProxyTargetUrl()
+    options.Mode = HttpProxyManual
+    options.ProxyUrl = RequireProxyUrl()
+    Set client.ProxyOptions = options
+    Set client.Transport = New WinHttpNativeTransport
+
+    Set response = client.GetResponse("/headers")
+
+    XlflowAssert.AssertEquals 200, response.StatusCode
+    XlflowAssert.AssertEquals "1", response.Headers.GetValue("X-Test-Proxy-Forwarded")
+    XlflowAssert.AssertContains "X-Test-Proxy-Forwarded", response.Text
+End Sub
+
+'@Tag("integration")
 Public Sub Test_NativeTransport_RequiredProtocolRejectsPlainHttp()
     Dim client As New HttpClient
     Dim options As New HttpProtocolOptions
@@ -638,6 +657,20 @@ Private Function RequireBaseUrl() As String
     If Len(RequireBaseUrl) = 0 Then
         XlflowAssert.AssertInconclusive "VBA_HTTP_TEST_BASE_URL is not set; run task test:integration."
         Exit Function
+    End If
+End Function
+
+Private Function RequireProxyUrl() As String
+    RequireProxyUrl = Trim$(Environ$("VBA_HTTP_TEST_PROXY_URL"))
+    If Len(RequireProxyUrl) = 0 Then
+        XlflowAssert.AssertInconclusive "VBA_HTTP_TEST_PROXY_URL is not set; run task test:integration."
+    End If
+End Function
+
+Private Function RequireProxyTargetUrl() As String
+    RequireProxyTargetUrl = Trim$(Environ$("VBA_HTTP_TEST_PROXY_TARGET_URL"))
+    If Len(RequireProxyTargetUrl) = 0 Then
+        XlflowAssert.AssertInconclusive "VBA_HTTP_TEST_PROXY_TARGET_URL is not set; run task test:integration."
     End If
 End Function
 

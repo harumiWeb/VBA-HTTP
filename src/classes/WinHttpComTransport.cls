@@ -16,6 +16,9 @@ Implements IHttpAttemptTransport
 Private Const TransportSource As String = "WinHttpComTransport.Execute"
 Private Const WinHttpOptionEnableRedirects As Long = 6
 Private Const WinHttpOptionMaxAutomaticRedirects As Long = 14
+Private Const WinHttpRequestProxySettingDefault As Long = 0
+Private Const WinHttpRequestProxySettingDirect As Long = 1
+Private Const WinHttpRequestProxySettingProxy As Long = 2
 
 Public Function Execute(ByVal Request As HttpRequest) As HttpResponse
     Set Execute = ExecuteCore(Request)
@@ -56,6 +59,7 @@ Private Function ExecuteCore(ByVal Request As HttpRequest) As HttpResponse
 
     started = HttpTiming.CounterValue()
     backend.Open Request.Method, Request.Url, False
+    ApplyProxy backend, Request.ProxyOptions, TransportSource
     ApplyRequestHeaders backend, Request.Headers
     SendRequest backend, Request.Body
     finished = HttpTiming.CounterValue()
@@ -432,6 +436,7 @@ Private Function CreateAsyncOperation(ByVal Request As HttpRequest, ByVal itemIn
     backend.Option(WinHttpOptionMaxAutomaticRedirects) = Request.MaxRedirects
     started = HttpTiming.CounterValue()
     backend.Open Request.Method, Request.Url, True
+    ApplyProxy backend, Request.ProxyOptions, TransportSource
     ApplyRequestHeaders backend, Request.Headers
     SendRequest backend, Request.Body
     operation.Initialize itemIndex, backend, started, deadlineMilliseconds
@@ -464,6 +469,36 @@ Private Sub ValidateDecompressionOptions(ByVal Request As HttpRequest)
         HttpErrors.RaiseValidation TransportSource, "Response decompression options require the native WinHTTP transport."
     End If
 End Sub
+
+Private Sub ApplyProxy(ByVal backend As Object, ByVal Options As HttpProxyOptions, ByVal Source As String)
+    If backend Is Nothing Then
+        HttpErrors.RaiseValidation Source, "WinHTTP backend is unavailable."
+        Exit Sub
+    End If
+    If Options Is Nothing Then Exit Sub
+    Options.Validate
+    Select Case Options.Mode
+    Case HttpProxyDefault
+        backend.SetProxy WinHttpRequestProxySettingDefault, "", ""
+    Case HttpProxyNoProxy
+        backend.SetProxy WinHttpRequestProxySettingDirect, "", ""
+    Case HttpProxyManual
+        backend.SetProxy WinHttpRequestProxySettingProxy, ProxyServerName(Options.ProxyUrl), Options.BypassList
+    Case Else
+        HttpErrors.RaiseValidation Source, "Unsupported proxy mode."
+    End Select
+End Sub
+
+Private Function ProxyServerName(ByVal ProxyUrl As String) As String
+    Dim schemeEnd As Long
+
+    schemeEnd = InStr(1, ProxyUrl, "://", vbBinaryCompare)
+    If schemeEnd > 0 Then
+        ProxyServerName = Mid$(ProxyUrl, schemeEnd + 3)
+    Else
+        ProxyServerName = ProxyUrl
+    End If
+End Function
 
 Private Function PollAsyncOperation(ByVal operation As WinHttpComOperation) As Boolean
     Dim errorNumber As Long

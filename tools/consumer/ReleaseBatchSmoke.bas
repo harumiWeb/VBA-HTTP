@@ -87,6 +87,35 @@ Public Sub RunDecompressionSmoke(ByVal releaseWorkbookName As String, ByVal base
     End If
 End Sub
 
+Public Sub RunProxySmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As String, ByVal proxyUrl As String)
+    Dim client As Object
+    Dim nativeClient As Object
+    Dim options As Object
+    Dim response As Object
+
+    Set client = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateClient")
+    Set options = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateProxyOptions")
+    options.Mode = 2
+    options.ProxyUrl = proxyUrl
+    Set client.ProxyOptions = options
+    client.BaseUrl = baseUrl
+    Set response = client.GetResponse("/headers")
+    If response.StatusCode <> 200 Or response.Headers.GetValue("X-Test-Proxy-Forwarded") <> "1" Then
+        Err.Raise vbObjectError + 749, "ReleaseBatchSmoke.RunProxySmoke", "Release COM proxy smoke returned an unexpected response."
+    End If
+
+    Set nativeClient = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateNativeClient")
+    Set options = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateProxyOptions")
+    options.Mode = 2
+    options.ProxyUrl = proxyUrl
+    Set nativeClient.ProxyOptions = options
+    nativeClient.BaseUrl = baseUrl
+    Set response = nativeClient.GetResponse("/headers")
+    If response.StatusCode <> 200 Or response.Headers.GetValue("X-Test-Proxy-Forwarded") <> "1" Then
+        Err.Raise vbObjectError + 750, "ReleaseBatchSmoke.RunProxySmoke", "Release native proxy smoke returned an unexpected response."
+    End If
+End Sub
+
 Public Sub RunUploadSmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As String, ByVal sourcePath As String)
     Dim client As Object
     Dim form As Object

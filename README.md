@@ -4,7 +4,7 @@ VBA-HTTP is a Windows Excel/VBA HTTP client designed for deterministic testing, 
 
 ## Development status
 
-Phase 6 adds constant-memory downloads and Phase 7 adds file/multipart uploads on the synchronous native WinHTTP backend. Phase 8 adds explicit native-only HTTP/2/HTTP/3 negotiation and gzip/deflate response decompression policies with deterministic fallback. The default remains the late-bound `WinHttp.WinHttpRequest.5.1` transport; the native backend provides pointer-safe handles, negotiated protocol reporting, bounded file streaming, and OS-owned response decoding without a WinHTTP type-library reference.
+Phase 6 adds constant-memory downloads and Phase 7 adds file/multipart uploads on the synchronous native WinHTTP backend. Phase 8 adds explicit native-only HTTP/2/HTTP/3 negotiation, gzip/deflate response decompression, and shared OS/direct/manual HTTP proxy routing. The default remains the late-bound `WinHttp.WinHttpRequest.5.1` transport; the native backend provides pointer-safe handles, negotiated protocol reporting, bounded file streaming, and OS-owned response decoding without a WinHTTP type-library reference.
 
 ```vb
 Dim client As HttpClient
@@ -96,6 +96,25 @@ Debug.Print nativeResponse.Text  ' decoded identity text
 The COM backend rejects an active decompression option. See
 [`docs/specs/decompression-policy.md`](docs/specs/decompression-policy.md) for
 the `Accept-Encoding`, fallback, and streaming length contract.
+
+Proxy routing is configured with the same snapshot-safe options on either
+transport. Default mode uses the OS/WinHTTP configuration; `HttpProxyNoProxy`
+connects directly; manual mode accepts an HTTP/HTTPS proxy URL and optional
+semicolon-delimited bypass list:
+
+```vb
+Dim proxy As HttpProxyOptions
+
+Set proxy = VBAHttp.CreateProxyOptions()
+proxy.Mode = HttpProxyManual
+proxy.ProxyUrl = "http://proxy.example.test:8080"
+proxy.BypassList = "localhost;127.0.0.1"
+Set client.ProxyOptions = proxy
+```
+
+Proxy credentials and HTTPS CONNECT authentication are deliberately handled by
+the later authentication policy. See
+[`docs/specs/proxy-policy.md`](docs/specs/proxy-policy.md).
 
 The native transport uses synchronous WinHTTP calls, OS certificate validation, and deterministic handle cleanup. Buffered native requests still reject active cancellation and total-deadline options because a blocking call cannot observe them; streaming downloads support cooperative cancellation and total-deadline checkpoints between bounded reads.
 

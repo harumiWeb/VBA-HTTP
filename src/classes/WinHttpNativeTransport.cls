@@ -62,7 +62,7 @@ Private Function ExecuteCore(ByVal Request As HttpRequest) As HttpResponse
     Set Url = New WinHttpNativeUrl
     Url.Initialize Request.Url
     Set session = New WinHttpSessionHandle
-    handleValue = WinHttpNativeApi.OpenSession(UserAgent)
+    handleValue = OpenSessionForRequest(Request, TransportSource)
     If handleValue = 0 Then RaiseNativeFailure "OpenSession"
     session.Initialize handleValue
 
@@ -153,7 +153,7 @@ Private Function DownloadCore(ByVal Request As HttpRequest, ByVal DestinationPat
     Set Url = New WinHttpNativeUrl
     Url.Initialize Request.Url
     Set session = New WinHttpSessionHandle
-    handleValue = WinHttpNativeApi.OpenSession(UserAgent)
+    handleValue = OpenSessionForRequest(Request, DownloadSource)
     If handleValue = 0 Then RaiseNativeFailure "OpenSession", DownloadSource
     session.Initialize handleValue
 
@@ -321,7 +321,7 @@ Private Function UploadCore(ByVal Request As HttpRequest, ByVal Source As IHttpU
     Set Url = New WinHttpNativeUrl
     Url.Initialize Request.Url
     Set session = New WinHttpSessionHandle
-    handleValue = WinHttpNativeApi.OpenSession(UserAgent)
+    handleValue = OpenSessionForRequest(Request, SourceName)
     If handleValue = 0 Then RaiseNativeFailure "OpenSession", SourceName
     session.Initialize handleValue
 
@@ -390,6 +390,77 @@ Private Sub RaiseNativeFailure(Optional ByVal Operation As String = "", Optional
     If Len(Source) = 0 Then Source = TransportSource
     WinHttpErrorMapping.RaiseMappedWinHttpFailure WinHttpNativeApi.LastErrorCode(), Source, Operation
 End Sub
+
+#If VBA7 Then
+Private Function OpenSessionForRequest(ByVal Request As HttpRequest, ByVal Source As String) As LongPtr
+    Dim Options As HttpProxyOptions
+    Dim accessType As Long
+
+    If Request Is Nothing Then HttpErrors.RaiseValidation Source, "Request cannot be Nothing."
+    Set Options = Request.ProxyOptions
+    If Options Is Nothing Then
+        accessType = WinHttpNativeApi.WinHttpAccessTypeDefaultProxy
+    Else
+        Options.Validate
+        Select Case Options.Mode
+        Case HttpProxyDefault
+            accessType = WinHttpNativeApi.WinHttpAccessTypeDefaultProxy
+        Case HttpProxyNoProxy
+            accessType = WinHttpNativeApi.WinHttpAccessTypeNoProxy
+        Case HttpProxyManual
+            accessType = WinHttpNativeApi.WinHttpAccessTypeNamedProxy
+        Case Else
+            HttpErrors.RaiseValidation Source, "Unsupported proxy mode."
+        End Select
+    End If
+
+    If Options Is Nothing Then
+        OpenSessionForRequest = WinHttpNativeApi.OpenSession(UserAgent, accessType)
+    Else
+        OpenSessionForRequest = WinHttpNativeApi.OpenSession(UserAgent, accessType, ProxyServerName(Options.ProxyUrl), Options.BypassList)
+    End If
+End Function
+#Else
+Private Function OpenSessionForRequest(ByVal Request As HttpRequest, ByVal Source As String) As Long
+    Dim Options As HttpProxyOptions
+    Dim accessType As Long
+
+    If Request Is Nothing Then HttpErrors.RaiseValidation Source, "Request cannot be Nothing."
+    Set Options = Request.ProxyOptions
+    If Options Is Nothing Then
+        accessType = WinHttpNativeApi.WinHttpAccessTypeDefaultProxy
+    Else
+        Options.Validate
+        Select Case Options.Mode
+        Case HttpProxyDefault
+            accessType = WinHttpNativeApi.WinHttpAccessTypeDefaultProxy
+        Case HttpProxyNoProxy
+            accessType = WinHttpNativeApi.WinHttpAccessTypeNoProxy
+        Case HttpProxyManual
+            accessType = WinHttpNativeApi.WinHttpAccessTypeNamedProxy
+        Case Else
+            HttpErrors.RaiseValidation Source, "Unsupported proxy mode."
+        End Select
+    End If
+
+    If Options Is Nothing Then
+        OpenSessionForRequest = WinHttpNativeApi.OpenSession(UserAgent, accessType)
+    Else
+        OpenSessionForRequest = WinHttpNativeApi.OpenSession(UserAgent, accessType, ProxyServerName(Options.ProxyUrl), Options.BypassList)
+    End If
+End Function
+#End If
+
+Private Function ProxyServerName(ByVal ProxyUrl As String) As String
+    Dim schemeEnd As Long
+
+    schemeEnd = InStr(1, ProxyUrl, "://", vbBinaryCompare)
+    If schemeEnd > 0 Then
+        ProxyServerName = Mid$(ProxyUrl, schemeEnd + 3)
+    Else
+        ProxyServerName = ProxyUrl
+    End If
+End Function
 
 Private Sub ApplyRequestOptions(ByVal nativeRequest As WinHttpRequestHandle, ByVal Request As HttpRequest, Optional ByVal Source As String = "")
     Dim redirectFlag As Long

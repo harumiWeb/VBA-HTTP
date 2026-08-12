@@ -19,6 +19,7 @@ Private mFollowRedirects As Boolean
 Private mMaxRedirects As Long
 Private mProtocolOptions As HttpProtocolOptions
 Private mDecompressionOptions As HttpDecompressionOptions
+Private mProxyOptions As HttpProxyOptions
 
 Public Property Get Method() As String
     Method = mMethod
@@ -134,6 +135,19 @@ Public Property Set DecompressionOptions(ByVal value As HttpDecompressionOptions
     End If
 End Property
 
+Public Property Get ProxyOptions() As HttpProxyOptions
+    Set ProxyOptions = mProxyOptions
+End Property
+
+Public Property Set ProxyOptions(ByVal value As HttpProxyOptions)
+    If value Is Nothing Then
+        Set mProxyOptions = Nothing
+    Else
+        value.Validate
+        Set mProxyOptions = value.Clone()
+    End If
+End Property
+
 Public Function Clone() As HttpRequest
     Dim copy As New HttpRequest
 
@@ -147,6 +161,7 @@ Public Function Clone() As HttpRequest
     copy.MaxRedirects = mMaxRedirects
     If Not mProtocolOptions Is Nothing Then Set copy.ProtocolOptions = mProtocolOptions
     If Not mDecompressionOptions Is Nothing Then Set copy.DecompressionOptions = mDecompressionOptions
+    If Not mProxyOptions Is Nothing Then Set copy.ProxyOptions = mProxyOptions
     Set Clone = copy
 End Function
 
