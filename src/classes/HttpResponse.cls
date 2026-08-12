@@ -14,6 +14,7 @@ Private mReasonPhrase As String
 Private mHeaders As New HttpHeaders
 Private mBody As New HttpBody
 Private mElapsedMilliseconds As Double
+Private mProtocolUsed As String
 Private mTextMaterialized As Boolean
 Private mText As String
 
@@ -37,6 +38,10 @@ Public Property Get ElapsedMilliseconds() As Double
     ElapsedMilliseconds = mElapsedMilliseconds
 End Property
 
+Public Property Get ProtocolUsed() As String
+    ProtocolUsed = mProtocolUsed
+End Property
+
 Public Property Get IsSuccess() As Boolean
     IsSuccess = (mStatusCode >= 200 And mStatusCode <= 299)
 End Property
@@ -49,7 +54,7 @@ Public Property Get Text() As String
     Text = mText
 End Property
 
-Public Sub Initialize(ByVal statusCode As Long, Optional ByVal reasonPhrase As String = "", Optional ByVal Headers As HttpHeaders = Nothing, Optional ByVal Body As HttpBody = Nothing, Optional ByVal elapsedMilliseconds As Double = 0)
+Public Sub Initialize(ByVal statusCode As Long, Optional ByVal reasonPhrase As String = "", Optional ByVal Headers As HttpHeaders = Nothing, Optional ByVal Body As HttpBody = Nothing, Optional ByVal elapsedMilliseconds As Double = 0, Optional ByVal protocolUsed As String = "")
     If statusCode < 100 Or statusCode > 599 Then
         HttpErrors.RaiseValidation "HttpResponse.Initialize", "HTTP status code must be between 100 and 599."
     End If
@@ -70,6 +75,7 @@ Public Sub Initialize(ByVal statusCode As Long, Optional ByVal reasonPhrase As S
         Set mBody = Body.Clone()
     End If
     mElapsedMilliseconds = elapsedMilliseconds
+    mProtocolUsed = protocolUsed
     mTextMaterialized = False
     mText = ""
 End Sub
@@ -83,7 +89,7 @@ End Sub
 Public Function Clone() As HttpResponse
     Dim copy As New HttpResponse
 
-    copy.Initialize mStatusCode, mReasonPhrase, mHeaders, mBody, mElapsedMilliseconds
+    copy.Initialize mStatusCode, mReasonPhrase, mHeaders, mBody, mElapsedMilliseconds, mProtocolUsed
     Set Clone = copy
 End Function
 

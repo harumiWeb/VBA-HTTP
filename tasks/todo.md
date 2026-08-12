@@ -97,14 +97,14 @@ Release buildの原則：
 
 ### Release Build Gate
 
-- [ ] 開発用workbookに全sourceをpushし、full test suiteが成功した。
-- [ ] `xlflow build --dry-run --json` にunmatched exclude warningがない。
-- [ ] dry-runのincluded componentがproduction allowlistと一致した。
-- [ ] dry-runでTests、Benchmarks、Xlflow、Dev配下がすべてexcludedになった。
-- [ ] `xlflow build --json` がVBE compile、save、closeに成功した。
-- [ ] build manifestがartifactと共に生成された。
-- [ ] release workbookのcomponent inspectionでdevelopment-only codeが存在しないことを確認した。
-- [ ] 外部consumer smoke harnessがrelease artifactのpublic APIを実行できた。
+- [x] 開発用workbookに全sourceをpushし、full test suiteが成功した。
+- [x] `xlflow build --dry-run --json` にunmatched exclude warningがない。
+- [x] dry-runのincluded componentがproduction allowlistと一致した。
+- [x] dry-runでTests、Benchmarks、Xlflow、Dev配下がすべてexcludedになった。
+- [x] `xlflow build --json` がVBE compile、save、closeに成功した。
+- [x] build manifestがartifactと共に生成された。
+- [x] release workbookのcomponent inspectionでdevelopment-only codeが存在しないことを確認した。
+- [x] 外部consumer smoke harnessがrelease artifactのpublic APIを実行できた。
 - [ ] artifactとmanifestのchecksumを保存した。
 
 ## Milestones
@@ -358,21 +358,21 @@ streamingとadvanced protocolの土台となる安全なNative WinHTTP transport
 
 ### Todo
 
-- [ ] native callbackからVBA application logicを呼ばないADRを作成する。
-- [ ] native handle ownershipとcleanup policyをspec化する。
-- [ ] 32-bit／64-bit対応WinHTTP declarationを実装する。
-- [ ] session、connection、request handle wrapperを実装する。
-- [ ] buffered GET、request headers、response headersを実装する。
-- [ ] protocol query、TLS validation、error mappingを実装する。
-- [ ] repeated requestのhandle計測とleak regression testsを追加する。
-- [ ] COM transportとのcontract suiteを追加する。
+- [x] native callbackからVBA application logicを呼ばないADRを作成する。
+- [x] native handle ownershipとcleanup policyをspec化する。
+- [x] 32-bit／64-bit対応WinHTTP declarationを実装する。
+- [x] session、connection、request handle wrapperを実装する。
+- [x] buffered GET、request headers、response headersを実装する。
+- [x] protocol query、TLS validation、error mappingを実装する。
+- [x] repeated requestのhandle計測とleak regression testsを追加する。
+- [x] COM transportとのcontract suiteを追加する。
 
 ### Exit Criteria
 
-- [ ] 32-bit／64-bit compile evidenceがある。
-- [ ] repeated request後にpersistent handle growthがない。
-- [ ] COM transportと同じpublic response／error contractを満たす。
-- [ ] production-only release buildが成功する。
+- [~] 32-bit／64-bit compile evidenceがある（現環境のx64実測済み、32-bit Office実機証跡は別ホスト待ち）。
+- [x] repeated request後にpersistent handle growthがない。
+- [x] COM transportと同じpublic response／error contractを満たす。
+- [x] production-only release buildが成功する（`xlflow build` のVBE compileと外部consumer smokeを確認済み）。
 
 ---
 
@@ -552,7 +552,7 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 - [ ] buffered／streaming request・response bodyのownership
 - [x] error分類とVBA error／result objectの境界
 - [ ] retry、deadline、redirect、cancellationの優先順位
-- [ ] native handle lifecycleとnative callback禁止
+- [x] native handle lifecycleとnative callback禁止
 - [ ] protocol fallbackとOS compatibility
 - [ ] diagnostics schemaとsecret redaction
 - [x] development-only componentへのproduction依存禁止

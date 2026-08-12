@@ -4,7 +4,7 @@ VBA-HTTP is a Windows Excel/VBA HTTP client designed for deterministic testing, 
 
 ## Development status
 
-Phase 4 provides synchronous buffered HTTP, bounded batch execution, idempotency-aware retries, total deadlines, and cooperative cancellation backed by late-bound `WinHttp.WinHttpRequest.5.1`. No WinHTTP type-library reference is required.
+Phase 5 adds an explicit synchronous native WinHTTP backend on top of the Phase 4 API. The default remains the late-bound `WinHttp.WinHttpRequest.5.1` transport; the native backend provides pointer-safe handles and negotiated protocol reporting without a WinHTTP type-library reference.
 
 ```vb
 Dim client As HttpClient
@@ -46,6 +46,19 @@ Debug.Print batch.SuccessCount, batch.FailureCount, batch.CancelledCount
 
 The default maximum concurrency is 8. `HttpBatchOptions` also controls polling, host yielding, per-request scheduler deadlines, and an optional `HttpCancellationToken`.
 
+For the native buffered backend, select it explicitly and inspect the negotiated protocol when needed:
+
+```vb
+Dim nativeClient As HttpClient
+Dim nativeResponse As HttpResponse
+
+Set nativeClient = VBAHttp.CreateNativeClient()
+Set nativeResponse = nativeClient.GetResponse("https://example.com/api")
+Debug.Print nativeResponse.ProtocolUsed
+```
+
+The native Phase 5 transport uses synchronous WinHTTP calls, OS certificate validation, and deterministic handle cleanup. Active cancellation and total-deadline options are rejected until a later native streaming design can enforce them while I/O is in flight.
+
 GET, HEAD, PUT, DELETE, OPTIONS, and TRACE retry 408, 429, 500, 502, 503, 504 and transient DNS, connection, timeout, and I/O failures by default. POST, PATCH, and extension methods require explicit opt-in:
 
 ```vb
@@ -75,4 +88,4 @@ task release:build
 
 Tests and benchmarks use only the deterministic loopback server. Release workbooks are generated with `xlflow build` and exclude tests, benchmarks, xlflow helpers, development modules, and test-only classes.
 
-Current contracts are documented in [`docs/specs/http-core-api.md`](docs/specs/http-core-api.md), [`docs/specs/bounded-concurrency.md`](docs/specs/bounded-concurrency.md), and [`docs/specs/reliability-policy.md`](docs/specs/reliability-policy.md), with architectural decisions under [`docs/adr/`](docs/adr/).
+Current contracts are documented in [`docs/specs/http-core-api.md`](docs/specs/http-core-api.md), [`docs/specs/native-winhttp-transport.md`](docs/specs/native-winhttp-transport.md), [`docs/specs/bounded-concurrency.md`](docs/specs/bounded-concurrency.md), and [`docs/specs/reliability-policy.md`](docs/specs/reliability-policy.md), with architectural decisions under [`docs/adr/`](docs/adr/).

@@ -9,6 +9,14 @@ Public Function CreateClient() As HttpClient
     Set CreateClient = New HttpClient
 End Function
 
+''' Creates a client using the synchronous native WinHTTP transport.
+Public Function CreateNativeClient() As HttpClient
+    Dim client As New HttpClient
+
+    Set client.Transport = New WinHttpNativeTransport
+    Set CreateNativeClient = client
+End Function
+
 ''' Creates retry policy configuration for referenced-workbook consumers.
 Public Function CreateRetryPolicy() As HttpRetryPolicy
     Set CreateRetryPolicy = New HttpRetryPolicy

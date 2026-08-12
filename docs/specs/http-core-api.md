@@ -6,7 +6,7 @@ The public VBA component names, public procedure names, parameter order, enum va
 
 All public objects are late-bindable from consumers except VBA class interfaces used with `Implements`. The core has no dependency on `Scripting.Dictionary` or another external VBA reference.
 
-Workbook-reference consumers cannot directly instantiate VBA classes marked `PublicNotCreatable`. `VBAHttp.CreateClient()` is the stable client factory; `CreateRetryPolicy`, `CreateExecutionOptions`, `CreateBatchOptions`, and `CreateCancellationToken` expose reliability configuration across the same boundary. Source-vendored consumers may continue to use `New`.
+Workbook-reference consumers cannot directly instantiate VBA classes marked `PublicNotCreatable`. `VBAHttp.CreateClient()` is the stable default-client factory; `VBAHttp.CreateNativeClient()` selects the synchronous native WinHTTP backend. `CreateRetryPolicy`, `CreateExecutionOptions`, `CreateBatchOptions`, and `CreateCancellationToken` expose reliability configuration across the same boundary. Source-vendored consumers may continue to use `New`.
 
 ## Synchronous API
 
@@ -20,6 +20,9 @@ Debug.Print response.Text
 ```
 
 `HttpClient.Execute(request)` is the primitive operation. `GetResponse`, `PostResponse`, `PutResponse`, `PatchResponse`, and `DeleteResponse` are convenience methods that construct a request and delegate to `Execute`. The `Response` suffix is required because VBA reserves `Get`, `Put`, and related tokens; this keeps ordinary early-bound calls compilable. Batch execution is defined by `bounded-concurrency.md`; download and upload APIs remain additive contracts for later specs.
+
+`HttpResponse.ProtocolUsed` reports the native backend's negotiated protocol as
+`HTTP/1.1`, `HTTP/2`, or `HTTP/3`. The COM backend leaves this property empty.
 
 `HttpClient.BaseUrl` resolves a relative request URL. An absolute request URL is used as-is. Base and relative URL joining must not discard path segments accidentally and is covered by URL unit tests before network transports are enabled.
 
@@ -72,6 +75,7 @@ The authoritative decision is ADR-0003. `HttpErrors` reserves the public namespa
 
 - Domain tests: `src/modules/Tests/Unit/HttpHeadersTests.bas`, `HttpParamsTests.bas`, `HttpBodyTests.bas`, `HttpResponseTests.bas`
 - Transport/client tests: `src/modules/Tests/Unit/HttpClientTests.bas`
+- Native transport tests: `src/modules/Tests/Unit/WinHttpNativeTests.bas` and `src/modules/Tests/Integration/WinHttpNativeTransportTests.bas`
 - Architectural boundary: `docs/adr/ADR-0002-dual-transport-boundary.md`
 - Error decision: `docs/adr/ADR-0003-http-error-model.md`
 - Buffered backend: `docs/specs/buffered-com-transport.md`

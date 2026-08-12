@@ -33,7 +33,14 @@
     "Ui",
     "VBAHttp",
     "WinHttpComOperation",
-    "WinHttpComTransport"
+    "WinHttpComTransport",
+    "WinHttpConnectionHandle",
+    "WinHttpErrorMapping",
+    "WinHttpNativeApi",
+    "WinHttpNativeTransport",
+    "WinHttpNativeUrl",
+    "WinHttpRequestHandle",
+    "WinHttpSessionHandle"
   ],
   "excluded": [
     "BenchmarkSupport",
@@ -63,6 +70,8 @@
     "VBAHttpTests",
     "WinHttpComTransportTests",
     "WinHttpConcurrencyTests",
-    "WinHttpReliabilityTests"
+    "WinHttpReliabilityTests",
+    "WinHttpNativeTests",
+    "WinHttpNativeTransportTests"
   ]
 }

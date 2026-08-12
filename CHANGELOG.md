@@ -11,6 +11,7 @@
 - Added client-owned retry policy and per-call execution options with idempotency-aware defaults, capped exponential backoff and jitter, `Retry-After`, total deadlines, and active WinHTTP cancellation.
 - Extended bounded batches with per-item retry scheduling, retry waits that release concurrency slots, total batch deadlines, and cancellation of waiting retries.
 - Added referenced-workbook factories for reliability configuration and external release retry/deadline smoke coverage.
+- Added the synchronous native WinHTTP transport with pointer-sized session, connection, and request handle wrappers, protocol reporting, shared error classification, and repeated-request handle regression coverage.
 
 ### Fixed
 

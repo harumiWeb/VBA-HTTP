@@ -113,6 +113,8 @@ $harnessWorkbook = $null
 $harnessComponent = $null
 $client = $null
 $response = $null
+$nativeClient = $null
+$nativeResponse = $null
 $ready = $null
 try {
     [void](New-Item -ItemType Directory -Path $smokeDirectory -Force)
@@ -167,6 +169,14 @@ try {
         throw "Release HttpClient GET returned an unexpected response."
     }
 
+    $nativeClient = $consumerExcel.Run("'$($consumerWorkbook.Name)'!VBAHttp.CreateNativeClient")
+    if ($null -eq $nativeClient) { throw "Release native factory returned no HttpClient." }
+    $nativeClient.BaseUrl = [string]$ready.url
+    $nativeResponse = $nativeClient.GetResponse("/status/204")
+    if ($null -eq $nativeResponse -or $nativeResponse.StatusCode -ne 204 -or -not $nativeResponse.IsSuccess -or [string]::IsNullOrWhiteSpace([string]$nativeResponse.ProtocolUsed)) {
+        throw "Release native HttpClient GET returned an unexpected response."
+    }
+
     $harnessWorkbook = $consumerWorkbooks.Add()
     $harnessComponent = $harnessWorkbook.VBProject.VBComponents.Import((Join-Path $PSScriptRoot "consumer\ReleaseBatchSmoke.bas"))
     if ($harnessComponent.Name -ne "ReleaseBatchSmoke") { throw "External batch smoke module import failed." }
@@ -179,8 +189,14 @@ finally {
     if ($null -ne $response -and [Runtime.InteropServices.Marshal]::IsComObject($response)) {
         [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($response)
     }
+    if ($null -ne $nativeResponse -and [Runtime.InteropServices.Marshal]::IsComObject($nativeResponse)) {
+        [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($nativeResponse)
+    }
     if ($null -ne $client -and [Runtime.InteropServices.Marshal]::IsComObject($client)) {
         [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($client)
+    }
+    if ($null -ne $nativeClient -and [Runtime.InteropServices.Marshal]::IsComObject($nativeClient)) {
+        [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($nativeClient)
     }
     if ($null -ne $harnessComponent) { [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($harnessComponent) }
     if ($null -ne $harnessWorkbook) {
@@ -210,4 +226,4 @@ finally {
     }
 }
 
-Write-Output "Release artifact is valid: $($actualComponents.Count) components; external GET, batch, retry, and deadline smoke passed."
+Write-Output "Release artifact is valid: $($actualComponents.Count) components; external COM/native GET, batch, retry, and deadline smoke passed."

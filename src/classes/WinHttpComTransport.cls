@@ -73,6 +73,7 @@ TransportFailure:
         Err.Raise errorNumber, errorSource, errorDescription
     End If
     RaiseMappedFailure errorNumber
+    Err.Raise errorNumber, errorSource, errorDescription
 End Function
 
 Private Function ExecuteAttemptCore(ByVal Request As HttpRequest, ByVal Options As HttpAttemptOptions) As HttpResponse
@@ -437,6 +438,7 @@ TransportFailure:
     errorDescription = Err.Description
     Set backend = Nothing
     RaiseCapturedTransportFailure errorNumber, errorSource, errorDescription
+    Err.Raise errorNumber, errorSource, errorDescription
 End Function
 
 Private Function PollAsyncOperation(ByVal operation As WinHttpComOperation) As Boolean
@@ -451,6 +453,7 @@ Private Function PollAsyncOperation(ByVal operation As WinHttpComOperation) As B
 TransportFailure:
     CaptureCurrentError errorNumber, errorSource, errorDescription
     RaiseCapturedTransportFailure errorNumber, errorSource, errorDescription
+    Err.Raise errorNumber, errorSource, errorDescription
 End Function
 
 Private Function FinishAsyncOperation(ByVal operation As WinHttpComOperation) As HttpResponse
@@ -469,6 +472,7 @@ TransportFailure:
     CaptureCurrentError errorNumber, errorSource, errorDescription
     operation.ReleaseBackend
     RaiseCapturedTransportFailure errorNumber, errorSource, errorDescription
+    Err.Raise errorNumber, errorSource, errorDescription
 End Function
 
 Private Sub CaptureCurrentError(ByRef number As Long, ByRef Source As String, ByRef Description As String)
@@ -566,7 +570,7 @@ Private Sub RaiseMappedFailure(ByVal nativeErrorNumber As Long)
     Dim summary As String
 
     code = nativeErrorNumber And 65535
-    category = CategoryFromWinHttpCode(code)
+    category = WinHttpErrorMapping.CategoryFromCode(code)
     Select Case category
     Case HttpErrorInvalidUrl
         summary = "WinHTTP rejected the request URL"
@@ -588,24 +592,3 @@ Private Sub RaiseMappedFailure(ByVal nativeErrorNumber As Long)
     End Select
     HttpErrors.RaiseTransport category, TransportSource, summary & " (" & CStr(code) & ")."
 End Sub
-
-Private Function CategoryFromWinHttpCode(ByVal code As Long) As HttpErrorCategory
-    Select Case code
-    Case 12005, 12006
-        CategoryFromWinHttpCode = HttpErrorInvalidUrl
-    Case 12007
-        CategoryFromWinHttpCode = HttpErrorDns
-    Case 12029, 12030, 12031
-        CategoryFromWinHttpCode = HttpErrorConnection
-    Case 12037, 12038, 12044, 12045, 12055, 12057, 12157, 12175
-        CategoryFromWinHttpCode = HttpErrorTls
-    Case 12002
-        CategoryFromWinHttpCode = HttpErrorTimeout
-    Case 12017
-        CategoryFromWinHttpCode = HttpErrorCancelled
-    Case 12150 To 12156
-        CategoryFromWinHttpCode = HttpErrorProtocol
-    Case Else
-        CategoryFromWinHttpCode = HttpErrorIo
-    End Select
-End Function
