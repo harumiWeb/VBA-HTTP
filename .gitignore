@@ -7,4 +7,5 @@
 .xlflow/
 build/
 
+references/
 docs/design.md
