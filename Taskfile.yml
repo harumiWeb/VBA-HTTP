@@ -33,6 +33,11 @@ tasks:
     cmds:
       - xlflow test --json
 
+  bootstrap:dirs:
+    desc: Restore empty xlflow scaffold directories omitted by Git
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Ensure-XlflowDirectories.ps1
+
   build:plan:
     desc: Validate the production-only release build plan
     cmds:
@@ -41,6 +46,7 @@ tasks:
   release:build:
     desc: Build and validate the release workbook
     cmds:
+      - task: bootstrap:dirs
       - xlflow build --json --out build/Release/VBA-HTTP.xlsm
       - task: release:smoke
 

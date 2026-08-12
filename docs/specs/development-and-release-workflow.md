@@ -8,6 +8,7 @@
 - Integration tests use the `integration` tag. Stress tests use the `stress` tag and are not part of the routine focused suite.
 - Benchmark modules live in `src/modules/Benchmarks/`; temporary development helpers live in `src/modules/Dev/`.
 - `build/VBA-HTTP.xlsm` is the tracked development workbook. It is synchronized from source and used to compile and execute VBA; it is not the editing authority.
+- Git does not preserve empty directories. `task bootstrap:dirs` restores configured empty `src/classes/` and `src/forms/` roots before release planning or build; do not add non-VBA placeholder files to source roots.
 
 If VBA is changed directly in the VBE during exceptional diagnosis or recovery, stop source editing, run `xlflow status --json`, pull the workbook source, and reconcile the resulting source diff before continuing.
 

@@ -6,6 +6,8 @@ $projectRoot = Split-Path -Parent $PSScriptRoot
 $policyPath = Join-Path $PSScriptRoot "build-component-policy.json"
 $outputPath = Join-Path $projectRoot "build\Release\VBA-HTTP.xlsm"
 
+& (Join-Path $PSScriptRoot "Ensure-XlflowDirectories.ps1")
+
 $policy = Get-Content -LiteralPath $policyPath -Raw | ConvertFrom-Json
 $json = & xlflow build --dry-run --json --out $outputPath
 if ($LASTEXITCODE -ne 0) {
