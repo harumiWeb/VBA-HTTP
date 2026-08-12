@@ -137,6 +137,16 @@ func TestUnicodeAndMalformedUtf8EndpointsAreDeterministic(t *testing.T) {
 	}
 }
 
+func TestMalformedHeadersEndpointIsRejectedByNetHttpClient(t *testing.T) {
+	server := httptest.NewServer(newTestServer().routes())
+	defer server.Close()
+
+	_, err := http.Get(server.URL + "/malformed-headers")
+	if err == nil {
+		t.Fatal("malformed response headers were accepted")
+	}
+}
+
 func TestCompressedEndpointsUseDeterministicWireEncoding(t *testing.T) {
 	server := httptest.NewServer(newTestServer().routes())
 	defer server.Close()

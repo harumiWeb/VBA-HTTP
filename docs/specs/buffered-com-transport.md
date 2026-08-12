@@ -39,7 +39,9 @@ or text body.
 Loopback integration additionally proves that direct binary GET responses keep
 their exact bytes, that UTF-8 text containing supplementary Unicode code points
 is decoded deterministically, and that malformed UTF-8 is rejected when text is
-requested.
+requested. The raw `/malformed-headers` fixture must fail as
+`HttpErrorProtocol`, whether rejection comes from WinHTTP or the transport's
+header parser.
 
 Header parsing splits each raw header line at its first colon, preserving
 repeated fields and the field-value text after trimming optional whitespace.

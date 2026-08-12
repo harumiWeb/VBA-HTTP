@@ -2,7 +2,7 @@
 
 - Added deterministic loopback response-boundary coverage for UTF-8 Unicode,
   exact binary GET bodies, and malformed UTF-8 rejection across the COM and
-  native transports.
+  native transports, plus raw malformed response-header protocol mapping.
 
 - Added a Phase 9 resource-stress gate with 10,000-request warmup followed by
   10,000 measured sequential native and scheduled COM requests, PID-scoped

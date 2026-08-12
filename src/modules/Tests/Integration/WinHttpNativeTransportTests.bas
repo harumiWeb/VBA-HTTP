@@ -248,6 +248,24 @@ Public Sub Test_NativeTransport_RejectsMalformedUtf8ResponseText()
 End Sub
 
 '@Tag("integration")
+Public Sub Test_NativeTransport_MapsMalformedResponseHeadersToProtocolError()
+    Dim client As New HttpClient
+    Dim observedNumber As Long
+
+    client.BaseUrl = RequireBaseUrl()
+    Set client.Transport = New WinHttpNativeTransport
+    On Error GoTo ExpectedFailure
+    Call client.GetResponse("/malformed-headers")
+    XlflowAssert.AssertTrue False, "Malformed response headers should fail the exchange."
+    Exit Sub
+
+    ExpectedFailure: ' xlflow:disable-line VBA237
+    observedNumber = Err.Number
+    Err.Clear
+    XlflowAssert.AssertEquals HttpErrorProtocol, HttpErrors.CategoryFromNumber(observedNumber)
+End Sub
+
+'@Tag("integration")
 Public Sub Test_NativeTransport_AppliesRedirectAndReturnsStatus()
     Dim client As New HttpClient
     Dim Request As New HttpRequest

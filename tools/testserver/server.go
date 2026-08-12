@@ -58,6 +58,7 @@ func (s *testServer) routes() http.Handler {
 	mux.HandleFunc("GET /sha256/{size}", s.sha256)
 	mux.HandleFunc("GET /unicode", s.unicode)
 	mux.HandleFunc("GET /malformed-utf8", s.malformedUTF8)
+	mux.HandleFunc("GET /malformed-headers", s.malformedHeaders)
 	mux.HandleFunc("GET /compress/gzip", s.compressGzip)
 	mux.HandleFunc("GET /compress/deflate", s.compressDeflate)
 	mux.HandleFunc("GET /headers", s.headers)
@@ -203,6 +204,20 @@ func (s *testServer) malformedUTF8(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte{0xc3, 0x28})
+}
+
+func (s *testServer) malformedHeaders(w http.ResponseWriter, _ *http.Request) {
+	hijacker, ok := w.(http.Hijacker)
+	if !ok {
+		http.Error(w, "connection hijacking unavailable", http.StatusInternalServerError)
+		return
+	}
+	connection, _, err := hijacker.Hijack()
+	if err != nil {
+		return
+	}
+	defer connection.Close()
+	_, _ = io.WriteString(connection, "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nMalformed-Header\r\nContent-Length: 0\r\n\r\n")
 }
 
 func (s *testServer) compressGzip(w http.ResponseWriter, _ *http.Request) {

@@ -32,6 +32,7 @@
 | `GET /sha256/{size}` | Returns the expected SHA-256 digest and byte count for the generated pattern. |
 | `GET /unicode` | Returns the fixed UTF-8 text fixture `VBA-HTTP unicode: 日本語🙂` with an explicit UTF-8 charset. |
 | `GET /malformed-utf8` | Returns the fixed invalid UTF-8 byte sequence `C3 28` with an explicit UTF-8 charset; clients must reject text materialization. |
+| `GET /malformed-headers` | Writes a raw HTTP response containing a header line without a colon; COM/native clients must classify the exchange as `HttpErrorProtocol`. |
 | `GET /headers` | Returns method, path, query, and request headers as JSON. |
 | `GET /auth/basic` | Verifies the fixed test-only Basic credential and returns 204 plus `X-Auth-Verified: 1`; missing or wrong credentials return 401 with a deterministic challenge and never reflect the value. |
 | `GET /auth/bearer` | Verifies the fixed test-only Bearer token and returns 204 plus `X-Auth-Verified: 1`; missing or wrong credentials return 401 with a deterministic challenge and never reflect the value. |
