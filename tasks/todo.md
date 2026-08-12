@@ -473,16 +473,16 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 - [x] cross-originでAuthorization／Proxy-Authorizationを除去する（native callbackを使わず、credential-bearing automatic redirectを停止して3xxをcallerへ返す）。
 - [x] HTTPSからHTTPへのdowngrade redirectをdefault拒否する（COM option 12=false、native policy=DISALLOW_HTTPS_TO_HTTP）。
 - [ ] malformed headers、unicode、binary response testsを追加する。
-- [ ] 10,000 sequential／scheduled request stress testsを追加する。
+- [x] 10,000 sequential／scheduled request stress testsを追加する（10,000 warmup後の10,000測定区間）。
 - [ ] repeated cancellation／timeout stress testsを追加する。
-- [ ] process memory／native handle leak checksを自動化する。
+- [x] process memory／native handle leak checksを自動化する（PID scoped、idle handle delta gate、memory peak evidence）。
 - [ ] security policyとthreat reviewを文書化する。
 - [ ] release manifestのincluded component一覧をsecurity reviewする。
 
 ### Exit Criteria
 
 - [ ] known critical bugとrelease blocker bugが0件である。
-- [ ] 10,000 request後にpersistent resource growthがない。
+- [x] 10,000 request測定区間後にpersistent resource growthがない（x64実測、native delta <=8／COM delta <=32）。
 - [ ] redirect、credential、certificate security testsが成功する。
 - [ ] release artifactのcomponent構成がreview済みである。
 

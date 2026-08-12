@@ -57,8 +57,9 @@ Result JSON uses schema version 1. Decimal numbers must use a period regardless 
 ## Phase 9 resource stability scenario
 
 `task test:resource-stress` runs the two-scenario resource gate described in
-`resource-stress.md`. It is intentionally separate from pre-commit and ordinary
-integration because 10,000 requests exercise Excel and WinHTTP resource
+`resource-stress.md`. Each scenario warms up with 10,000 requests before the
+measured 10,000-request interval. It is intentionally separate from pre-commit
+and ordinary integration because the combined workload exercises Excel and WinHTTP resource
 lifecycle over a much longer interval. The result records PID-scoped process
 handles, working-set/private-memory peaks, and an idle post-workload sample;
 only the idle handle delta is a hard gate. The complete result is stored at

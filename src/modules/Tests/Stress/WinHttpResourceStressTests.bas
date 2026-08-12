@@ -3,7 +3,7 @@ Option Explicit
 
 Private Const SequentialHandleDeltaLimit As Long = 8
 Private Const ScheduledHandleDeltaLimit As Long = 32
-Private Const WarmupRequests As Long = 10
+Private Const WarmupRequests As Long = 10000
 
 '@Tag("stress")
 Public Sub Test_ResourceStress_SequentialNative()
@@ -78,7 +78,7 @@ Public Sub Test_ResourceStress_ScheduledCom()
     concurrency = ReadBoundedLong("VBA_HTTP_RESOURCE_CONCURRENCY", 16, 1, 64)
 
     client.BaseUrl = baseUrl
-    For index = 1 To iterations
+    For index = 1 To WarmupRequests
         Set Request = New HttpRequest
         Request.Method = "GET"
         Request.Url = "/status/204"
@@ -87,6 +87,18 @@ Public Sub Test_ResourceStress_ScheduledCom()
     Options.MaxConcurrency = concurrency
     Options.PollIntervalMilliseconds = 1
     Options.YieldToHost = False
+    Set result = client.ExecuteMany(Requests, Options)
+    XlflowAssert.AssertEquals WarmupRequests, result.Count
+    XlflowAssert.AssertEquals WarmupRequests, result.SuccessCount
+    XlflowAssert.AssertEquals 0, result.FailureCount
+    Set result = Nothing
+    Set Requests = New Collection
+    For index = 1 To iterations
+        Set Request = New HttpRequest
+        Request.Method = "GET"
+        Request.Url = "/status/204"
+        Requests.Add Request
+    Next index
     If Not WinHttpNativeApi.ProcessHandleCount(beforeHandles) Then
         XlflowAssert.AssertInconclusive "GetProcessHandleCount is unavailable on this host."
         Exit Sub

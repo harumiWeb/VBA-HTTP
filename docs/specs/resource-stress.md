@@ -12,14 +12,17 @@ uses the configured iteration count (default 10,000):
 | `scheduled_com` | `WinHttpComTransport` | `HttpClient.ExecuteMany` | 16 |
 
 The runner can select one scenario for diagnosis, but the complete release
-evidence requires both. The stress source is under `src/modules/Tests/Stress/`
-and is excluded from the release workbook.
+evidence requires both. Each scenario first executes a 10,000-request warmup
+and then measures the configured 10,000-request workload; this separates
+WinHTTP/Excel one-time pool allocation from persistent growth. The stress
+source is under `src/modules/Tests/Stress/` and is excluded from the release
+workbook.
 
 ## Process sampling
 
 `Run-ResourceStressTests.ps1` records the Excel process IDs present before the
 scenario and samples only newly created Excel processes. The VBA test performs a
-short warmup, writes a start marker immediately before the measured workload,
+10,000-request warmup, writes a start marker immediately before the measured workload,
 writes a done marker after all requests and native handle assertions pass, and
 waits for a release marker. The runner uses that pause to capture:
 

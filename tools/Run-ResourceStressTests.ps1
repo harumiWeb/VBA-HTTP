@@ -146,11 +146,11 @@ function Run-ResourceScenario([string]$Name, [string]$Filter, [int]$HandleDeltaL
         $testStdout = $testProcess.StandardOutput.ReadToEnd()
         $testStderr = $testProcess.StandardError.ReadToEnd()
         $testProcess.WaitForExit()
-        if ($null -eq $before -or $null -eq $after -or $null -eq $idleAfter -or $null -eq $peak) {
-            throw "$Name resource stress did not publish complete process snapshots."
-        }
         if ($testProcess.ExitCode -ne 0) {
             throw "$Name resource stress failed with exit code $($testProcess.ExitCode): $testStderr$testStdout"
+        }
+        if ($null -eq $before -or $null -eq $after -or $null -eq $idleAfter -or $null -eq $peak) {
+            throw "$Name resource stress did not publish complete process snapshots: $testStderr$testStdout"
         }
         $testResult = $testStdout | ConvertFrom-Json
         $tests = @($testResult.tests)

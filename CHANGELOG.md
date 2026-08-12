@@ -1,8 +1,9 @@
 ## Unreleased
 
-- Added a Phase 9 resource-stress gate with 10,000 sequential native and
-  scheduled COM requests, PID-scoped Excel process sampling, idle handle-growth
-  limits, atomic JSON evidence, and an excluded development-only stress module.
+- Added a Phase 9 resource-stress gate with 10,000-request warmup followed by
+  10,000 measured sequential native and scheduled COM requests, PID-scoped
+  Excel process sampling, idle handle-growth limits, atomic JSON evidence, and
+  an excluded development-only stress module.
 
 - Added a redirect security boundary: credential and cookie headers suppress
   automatic redirects, redirect loops honor the bounded maximum, and both COM

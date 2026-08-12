@@ -15,17 +15,20 @@ sampling also risks including an unrelated user workbook.
 ## Decision
 
 - Add a dedicated excluded stress module with two independent scenarios:
-  `sequential_native` uses `WinHttpNativeTransport` for 10,000 buffered
-  `GET /status/204` requests, and `scheduled_com` uses the COM bounded scheduler
-  with 10,000 requests and a configurable maximum concurrency (default 16).
+  `sequential_native` uses `WinHttpNativeTransport` for a 10,000-request
+  warmup followed by 10,000 measured buffered `GET /status/204` requests, and
+  `scheduled_com` uses the COM bounded scheduler with the same warmup/measured
+  shape and a configurable maximum concurrency (default 16).
 - Run each scenario in its own temporary xlflow test process. The VBA test
   publishes start/done markers and waits at a release gate. The PowerShell
   runner samples only Excel processes created after the scenario began, captures
   before/peak/after/idle process handles and memory, then opens the release gate.
   This keeps the after snapshot alive long enough to make the handle check
   meaningful and excludes pre-existing user Excel processes.
-- The strict leak gate is the idle handle delta: at most 8 for sequential native
-  requests and at most 32 for scheduled COM requests. Working-set and private
+- The warmup is part of the evidence contract: it absorbs one-time WinHTTP and
+  Excel allocator pools. The strict leak gate is the measured idle handle
+  delta after that warmup: at most 8 for sequential native requests and at most
+  32 for scheduled COM requests. Working-set and private
   memory peaks are recorded as engineering evidence, not rejected by an
   allocator-dependent absolute threshold.
 - Results are written atomically to
