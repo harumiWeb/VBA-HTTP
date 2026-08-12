@@ -59,6 +59,12 @@ tasks:
     cmds:
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Run-UploadStressTests.ps1
 
+  test:resource-stress:
+    desc: Run the Phase 9 10,000-request resource and handle stability gate
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Run-ResourceStressTests.ps1
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Validate-ResourceStressResult.ps1
+
   testserver:test:
     desc: Run deterministic local HTTP server tests
     cmds:

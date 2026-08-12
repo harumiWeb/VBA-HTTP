@@ -107,6 +107,7 @@
     "WinHttpNativeTests",
     "WinHttpNativeTransportTests",
     "WinHttpDownloadStressTests",
-    "WinHttpUploadStressTests"
+    "WinHttpUploadStressTests",
+    "WinHttpResourceStressTests"
   ]
 }

@@ -11,6 +11,7 @@
 - `development-and-release-workflow.md`: source authority、proof loop、release component boundary
 - `local-test-server.md`: deterministic integration server contract
 - `benchmark-methodology.md`: benchmark conditions、provenance、result evidence
+- `resource-stress.md`: 10,000-request scenarios, PID-scoped sampling, idle handle gates, and result evidence
 - `http-core-api.md`: Phase 1 public domain、transport、body、decoding、error contract
 - `buffered-com-transport.md`: default WinHTTP COM request、response、redirect、failure contract
 - `bounded-concurrency.md`: cooperative COM async scheduling、batch results、deadlines、cancellation、reentrancy contract

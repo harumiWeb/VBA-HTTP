@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vba-http.local/schemas/resource-stress-result.schema.json",
+  "title": "VBA-HTTP Phase 9 resource stress result",
+  "type": "object",
+  "required": ["schema_version", "benchmark", "source_commit", "environment", "server", "parameters", "results"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "benchmark": { "const": "phase9-resource-stress" },
+    "source_commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "environment": {
+      "type": "object",
+      "required": ["platform", "powershell", "processor_architecture"],
+      "properties": {
+        "platform": { "const": "Windows" },
+        "powershell": { "type": "string", "minLength": 1 },
+        "processor_architecture": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "server": {
+      "type": "object",
+      "required": ["base_url", "external_network"],
+      "properties": {
+        "base_url": { "type": "string", "pattern": "^http://(127\\.0\\.0\\.1|localhost)(:[0-9]+)?$" },
+        "external_network": { "const": false }
+      },
+      "additionalProperties": false
+    },
+    "parameters": {
+      "type": "object",
+      "required": ["iterations", "scheduled_concurrency", "status_endpoint", "handle_delta_limits", "idle_wait_ms"],
+      "properties": {
+        "iterations": { "type": "integer", "minimum": 1 },
+        "scheduled_concurrency": { "type": "integer", "minimum": 1, "maximum": 64 },
+        "status_endpoint": { "const": "/status/204" },
+        "handle_delta_limits": {
+          "type": "object",
+          "required": ["sequential_native", "scheduled_com"],
+          "properties": {
+            "sequential_native": { "const": 8 },
+            "scheduled_com": { "const": 32 }
+          },
+          "additionalProperties": false
+        },
+        "idle_wait_ms": { "const": 1000 }
+      },
+      "additionalProperties": false
+    },
+    "results": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["scenario", "transport", "iterations", "concurrency", "status", "elapsed_ms", "handle_delta", "idle_handle_delta", "handle_delta_limit", "process_before", "process_peak", "process_after", "process_idle_after"],
+        "properties": {
+          "scenario": { "enum": ["sequential_native", "scheduled_com"] },
+          "transport": { "enum": ["WinHttpNativeTransport", "WinHttpComTransport"] },
+          "iterations": { "type": "integer", "minimum": 1 },
+          "concurrency": { "type": "integer", "minimum": 1, "maximum": 64 },
+          "status": { "const": 204 },
+          "elapsed_ms": { "type": "number", "exclusiveMinimum": 0 },
+          "handle_delta": { "type": "integer" },
+          "idle_handle_delta": { "type": "integer" },
+          "handle_delta_limit": { "type": "integer", "minimum": 0 },
+          "process_before": { "$ref": "#/$defs/processSnapshot" },
+          "process_peak": { "$ref": "#/$defs/processSnapshot" },
+          "process_after": { "$ref": "#/$defs/processSnapshot" },
+          "process_idle_after": { "$ref": "#/$defs/processSnapshot" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "$defs": {
+    "processSnapshot": {
+      "type": "object",
+      "required": ["observed", "process_count", "handles", "working_set_bytes", "private_bytes"],
+      "properties": {
+        "observed": { "type": "boolean" },
+        "process_count": { "type": "integer", "minimum": 1 },
+        "handles": { "type": "integer", "minimum": 0 },
+        "working_set_bytes": { "type": "integer", "minimum": 0 },
+        "private_bytes": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

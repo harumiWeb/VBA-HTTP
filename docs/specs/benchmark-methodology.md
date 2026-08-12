@@ -53,3 +53,14 @@ Time is measured with Windows `QueryPerformanceCounter`. Process working set, pe
 `task benchmark:phase3` runs 5 warmup requests, followed by 100 measured `GET /delay/100` requests with `MaxConcurrency=1`, then the same workload with `MaxConcurrency=16`. Both runs disable host yielding, reset server statistics, and use the normal COM batch transport. The result records elapsed milliseconds, speedup, and the server-observed maximum in-flight count. The runner uses a synchronized temporary workbook and atomically replaces the result only after schema validation.
 
 Result JSON uses schema version 1. Decimal numbers must use a period regardless of Windows locale. Each run writes and validates a same-directory staging file before atomic replacement, so failure preserves the previous baseline. The xlflow structured error and test-server stderr are the diagnostic evidence for failed runs. Run `task benchmark:phase0` to refresh both implementations in one top-level invocation.
+
+## Phase 9 resource stability scenario
+
+`task test:resource-stress` runs the two-scenario resource gate described in
+`resource-stress.md`. It is intentionally separate from pre-commit and ordinary
+integration because 10,000 requests exercise Excel and WinHTTP resource
+lifecycle over a much longer interval. The result records PID-scoped process
+handles, working-set/private-memory peaks, and an idle post-workload sample;
+only the idle handle delta is a hard gate. The complete result is stored at
+`benchmarks/results/phase9-resource-stress.json` and validated by
+`benchmarks/schema/resource-stress-result.schema.json`.
