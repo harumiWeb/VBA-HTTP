@@ -116,8 +116,8 @@ Public Sub Test_Client_RejectsNonHttpScheme()
     Call client.GetResponse("ftp://example.test/file")
 End Sub
 
-'@ExpectedError(-2147200503, "No HTTP transport is configured.", "HttpClient.Execute")
-Public Sub Test_Client_RequiresTransport()
+Public Sub Test_Client_DefaultsToComTransport()
     Dim client As New HttpClient
-    Call client.GetResponse("https://example.test/")
+
+    XlflowAssert.AssertEquals "WinHttpComTransport", TypeName(client.Transport)
 End Sub

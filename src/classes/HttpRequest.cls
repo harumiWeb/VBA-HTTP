@@ -15,6 +15,8 @@ Private mHeaders As New HttpHeaders
 Private mQuery As New HttpParams
 Private mTimeouts As New HttpTimeouts
 Private mBody As New HttpBody
+Private mFollowRedirects As Boolean
+Private mMaxRedirects As Long
 
 Public Property Get Method() As String
     Method = mMethod
@@ -85,6 +87,25 @@ Public Property Set Body(ByVal value As HttpBody)
     Set mBody = value
 End Property
 
+Public Property Get FollowRedirects() As Boolean
+    FollowRedirects = mFollowRedirects
+End Property
+
+Public Property Let FollowRedirects(ByVal value As Boolean)
+    mFollowRedirects = value
+End Property
+
+Public Property Get MaxRedirects() As Long
+    MaxRedirects = mMaxRedirects
+End Property
+
+Public Property Let MaxRedirects(ByVal value As Long)
+    If value < 1 Or value > 100 Then
+        HttpErrors.RaiseValidation "HttpRequest.MaxRedirects", "Maximum redirects must be between 1 and 100."
+    End If
+    mMaxRedirects = value
+End Property
+
 Public Function Clone() As HttpRequest
     Dim copy As New HttpRequest
 
@@ -94,9 +115,13 @@ Public Function Clone() As HttpRequest
     Set copy.Query = mQuery.Clone()
     Set copy.Timeouts = mTimeouts.Clone()
     Set copy.Body = mBody.Clone()
+    copy.FollowRedirects = mFollowRedirects
+    copy.MaxRedirects = mMaxRedirects
     Set Clone = copy
 End Function
 
 Private Sub Class_Initialize()
     mMethod = "GET"
+    mFollowRedirects = True
+    mMaxRedirects = 10
 End Sub

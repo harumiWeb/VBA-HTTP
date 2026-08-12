@@ -51,3 +51,41 @@ Public Function CategoryFromNumber(ByVal errorNumber As Long) As HttpErrorCatego
         CategoryFromNumber = HttpErrorNone
     End Select
 End Function
+
+Public Function NumberFromCategory(ByVal category As HttpErrorCategory) As Long
+    Select Case category
+    Case HttpErrorNone
+        NumberFromCategory = 0
+    Case HttpErrorValidation
+        NumberFromCategory = HttpErrValidation
+    Case HttpErrorInvalidUrl
+        NumberFromCategory = HttpErrInvalidUrl
+    Case HttpErrorDns
+        NumberFromCategory = HttpErrDns
+    Case HttpErrorConnection
+        NumberFromCategory = HttpErrConnection
+    Case HttpErrorTls
+        NumberFromCategory = HttpErrTls
+    Case HttpErrorTimeout
+        NumberFromCategory = HttpErrTimeout
+    Case HttpErrorCancelled
+        NumberFromCategory = HttpErrCancelled
+    Case HttpErrorProtocol
+        NumberFromCategory = HttpErrProtocol
+    Case HttpErrorIo
+        NumberFromCategory = HttpErrIo
+    Case HttpErrorStatus
+        NumberFromCategory = HttpErrStatus
+    Case Else
+        RaiseValidation "HttpErrors.NumberFromCategory", "Unknown HTTP error category."
+    End Select
+End Function
+
+Public Sub RaiseTransport(ByVal category As HttpErrorCategory, ByVal Source As String, ByVal Description As String)
+    Select Case category
+    Case HttpErrorInvalidUrl, HttpErrorDns, HttpErrorConnection, HttpErrorTls, HttpErrorTimeout, HttpErrorCancelled, HttpErrorProtocol, HttpErrorIo
+        Err.Raise NumberFromCategory(category), Source, Description
+    Case Else
+        RaiseValidation "HttpErrors.RaiseTransport", "Category is not a transport failure."
+    End Select
+End Sub

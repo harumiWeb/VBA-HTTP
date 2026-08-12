@@ -33,6 +33,8 @@ A successful exchange returns a non-`Nothing` response. Input and transport fail
 
 `HttpRequest` contains method, URL, headers, query parameters, timeouts, and an optional body. Callers may configure a request until execution starts. `HttpClient` clones all mutable domain objects before invoking the transport.
 
+Buffered requests also expose `FollowRedirects` and `MaxRedirects`. They default to `True` and 10 respectively, are copied into the execution snapshot, and are applied by transports that support automatic redirects.
+
 Core buffered bodies use `HttpBody` with one of three kinds: empty, text, or bytes.
 
 - Text is copied into the request snapshot as a VBA `String`.
@@ -70,3 +72,4 @@ The authoritative decision is ADR-0003. `HttpErrors` reserves the public namespa
 - Transport/client tests: `src/modules/Tests/Unit/HttpClientTests.bas`
 - Architectural boundary: `docs/adr/ADR-0002-dual-transport-boundary.md`
 - Error decision: `docs/adr/ADR-0003-http-error-model.md`
+- Buffered backend: `docs/specs/buffered-com-transport.md`

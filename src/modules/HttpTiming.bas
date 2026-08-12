@@ -1,0 +1,29 @@
+Attribute VB_Name = "HttpTiming"
+Option Explicit
+
+Option Private Module
+
+#If VBA7 Then
+Private Declare PtrSafe Function QueryPerformanceCounter Lib "kernel32" (ByRef value As Currency) As Long
+Private Declare PtrSafe Function QueryPerformanceFrequency Lib "kernel32" (ByRef value As Currency) As Long
+#Else
+Private Declare Function QueryPerformanceCounter Lib "kernel32" (ByRef value As Currency) As Long
+Private Declare Function QueryPerformanceFrequency Lib "kernel32" (ByRef value As Currency) As Long
+#End If
+
+Public Function CounterValue() As Currency
+    If QueryPerformanceCounter(CounterValue) = 0 Then
+        Err.Raise HttpErrIo, "HttpTiming.CounterValue", "High-resolution timer is unavailable."
+    End If
+End Function
+
+Public Function ElapsedMilliseconds(ByVal started As Currency, ByVal finished As Currency) As Double
+    Static frequency As Currency
+
+    If frequency = 0 Then
+        If QueryPerformanceFrequency(frequency) = 0 Then
+            Err.Raise HttpErrIo, "HttpTiming.ElapsedMilliseconds", "High-resolution timer is unavailable."
+        End If
+    End If
+    ElapsedMilliseconds = (CDbl(finished) - CDbl(started)) * 1000# / CDbl(frequency)
+End Function

@@ -193,3 +193,7 @@ Private Function LTrimSlash(ByVal value As String) As String
     Loop
     LTrimSlash = value
 End Function
+
+Private Sub Class_Initialize()
+    Set mTransport = New WinHttpComTransport
+End Sub

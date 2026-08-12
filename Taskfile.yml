@@ -44,6 +44,11 @@ tasks:
     cmds:
       - xlflow test --json
 
+  test:integration:
+    desc: Run WinHTTP integration tests against the deterministic loopback server
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Run-IntegrationTests.ps1
+
   testserver:test:
     desc: Run deterministic local HTTP server tests
     cmds:
@@ -116,6 +121,7 @@ tasks:
     cmds:
       - task: check
       - task: test
+      - task: test:integration
       - task: testserver:test
       - task: build:plan
 

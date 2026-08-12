@@ -12,3 +12,4 @@
 - `local-test-server.md`: deterministic integration server contract
 - `benchmark-methodology.md`: benchmark conditions、provenance、result evidence
 - `http-core-api.md`: Phase 1 public domain、transport、body、decoding、error contract
+- `buffered-com-transport.md`: default WinHTTP COM request、response、redirect、failure contract

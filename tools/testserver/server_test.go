@@ -145,6 +145,25 @@ func TestHeadersAndEcho(t *testing.T) {
 	if !bytes.Equal(actualEcho, echoBody) {
 		t.Fatalf("echo = %q, want %q", actualEcho, echoBody)
 	}
+
+	for _, method := range []string{http.MethodPut, http.MethodPatch, http.MethodDelete} {
+		request, err := http.NewRequest(method, server.URL+"/echo", bytes.NewReader(echoBody))
+		if err != nil {
+			t.Fatal(err)
+		}
+		response, err := http.DefaultClient.Do(request)
+		if err != nil {
+			t.Fatal(err)
+		}
+		actual, readErr := io.ReadAll(response.Body)
+		response.Body.Close()
+		if readErr != nil {
+			t.Fatal(readErr)
+		}
+		if response.StatusCode != http.StatusOK || !bytes.Equal(actual, echoBody) {
+			t.Fatalf("%s echo = status %d body %q", method, response.StatusCode, actual)
+		}
+	}
 }
 
 func TestRedirect(t *testing.T) {

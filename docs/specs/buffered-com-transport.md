@@ -1,0 +1,69 @@
+# Buffered COM transport
+
+## Backend and selection
+
+`WinHttpComTransport` implements `IHttpTransport` with a late-bound
+`WinHttp.WinHttpRequest.5.1` object. `HttpClient` creates this transport by
+default, while `HttpClient.Transport` remains replaceable for tests and custom
+backends. The production source has no compile-time reference to a WinHTTP type
+library.
+
+## Request mapping
+
+- The execution snapshot's uppercase method and absolute URL are passed to
+  `Open` in synchronous mode.
+- Resolve, connect, send, and receive timeouts are passed to `SetTimeouts` in
+  milliseconds. Zero retains WinHTTP's infinite-timeout meaning.
+- Headers are emitted in insertion order. Repeated header names are emitted as
+  repeated `SetRequestHeader` calls.
+- Empty bodies call `Send` without an argument. Text bodies are encoded as
+  UTF-8 bytes by `HttpBody`; binary bodies retain their exact bytes.
+- `HttpRequest.FollowRedirects` defaults to `True` and
+  `HttpRequest.MaxRedirects` defaults to 10. The transport applies both WinHTTP
+  options before sending. Automatic HTTPS-to-HTTP redirects remain disabled.
+
+## Response mapping
+
+Every completed exchange, including 4xx and 5xx, returns `HttpResponse`.
+`Status`, `StatusText`, all response headers, authoritative `ResponseBody`
+bytes, and elapsed milliseconds are copied before the COM object is released.
+An empty response remains `HttpBodyEmpty`; it is not represented as a one-byte
+or text body.
+
+Header parsing splits each raw header line at its first colon, preserving
+repeated fields and the field-value text after trimming optional whitespace.
+Malformed response header lines fail as `HttpErrProtocol` rather than being
+silently discarded.
+
+## Transport failures
+
+Raw COM/HRESULT values are not public error numbers. The low WinHTTP error code
+is classified into the stable `HttpErrors` namespace:
+
+| WinHTTP condition | Public category |
+| --- | --- |
+| invalid URL or scheme | `HttpErrorInvalidUrl` |
+| name not resolved | `HttpErrorDns` |
+| connect/connection failure | `HttpErrorConnection` |
+| certificate or secure-channel failure | `HttpErrorTls` |
+| timeout | `HttpErrorTimeout` |
+| operation cancelled | `HttpErrorCancelled` |
+| invalid response, header, or redirect | `HttpErrorProtocol` |
+| other backend failure | `HttpErrorIo` |
+
+Descriptions contain only a stable summary and numeric WinHTTP code. They do
+not include the request URL, headers, credentials, response body, or the raw COM
+description. Failures raised by VBA-HTTP before the COM call are propagated
+unchanged.
+
+## Scope
+
+This transport is buffered and synchronous. Bounded asynchronous scheduling is
+defined in Phase 3. Constant-memory download/upload and advanced protocol
+selection use the native transport defined by later specs.
+
+## Evidence
+
+- Integration suite: `src/modules/Tests/Integration/WinHttpComTransportTests.bas`
+- Unit suite: `src/modules/Tests/Unit/HttpRequestTests.bas`
+- Loopback runner: `tools/Run-IntegrationTests.ps1`

@@ -10,12 +10,14 @@
     "HttpParams",
     "HttpRequest",
     "HttpResponse",
+    "HttpTiming",
     "HttpTimeouts",
     "IHttpTransport",
     "Main",
     "Sheet1",
     "ThisWorkbook",
-    "Ui"
+    "Ui",
+    "WinHttpComTransport"
   ],
   "excluded": [
     "BenchmarkSupport",
@@ -27,12 +29,14 @@
     "HttpHeadersTests",
     "HttpParamsTests",
     "HttpResponseTests",
+    "HttpRequestTests",
     "HttpTimeoutsTests",
     "MockHttpTransport",
     "RawWinHttpBenchmark",
     "XlflowAssert",
     "XlflowDebug",
     "XlflowRuntime",
-    "XlflowUI"
+    "XlflowUI",
+    "WinHttpComTransportTests"
   ]
 }
