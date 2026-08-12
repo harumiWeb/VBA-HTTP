@@ -38,6 +38,17 @@ tasks:
     cmds:
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Validate-BuildPlan.ps1
 
+  release:build:
+    desc: Build and validate the release workbook
+    cmds:
+      - xlflow build --json --out build/Release/VBA-HTTP.xlsm
+      - task: release:smoke
+
+  release:smoke:
+    desc: Inspect and execute the release workbook from an external harness
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Validate-ReleaseArtifact.ps1
+
   verify:
     desc: Run source, test, and release-plan verification
     cmds:

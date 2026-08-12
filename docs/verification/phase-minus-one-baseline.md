@@ -28,6 +28,7 @@ Recorded: 2026-08-12
 - Publication: atomic replace
 - Included components: `App`, `Main`, `Ui`, `Sheet1`, `ThisWorkbook`
 - Excluded components: `BenchmarkSupport`, `DevSupport`, `BootstrapTests`, `XlflowAssert`, `XlflowDebug`, `XlflowRuntime`, `XlflowUI`
+- `task release:smoke`: the actual workbook exposed exactly the 5 allowed VBA components and external `Main.Run` execution passed without source injection
 
 Release artifacts and manifests are generated evidence and remain ignored. This document records the baseline result; future release milestones must retain their generated manifest and checksum as release evidence.
 

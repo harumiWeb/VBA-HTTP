@@ -168,10 +168,10 @@ fresh cloneから同じ開発・test・release buildを再現できるclean base
 - [x] production component allowlistとdry-run結果を照合する。
 - [x] `xlflow build --json` で `build/Release/VBA-HTTP.xlsm` を生成する。
 - [x] build manifestからVBE compile、save、close、publication結果を検証する。
-- [ ] release artifactのVBA component一覧をinspectする。
-- [ ] release artifactにexcluded componentが存在しないことを自動検証する。
-- [ ] release artifactを呼び出す外部consumer smoke harnessの構成を決定・作成する。
-- [ ] consumer smoke harnessがrelease artifactの最小public APIを実行できることを確認する。
+- [x] release artifactのVBA component一覧をinspectする。
+- [x] release artifactにexcluded componentが存在しないことを自動検証する。
+- [x] release artifactを呼び出す外部consumer smoke harnessの構成を決定・作成する。
+- [x] consumer smoke harnessがrelease artifactの最小public APIを実行できることを確認する。
 
 ### Governance and contributor workflow
 
@@ -191,7 +191,7 @@ fresh cloneから同じ開発・test・release buildを再現できるclean base
 - [x] build dry-runが意図したproduction componentだけをincludeする。
 - [x] release buildがVBE compileに成功する。
 - [x] release artifactにexcluded componentが存在しない。
-- [ ] 外部consumer smoke harnessがrelease artifactに対して成功する。
+- [x] 外部consumer smoke harnessがrelease artifactに対して成功する。
 - [x] x64の実行証跡と32-bitの検証経路が存在する。
 
 ---

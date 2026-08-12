@@ -42,7 +42,7 @@ Before a release build:
 2. Inspect the dry-run included and excluded component sets.
 3. Run `xlflow build --json --out build/Release/VBA-HTTP.xlsm`.
 4. Verify the build manifest reports successful source application, VBE compile, save, close, and atomic publication.
-5. Inspect the release workbook and run the external consumer smoke harness without injecting test code into the artifact.
+5. Run `task release:smoke` to inspect the actual VBA component collection and call `Main.Run` without injecting test code into the artifact.
 
 Generated release artifacts and staging files are not committed. The tracked development workbook is never overwritten by a release build.
 
