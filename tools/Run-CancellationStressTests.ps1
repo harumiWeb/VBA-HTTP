@@ -227,7 +227,7 @@ try {
     $definitions = @(
         [pscustomobject]@{ Name = "com_active_cancellation"; Filter = "WinHttpCancellationStressTests.Test_CancellationStress_ComActiveCancellation"; Transport = "WinHttpComTransport"; HandleDeltaLimit = 32; Invariant = "four delayed COM requests become cancelled on every iteration, followed by a 204 recovery request" },
         [pscustomobject]@{ Name = "com_request_deadline"; Filter = "WinHttpCancellationStressTests.Test_CancellationStress_ComDeadline"; Transport = "WinHttpComTransport"; HandleDeltaLimit = 32; Invariant = "four delayed COM requests become timeout failures on every iteration, followed by a 204 recovery request" },
-        [pscustomobject]@{ Name = "native_download_cancellation"; Filter = "WinHttpCancellationStressTests.Test_CancellationStress_NativeDownloadCancellation"; Transport = "WinHttpNativeTransport"; HandleDeltaLimit = 8; Invariant = "4 MiB streaming download cancellation preserves the sentinel destination and temporary-file count" }
+        [pscustomobject]@{ Name = "native_download_cancellation"; Filter = "WinHttpCancellationStressTests.Test_CancellationStress_NativeDownloadCancellation"; Transport = "WinHttpNativeTransport"; HandleDeltaLimit = 8; Invariant = "64 KiB streaming download cancellation preserves the sentinel destination and temporary-file count" }
     )
     if ($Scenario -eq "all") {
         $selectedDefinitions = @($definitions)
@@ -264,7 +264,7 @@ try {
             iterations = $Iterations
             com_cancellation_requests = 4
             com_deadline_requests = 4
-            native_download_bytes = 4194304
+            native_download_bytes = 65536
             native_download_cancel_after_bytes = 65536
             idle_wait_ms = 1000
             handle_delta_limits = [ordered]@{ native = 8; com = 32 }

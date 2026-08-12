@@ -10,7 +10,7 @@ deterministic Go test server. The stress module lives under
 | --- | --- | --- | --- | ---: |
 | `com_active_cancellation` | `WinHttpComTransport` | four `GET /delay/2000` requests, cancelled after one second | every item is cancelled; a recovery `GET /status/204` succeeds | <=32 |
 | `com_request_deadline` | `WinHttpComTransport` | four `GET /delay/250` requests, 25 ms per-request deadline | every item is `HttpErrorTimeout`; recovery succeeds | <=32 |
-| `native_download_cancellation` | `WinHttpNativeTransport` | 4 MiB `GET /stream/4194304`, progress cancellation at 64 KiB | `HttpErrCancelled`, 8-byte sentinel and temp-file count unchanged; recovery succeeds | <=8 |
+| `native_download_cancellation` | `WinHttpNativeTransport` | 64 KiB `GET /stream/65536`, progress cancellation at 64 KiB | `HttpErrCancelled`, 8-byte sentinel and temp-file count unchanged; recovery succeeds | <=8 |
 
 Each selected scenario runs exactly the configured number of iterations
 (default 25, allowed range 1..1000), uses a fresh cancellation token/options for

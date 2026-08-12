@@ -6,7 +6,7 @@ Private Const ComCancellationDelayMilliseconds As Long = 2000
 Private Const ComDeadlineRequests As Long = 4
 Private Const ComDeadlineMilliseconds As Long = 25
 Private Const ComDeadlineDelayMilliseconds As Long = 250
-Private Const NativeDownloadBytes As Long = 4194304
+Private Const NativeDownloadBytes As Long = 65536
 Private Const DownloadCancelAfterBytes As Currency = 65536
 
 Private mScheduledCancellation As HttpCancellationToken

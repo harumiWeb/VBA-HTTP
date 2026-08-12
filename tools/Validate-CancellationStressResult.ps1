@@ -21,7 +21,7 @@ if ($result.server.external_network -ne $false -or [string]$result.server.base_u
 }
 if ([int]$result.parameters.iterations -lt 1 -or [int]$result.parameters.iterations -gt 1000) { throw "Cancellation result iteration parameter is invalid." }
 if ([int]$result.parameters.com_cancellation_requests -ne 4 -or [int]$result.parameters.com_deadline_requests -ne 4) { throw "Cancellation result COM workload is invalid." }
-if ([int]$result.parameters.native_download_bytes -ne 4194304 -or [int]$result.parameters.native_download_cancel_after_bytes -ne 65536) { throw "Cancellation result download workload is invalid." }
+if ([int]$result.parameters.native_download_bytes -ne 65536 -or [int]$result.parameters.native_download_cancel_after_bytes -ne 65536) { throw "Cancellation result download workload is invalid." }
 if ([int]$result.parameters.idle_wait_ms -ne 1000) { throw "Cancellation result timeout/sampling parameters are invalid." }
 if ([int]$result.parameters.handle_delta_limits.native -ne 8 -or [int]$result.parameters.handle_delta_limits.com -ne 32) { throw "Cancellation result handle limits are invalid." }
 

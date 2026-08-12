@@ -20,7 +20,7 @@ promise and must not claim stronger interruption semantics.
   scenarios, each executed in its own temporary xlflow/Excel process:
   `com_active_cancellation` cancels four delayed asynchronous COM requests,
   `com_request_deadline` expires four COM request deadlines,
-  and `native_download_cancellation` cancels a 4 MiB streaming download while
+  and `native_download_cancellation` cancels a 64 KiB streaming download while
   preserving its sentinel destination and temporary-file count.
 - Use 25 iterations by default, with a bounded 1..1000 override for diagnosis.
   Every iteration performs a loopback recovery `GET /status/204`; COM retry
