@@ -14,3 +14,4 @@
 - `http-core-api.md`: Phase 1 public domain、transport、body、decoding、error contract
 - `buffered-com-transport.md`: default WinHTTP COM request、response、redirect、failure contract
 - `bounded-concurrency.md`: cooperative COM async scheduling、batch results、deadlines、cancellation、reentrancy contract
+- `reliability-policy.md`: retry classification、backoff／jitter、Retry-After、total deadline、cancellation precedence

@@ -15,6 +15,8 @@ Private mYieldToHost As Boolean
 Private mYieldIntervalMilliseconds As Long
 Private mRequestDeadlineMilliseconds As Long
 Private mCancellationToken As HttpCancellationToken
+Private mRetryPolicy As HttpRetryPolicy
+Private mTotalDeadlineMilliseconds As Long
 
 Public Property Get MaxConcurrency() As Long
     MaxConcurrency = mMaxConcurrency
@@ -68,6 +70,27 @@ Public Property Set CancellationToken(ByVal value As HttpCancellationToken)
     Set mCancellationToken = value
 End Property
 
+Public Property Get RetryPolicy() As HttpRetryPolicy
+    Set RetryPolicy = mRetryPolicy
+End Property
+
+Public Property Set RetryPolicy(ByVal value As HttpRetryPolicy)
+    If value Is Nothing Then
+        Set mRetryPolicy = Nothing
+    Else
+        Set mRetryPolicy = value.Clone()
+    End If
+End Property
+
+Public Property Get TotalDeadlineMilliseconds() As Long
+    TotalDeadlineMilliseconds = mTotalDeadlineMilliseconds
+End Property
+
+Public Property Let TotalDeadlineMilliseconds(ByVal value As Long)
+    If value < 0 Then HttpErrors.RaiseValidation "HttpBatchOptions.TotalDeadlineMilliseconds", "Total deadline cannot be negative."
+    mTotalDeadlineMilliseconds = value
+End Property
+
 Public Function Clone() As HttpBatchOptions
     Dim copy As New HttpBatchOptions
 
@@ -77,6 +100,8 @@ Public Function Clone() As HttpBatchOptions
     copy.YieldIntervalMilliseconds = mYieldIntervalMilliseconds
     copy.RequestDeadlineMilliseconds = mRequestDeadlineMilliseconds
     Set copy.CancellationToken = mCancellationToken
+    If Not mRetryPolicy Is Nothing Then Set copy.RetryPolicy = mRetryPolicy
+    copy.TotalDeadlineMilliseconds = mTotalDeadlineMilliseconds
     Set Clone = copy
 End Function
 
