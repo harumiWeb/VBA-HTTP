@@ -310,6 +310,32 @@ Public Sub Test_NativeTransport_BasicAndBearerAuth()
 End Sub
 
 '@Tag("integration")
+Public Sub Test_NativeTransport_ExplicitCookieJarPersistsAndSuppressesRedirects()
+    Dim client As New HttpClient
+    Dim jar As New HttpCookieJar
+    Dim response As HttpResponse
+
+    client.BaseUrl = RequireBaseUrl()
+    Set client.Transport = New WinHttpNativeTransport
+    Set client.CookieJar = jar
+    Set response = client.GetResponse("/cookie/set")
+    XlflowAssert.AssertEquals 204, response.StatusCode
+    XlflowAssert.AssertEquals 1, jar.Count
+
+    Set response = client.GetResponse("/cookie/echo")
+    XlflowAssert.AssertEquals 204, response.StatusCode
+    XlflowAssert.AssertEquals "1", response.Headers.GetValue("X-Cookie-Verified")
+
+    Set response = client.GetResponse("/cookie/redirect")
+    XlflowAssert.AssertEquals 302, response.StatusCode
+    XlflowAssert.AssertEquals "/cookie/echo", response.Headers.GetValue("Location")
+
+    Set response = client.GetResponse("/cookie/clear")
+    XlflowAssert.AssertEquals 204, response.StatusCode
+    XlflowAssert.AssertEquals 0, jar.Count
+End Sub
+
+'@Tag("integration")
 Public Sub Test_NativeTransport_AuthProviderDisablesRedirects()
     Dim client As New HttpClient
     Dim provider As IHttpAuthProvider

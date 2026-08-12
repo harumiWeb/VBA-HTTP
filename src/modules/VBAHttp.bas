@@ -52,6 +52,11 @@ Public Function CreateProxyOptions() As HttpProxyOptions
     Set CreateProxyOptions = New HttpProxyOptions
 End Function
 
+''' Creates an explicit caller-owned cookie jar for referenced-workbook consumers.
+Public Function CreateCookieJar() As HttpCookieJar
+    Set CreateCookieJar = New HttpCookieJar
+End Function
+
 Public Function CreateBasicAuthProvider(ByVal Username As String, ByVal Password As String, Optional ByVal AllowInsecureHttp As Boolean = False) As IHttpAuthProvider
     Dim provider As New HttpBasicAuthProvider
 

@@ -31,9 +31,10 @@ manifest describes a production-only workbook.
   hashes, checks performed, and deferred security topics without host paths or
   secrets. Reports are written atomically under `.xlflow` by the release task.
 - Keep the gate lexical and manifest-focused. It does not claim certificate
-  negative-fixture coverage, HTTP/2/HTTP/3 TLS compatibility, integrated
-  authentication, or cookie-jar security; those remain explicit residual
-  risks until their dedicated fixtures and policies exist.
+  negative-fixture coverage, HTTP/2/HTTP/3 TLS compatibility, or integrated/
+  proxy challenge authentication; those remain explicit residual risks until
+  their dedicated fixtures and policies exist. Cookie handling is covered by
+  the separate explicit caller-owned jar policy in ADR-0018.
 
 ## Consequences
 

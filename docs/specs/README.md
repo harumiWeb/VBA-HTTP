@@ -24,6 +24,7 @@
 - `proxy-policy.md`: OS/default, direct, and manual proxy routing, validation, and transport mapping
 - `auth-policy.md`: preemptive Basic/Bearer providers, TLS/redirect boundary, redaction, and deferred challenge authentication
 - `redirect-policy.md`: bounded automatic redirects, credential-header suppression, downgrade protection, and caller-owned follow-up
+- `cookie-policy.md`: explicit caller-owned cookie jar parsing, matching, expiry, redaction, and redirect boundary
 - `release-checksum.md`: deterministic SHA-256 sidecar generation, validation, and atomic evidence publication
 - `release-security.md`: fail-closed release manifest identity, component path boundary, checksum, and deferred-risk contract
 - `compatibility-matrix.md`: observed Windows/Office/protocol evidence and promotion requirements

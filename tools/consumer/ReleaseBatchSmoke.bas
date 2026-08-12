@@ -138,6 +138,37 @@ Public Sub RunAuthSmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As St
     End If
 End Sub
 
+Public Sub RunCookieSmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As String)
+    Dim client As Object
+    Dim jar As Object
+    Dim response As Object
+
+    Set client = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateClient")
+    Set jar = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateCookieJar")
+    Set client.CookieJar = jar
+    client.BaseUrl = baseUrl
+
+    Set response = client.GetResponse("/cookie/set")
+    If response.StatusCode <> 204 Or jar.Count <> 1 Then
+        Err.Raise vbObjectError + 755, "ReleaseBatchSmoke.RunCookieSmoke", "Release cookie jar did not store the fixture cookie."
+    End If
+
+    Set response = client.GetResponse("/cookie/echo")
+    If response.StatusCode <> 204 Or response.Headers.GetValue("X-Cookie-Verified") <> "1" Then
+        Err.Raise vbObjectError + 756, "ReleaseBatchSmoke.RunCookieSmoke", "Release cookie jar did not send the fixture cookie."
+    End If
+
+    Set response = client.GetResponse("/cookie/redirect")
+    If response.StatusCode <> 302 Or Len(response.Headers.GetValue("Location")) = 0 Then
+        Err.Raise vbObjectError + 757, "ReleaseBatchSmoke.RunCookieSmoke", "Release cookie jar followed a credential-bearing redirect."
+    End If
+
+    Set response = client.GetResponse("/cookie/clear")
+    If response.StatusCode <> 204 Or jar.Count <> 0 Then
+        Err.Raise vbObjectError + 758, "ReleaseBatchSmoke.RunCookieSmoke", "Release cookie jar did not clear the fixture cookie."
+    End If
+End Sub
+
 Public Sub RunRedirectSecuritySmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As String)
     Dim client As Object
     Dim nativeClient As Object

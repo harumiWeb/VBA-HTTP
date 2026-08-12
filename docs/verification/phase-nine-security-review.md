@@ -20,7 +20,7 @@ The authoritative implementation is
 | Caller credentials and redirect headers | Auth provider, sensitive-header redaction, and redirect suppression specs/tests | covered by existing auth/redirect gates |
 | TLS trust and certificate rejection | OS validation is retained; no deterministic certificate-negative fixture exists yet | deferred, release-blocking for claiming certificate coverage |
 | HTTP/2/HTTP/3 TLS and Office bitness | Compatibility evidence is still environment-dependent (current proof is x64) | deferred |
-| Integrated/proxy challenge auth and cookie persistence | Explicitly outside the preemptive auth/no-cookie contracts | deferred |
+| Integrated/proxy challenge auth | Explicitly outside the preemptive Basic/Bearer contract and challenge replay | deferred |
 
 ## Verification commands
 
@@ -41,5 +41,6 @@ without embedding host paths or secrets.
 
 Manifest/component integrity is accepted for the current x64 release path.
 This record does not declare Phase 9's certificate-negative test or the broader
-protocol/auth/cookie compatibility matrix complete; those remain explicit
-follow-up gates rather than being hidden by a green manifest check.
+protocol/auth compatibility matrix complete; those remain explicit follow-up
+gates rather than being hidden by a green manifest check. The explicit cookie
+jar policy is covered by ADR-0018 and its unit/integration/release smoke tests.

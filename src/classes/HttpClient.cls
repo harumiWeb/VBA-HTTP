@@ -19,6 +19,7 @@ Private mProtocolOptions As New HttpProtocolOptions
 Private mDecompressionOptions As New HttpDecompressionOptions
 Private mProxyOptions As New HttpProxyOptions
 Private mAuthProvider As IHttpAuthProvider
+Private mCookieJar As HttpCookieJar
 
 Public Property Get BaseUrl() As String
     BaseUrl = mBaseUrl
@@ -109,6 +110,14 @@ Public Property Set AuthProvider(ByVal value As IHttpAuthProvider)
     End If
 End Property
 
+Public Property Get CookieJar() As HttpCookieJar
+    Set CookieJar = mCookieJar
+End Property
+
+Public Property Set CookieJar(ByVal value As HttpCookieJar)
+    Set mCookieJar = value
+End Property
+
 Friend Property Set ReliabilityRuntime(ByVal value As IHttpReliabilityRuntime)
     If value Is Nothing Then HttpErrors.RaiseValidation "HttpClient.ReliabilityRuntime", "Reliability runtime cannot be Nothing."
     Set mReliabilityRuntime = value
@@ -155,6 +164,7 @@ Public Function ExecuteMany(ByVal Requests As Collection, Optional ByVal Options
     If snapshotOptions.RetryPolicy Is Nothing Then Set snapshotOptions.RetryPolicy = mRetryPolicy
     Set batchTransport = mTransport
     Set ExecuteMany = batchTransport.ExecuteMany(prepared, snapshotOptions)
+    StoreBatchCookies prepared, ExecuteMany
     mExecuting = False
     Exit Function
 
@@ -190,6 +200,7 @@ Public Function DownloadFile(ByVal Url As String, ByVal DestinationPath As Strin
 
     Set downloadTransport = mTransport
     Set DownloadFile = downloadTransport.DownloadFile(prepared, DestinationPath, snapshotOptions, Progress)
+    StoreDownloadCookies prepared, DownloadFile
     mExecuting = False
     Exit Function
 
@@ -226,6 +237,7 @@ Public Function UploadFile(ByVal Url As String, ByVal SourcePath As String, Opti
 
     Set uploadTransport = mTransport
     Set UploadFile = uploadTransport.UploadFile(prepared, SourcePath, ContentType, snapshotOptions, Progress)
+    StoreUploadCookies prepared, UploadFile
     mExecuting = False
     Exit Function
 
@@ -263,6 +275,7 @@ Public Function UploadMultipart(ByVal Url As String, ByVal Form As HttpMultipart
 
     Set uploadTransport = mTransport
     Set UploadMultipart = uploadTransport.UploadMultipart(prepared, Form, snapshotOptions, Progress)
+    StoreUploadCookies prepared, UploadMultipart
     mExecuting = False
     Exit Function
 
@@ -324,6 +337,7 @@ Private Function ExecuteCore(ByVal Request As HttpRequest, ByVal Options As Http
     End If
     engine.Initialize mReliabilityRuntime
     Set ExecuteCore = engine.Execute(mTransport, snapshot, policy, snapshotOptions)
+    StoreResponseCookies snapshot, ExecuteCore
 End Function
 
 Public Function GetResponse(ByVal Url As String, Optional ByVal Query As HttpParams = Nothing, Optional ByVal Options As HttpExecutionOptions = Nothing) As HttpResponse
@@ -373,15 +387,61 @@ Private Function PrepareRequest(ByVal Request As HttpRequest) As HttpRequest
     If snapshot.ProtocolOptions Is Nothing Then Set snapshot.ProtocolOptions = mProtocolOptions
     If snapshot.DecompressionOptions Is Nothing Then Set snapshot.DecompressionOptions = mDecompressionOptions
     If snapshot.ProxyOptions Is Nothing Then Set snapshot.ProxyOptions = mProxyOptions
+    If snapshot.CookieJar Is Nothing Then Set snapshot.CookieJar = mCookieJar
     ApplyQuery snapshot
     ApplyDefaultHeaders snapshot
     If snapshot.AuthProvider Is Nothing Then Set snapshot.AuthProvider = mAuthProvider
     If Not snapshot.AuthProvider Is Nothing Then
         snapshot.AuthProvider.Apply snapshot
     End If
+    ApplyCookie snapshot
     If HttpSecurity.HasRedirectSensitiveHeaders(snapshot.Headers) Then snapshot.FollowRedirects = False
     Set PrepareRequest = snapshot
 End Function
+
+Private Sub ApplyCookie(ByVal Request As HttpRequest)
+    Dim headerValue As String
+    Dim jar As HttpCookieJar
+
+    If Request Is Nothing Then Exit Sub
+    If Request.Headers.Contains("Cookie") Then Exit Sub
+    Set jar = Request.CookieJar
+    If jar Is Nothing Then Exit Sub
+    headerValue = jar.GetCookieHeader(Request.Url)
+    If Len(headerValue) > 0 Then Request.Headers.SetValue "Cookie", headerValue
+End Sub
+
+Private Sub StoreResponseCookies(ByVal Request As HttpRequest, ByVal Response As HttpResponse)
+    If Request Is Nothing Or Response Is Nothing Then Exit Sub
+    If Request.CookieJar Is Nothing Then Exit Sub
+    Request.CookieJar.StoreResponseCookies Request.Url, Response.Headers
+End Sub
+
+Private Sub StoreBatchCookies(ByVal Requests As Collection, ByVal Results As HttpBatchResult)
+    Dim index As Long
+    Dim item As HttpBatchItem
+    Dim requestCollection As Collection
+
+    If Requests Is Nothing Or Results Is Nothing Then Exit Sub
+    Set requestCollection = Requests
+    If requestCollection Is Nothing Then Exit Sub
+    For index = 1 To Results.Count
+        Set item = Results.ItemAt(index)
+        If Not item.Response Is Nothing Then StoreResponseCookies requestCollection(index), item.Response
+    Next index
+End Sub
+
+Private Sub StoreDownloadCookies(ByVal Request As HttpRequest, ByVal Result As HttpDownloadResult)
+    If Request Is Nothing Or Result Is Nothing Then Exit Sub
+    If Request.CookieJar Is Nothing Then Exit Sub
+    Request.CookieJar.StoreResponseCookies Request.Url, Result.Headers
+End Sub
+
+Private Sub StoreUploadCookies(ByVal Request As HttpRequest, ByVal Result As HttpUploadResult)
+    If Request Is Nothing Or Result Is Nothing Then Exit Sub
+    If Request.CookieJar Is Nothing Then Exit Sub
+    Request.CookieJar.StoreResponseCookies Request.Url, Result.Headers
+End Sub
 
 Private Function PrepareRequests(ByVal Requests As Collection) As Collection
     Dim prepared As New Collection

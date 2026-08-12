@@ -293,7 +293,7 @@ if ($null -ne $resolvedReportPath) {
         deferred_security_review = @(
             'certificate_negative_fixture',
             'http2_http3_tls_matrix',
-            'integrated_authentication_and_cookie_jar'
+            'integrated_and_proxy_challenge_authentication'
         )
     }
     Publish-Report $resolvedReportPath (($report | ConvertTo-Json -Depth 5 -Compress) + [Environment]::NewLine)

@@ -140,6 +140,22 @@ also return 3xx responses instead of automatically forwarding those values to a
 redirected origin. HTTPS-to-HTTP downgrade redirects are rejected by default;
 see [`docs/specs/redirect-policy.md`](docs/specs/redirect-policy.md).
 
+Cookie persistence is opt-in and caller-owned. Attach a jar to a client when a
+session should store and replay matching `Set-Cookie` values:
+
+```vb
+Dim jar As HttpCookieJar
+
+Set jar = VBAHttp.CreateCookieJar()
+Set client.CookieJar = jar
+Set response = client.GetResponse("https://example.com/session")
+```
+
+The jar applies host/path/secure/expiry rules, preserves an explicit caller
+`Cookie` header, and suppresses automatic redirects when a cookie is present.
+It is memory-only and is never shared with ambient WinHTTP state. See
+[`docs/specs/cookie-policy.md`](docs/specs/cookie-policy.md).
+
 The native transport uses synchronous WinHTTP calls, OS certificate validation, and deterministic handle cleanup. Buffered native requests still reject active cancellation and total-deadline options because a blocking call cannot observe them; streaming downloads support cooperative cancellation and total-deadline checkpoints between bounded reads.
 
 For a large file, use the native client and let the library publish only after the temporary file is complete:
@@ -192,7 +208,7 @@ Set response = client.PostResponse("https://example.com/jobs", Nothing, options)
 
 `Retry-After` delta-seconds and HTTP-date are supported. Cancellation has priority over the total deadline, which includes every attempt and retry wait.
 
-Use `VBAHttp.CreateClient()` when referencing the distributed workbook from another VBA project because VBA class modules are `PublicNotCreatable`. `CreateRetryPolicy`, `CreateExecutionOptions`, `CreateBatchOptions`, `CreateCancellationToken`, and the protocol/decompression/proxy/authentication factories expose the same configuration objects across that boundary. Source-vendored consumers may use `New`. The default transport can still be replaced through `HttpClient.Transport` for tests or custom backends.
+Use `VBAHttp.CreateClient()` when referencing the distributed workbook from another VBA project because VBA class modules are `PublicNotCreatable`. `CreateRetryPolicy`, `CreateExecutionOptions`, `CreateBatchOptions`, `CreateCancellationToken`, and the protocol/decompression/proxy/authentication/cookie-jar factories expose the same configuration objects across that boundary. Source-vendored consumers may use `New`. The default transport can still be replaced through `HttpClient.Transport` for tests or custom backends.
 
 ## Contributor verification
 

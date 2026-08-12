@@ -4,8 +4,8 @@
   canonical base/output paths, VBE/atomic-publication evidence, exact
   included/excluded component policy, development-only source boundaries, and
   checksum verification are checked before release smoke. Certificate-negative
-  fixtures, HTTP/2/HTTP/3 TLS evidence, integrated auth, and cookie persistence
-  remain explicitly deferred.
+  fixtures, HTTP/2/HTTP/3 TLS evidence, and integrated auth remain explicitly
+  deferred.
 
 - Added a Phase 9 cancellation/timeout stress gate with repeated COM active
   cancellation and request-deadline scenarios, native streaming download
@@ -27,7 +27,11 @@
 - Added a redirect security boundary: credential and cookie headers suppress
   automatic redirects, redirect loops honor the bounded maximum, and both COM
   and native transports explicitly reject HTTPS-to-HTTP downgrade redirects.
-  Cookie persistence remains caller-owned and deferred to a separate policy.
+  Cookie persistence is now an explicit caller-owned `HttpCookieJar` policy.
+
+- Added an explicit in-memory cookie jar with host/path/secure/expiry matching,
+  caller-header precedence, response `Set-Cookie` storage, redirect suppression,
+  deterministic loopback integration coverage, and release-consumer smoke.
 
 - Added snapshot-safe preemptive Basic/Bearer authentication providers for COM
   and native requests, deterministic loopback auth endpoints, redirect

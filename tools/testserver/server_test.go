@@ -137,6 +137,53 @@ func TestUnicodeAndMalformedUtf8EndpointsAreDeterministic(t *testing.T) {
 	}
 }
 
+func TestCookieEndpointsAreDeterministic(t *testing.T) {
+	server := httptest.NewServer(newTestServer().routes())
+	defer server.Close()
+
+	client := &http.Client{CheckRedirect: func(_ *http.Request, _ []*http.Request) error { return http.ErrUseLastResponse }}
+	setResponse, err := client.Get(server.URL + "/cookie/set")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer setResponse.Body.Close()
+	if setResponse.StatusCode != http.StatusNoContent || len(setResponse.Header.Values("Set-Cookie")) != 1 {
+		t.Fatalf("set response = %d, cookies = %#v", setResponse.StatusCode, setResponse.Header.Values("Set-Cookie"))
+	}
+
+	request, err := http.NewRequest(http.MethodGet, server.URL+"/cookie/echo", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	request.Header.Set("Cookie", "session=alpha")
+	echoResponse, err := client.Do(request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer echoResponse.Body.Close()
+	if echoResponse.StatusCode != http.StatusNoContent || echoResponse.Header.Get("X-Cookie-Verified") != "1" {
+		t.Fatalf("echo response = %d, verified = %q", echoResponse.StatusCode, echoResponse.Header.Get("X-Cookie-Verified"))
+	}
+
+	redirectResponse, err := client.Get(server.URL + "/cookie/redirect")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer redirectResponse.Body.Close()
+	if redirectResponse.StatusCode != http.StatusFound || redirectResponse.Header.Get("Location") != "/cookie/echo" {
+		t.Fatalf("redirect response = %d %q", redirectResponse.StatusCode, redirectResponse.Header.Get("Location"))
+	}
+
+	clearResponse, err := client.Get(server.URL + "/cookie/clear")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer clearResponse.Body.Close()
+	if clearResponse.StatusCode != http.StatusNoContent || len(clearResponse.Header.Values("Set-Cookie")) != 1 {
+		t.Fatalf("clear response = %d, cookies = %#v", clearResponse.StatusCode, clearResponse.Header.Values("Set-Cookie"))
+	}
+}
+
 func TestMalformedHeadersEndpointIsRejectedByNetHttpClient(t *testing.T) {
 	server := httptest.NewServer(newTestServer().routes())
 	defer server.Close()

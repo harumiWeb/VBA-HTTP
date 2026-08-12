@@ -24,6 +24,7 @@ Public Sub Test_Factory_CreatesReliabilityConfigurationObjects()
     XlflowAssert.AssertIsNotNothing VBAHttp.CreateProtocolOptions()
     XlflowAssert.AssertIsNotNothing VBAHttp.CreateDecompressionOptions()
     XlflowAssert.AssertIsNotNothing VBAHttp.CreateProxyOptions()
+    XlflowAssert.AssertIsNotNothing VBAHttp.CreateCookieJar()
 End Sub
 
 Public Sub Test_Factory_CreatesAuthenticationProviders()

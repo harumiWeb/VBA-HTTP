@@ -64,6 +64,10 @@ func (s *testServer) routes() http.Handler {
 	mux.HandleFunc("GET /headers", s.headers)
 	mux.HandleFunc("GET /auth/basic", s.authBasic)
 	mux.HandleFunc("GET /auth/bearer", s.authBearer)
+	mux.HandleFunc("GET /cookie/set", s.cookieSet)
+	mux.HandleFunc("GET /cookie/echo", s.cookieEcho)
+	mux.HandleFunc("GET /cookie/clear", s.cookieClear)
+	mux.HandleFunc("GET /cookie/redirect", s.cookieRedirect)
 	mux.HandleFunc("POST /echo", s.echo)
 	mux.HandleFunc("PUT /echo", s.echo)
 	mux.HandleFunc("PATCH /echo", s.echo)
@@ -277,6 +281,30 @@ func (s *testServer) authBearer(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("WWW-Authenticate", `Bearer realm="vba-http-test", error="invalid_token"`)
 	w.WriteHeader(http.StatusUnauthorized)
+}
+
+func (s *testServer) cookieSet(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Add("Set-Cookie", "session=alpha; Path=/cookie; Max-Age=3600")
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (s *testServer) cookieEcho(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("session")
+	if err == nil && cookie.Value == "alpha" {
+		w.Header().Set("X-Cookie-Verified", "1")
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	w.WriteHeader(http.StatusUnauthorized)
+}
+
+func (s *testServer) cookieClear(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Add("Set-Cookie", "session=; Path=/cookie; Max-Age=0")
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (s *testServer) cookieRedirect(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/cookie/echo", http.StatusFound)
 }
 
 func constantTimeEqual(actual, expected string) bool {

@@ -21,6 +21,7 @@ Private mProtocolOptions As HttpProtocolOptions
 Private mDecompressionOptions As HttpDecompressionOptions
 Private mProxyOptions As HttpProxyOptions
 Private mAuthProvider As IHttpAuthProvider
+Private mCookieJar As HttpCookieJar
 
 Public Property Get Method() As String
     Method = mMethod
@@ -165,6 +166,14 @@ Public Property Set AuthProvider(ByVal value As IHttpAuthProvider)
     End If
 End Property
 
+Public Property Get CookieJar() As HttpCookieJar
+    Set CookieJar = mCookieJar
+End Property
+
+Public Property Set CookieJar(ByVal value As HttpCookieJar)
+    Set mCookieJar = value
+End Property
+
 Public Function Clone() As HttpRequest
     Dim copy As New HttpRequest
 
@@ -180,6 +189,7 @@ Public Function Clone() As HttpRequest
     If Not mDecompressionOptions Is Nothing Then Set copy.DecompressionOptions = mDecompressionOptions
     If Not mProxyOptions Is Nothing Then Set copy.ProxyOptions = mProxyOptions
     If Not mAuthProvider Is Nothing Then Set copy.AuthProvider = mAuthProvider
+    If Not mCookieJar Is Nothing Then Set copy.CookieJar = mCookieJar
     Set Clone = copy
 End Function
 
