@@ -156,6 +156,24 @@ The jar applies host/path/secure/expiry rules, preserves an explicit caller
 It is memory-only and is never shared with ambient WinHTTP state. See
 [`docs/specs/cookie-policy.md`](docs/specs/cookie-policy.md).
 
+Structured diagnostics are opt-in and caller-owned. The collector records
+bounded top-level operation events with query-free targets and redacted
+authorization, proxy-authorization, cookie, and authentication headers; it
+never includes bodies or error descriptions:
+
+```vb
+Dim diagnostics As HttpDiagnostics
+
+Set diagnostics = VBAHttp.CreateDiagnostics()
+diagnostics.Enabled = True
+Set client.Diagnostics = diagnostics
+Set response = client.GetResponse("https://example.com/api")
+Debug.Print diagnostics.ToJson
+```
+
+See [`docs/specs/diagnostics-policy.md`](docs/specs/diagnostics-policy.md) for
+the schema and retention contract.
+
 The native transport uses synchronous WinHTTP calls, OS certificate validation, and deterministic handle cleanup. Buffered native requests still reject active cancellation and total-deadline options because a blocking call cannot observe them; streaming downloads support cooperative cancellation and total-deadline checkpoints between bounded reads.
 
 For a large file, use the native client and let the library publish only after the temporary file is complete:

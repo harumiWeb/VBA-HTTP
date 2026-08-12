@@ -138,6 +138,32 @@ Public Sub RunAuthSmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As St
     End If
 End Sub
 
+Public Sub RunDiagnosticsSmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As String)
+    Dim client As Object
+    Dim diagnostics As Object
+    Dim response As Object
+    Dim json As String
+
+    Set client = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateClient")
+    Set diagnostics = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateDiagnostics")
+    diagnostics.Enabled = True
+    Set client.Diagnostics = diagnostics
+    client.BaseUrl = baseUrl
+    client.DefaultHeaders.SetValue "Authorization", "release-diagnostics-secret"
+    client.DefaultHeaders.SetValue "Cookie", "release=session-secret"
+    Set response = client.GetResponse("/status/204?query-secret=release-query-secret")
+    json = diagnostics.ToJson
+    If response.StatusCode <> 204 Or diagnostics.Count <> 1 Then
+        Err.Raise vbObjectError + 759, "ReleaseBatchSmoke.RunDiagnosticsSmoke", "Release diagnostics smoke returned an unexpected event count."
+    End If
+    If InStr(1, json, "[REDACTED]", vbBinaryCompare) = 0 Or _
+        InStr(1, json, "release-diagnostics-secret", vbBinaryCompare) > 0 Or _
+        InStr(1, json, "session-secret", vbBinaryCompare) > 0 Or _
+        InStr(1, json, "release-query-secret", vbBinaryCompare) > 0 Then
+        Err.Raise vbObjectError + 760, "ReleaseBatchSmoke.RunDiagnosticsSmoke", "Release diagnostics smoke exposed a sensitive value."
+    End If
+End Sub
+
 Public Sub RunCookieSmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As String)
     Dim client As Object
     Dim jar As Object

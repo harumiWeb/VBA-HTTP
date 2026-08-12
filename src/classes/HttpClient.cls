@@ -20,6 +20,7 @@ Private mDecompressionOptions As New HttpDecompressionOptions
 Private mProxyOptions As New HttpProxyOptions
 Private mAuthProvider As IHttpAuthProvider
 Private mCookieJar As HttpCookieJar
+Private mDiagnostics As HttpDiagnostics
 
 Public Property Get BaseUrl() As String
     BaseUrl = mBaseUrl
@@ -118,6 +119,18 @@ Public Property Set CookieJar(ByVal value As HttpCookieJar)
     Set mCookieJar = value
 End Property
 
+Public Property Get Diagnostics() As HttpDiagnostics
+    Set Diagnostics = mDiagnostics
+End Property
+
+Public Property Set Diagnostics(ByVal value As HttpDiagnostics)
+    If value Is Nothing Then
+        Set mDiagnostics = New HttpDiagnostics
+    Else
+        Set mDiagnostics = value
+    End If
+End Property
+
 Friend Property Set ReliabilityRuntime(ByVal value As IHttpReliabilityRuntime)
     If value Is Nothing Then HttpErrors.RaiseValidation "HttpClient.ReliabilityRuntime", "Reliability runtime cannot be Nothing."
     Set mReliabilityRuntime = value
@@ -165,6 +178,7 @@ Public Function ExecuteMany(ByVal Requests As Collection, Optional ByVal Options
     Set batchTransport = mTransport
     Set ExecuteMany = batchTransport.ExecuteMany(prepared, snapshotOptions)
     StoreBatchCookies prepared, ExecuteMany
+    RecordBatchResponses prepared, ExecuteMany
     mExecuting = False
     Exit Function
 
@@ -172,6 +186,7 @@ ExecutionFailed:
     errorNumber = Err.Number
     errorSource = Err.Source
     errorDescription = Err.Description
+    RecordBatchFailure prepared, errorNumber
     mExecuting = False
     Err.Raise errorNumber, errorSource, errorDescription
 End Function
@@ -201,6 +216,7 @@ Public Function DownloadFile(ByVal Url As String, ByVal DestinationPath As Strin
     Set downloadTransport = mTransport
     Set DownloadFile = downloadTransport.DownloadFile(prepared, DestinationPath, snapshotOptions, Progress)
     StoreDownloadCookies prepared, DownloadFile
+    RecordDownloadResult prepared, DownloadFile
     mExecuting = False
     Exit Function
 
@@ -208,6 +224,7 @@ ExecutionFailed:
     errorNumber = Err.Number
     errorSource = Err.Source
     errorDescription = Err.Description
+    RecordFailure "download", prepared, errorNumber
     mExecuting = False
     Err.Raise errorNumber, errorSource, errorDescription
 End Function
@@ -238,6 +255,7 @@ Public Function UploadFile(ByVal Url As String, ByVal SourcePath As String, Opti
     Set uploadTransport = mTransport
     Set UploadFile = uploadTransport.UploadFile(prepared, SourcePath, ContentType, snapshotOptions, Progress)
     StoreUploadCookies prepared, UploadFile
+    RecordUploadResult prepared, UploadFile
     mExecuting = False
     Exit Function
 
@@ -245,6 +263,7 @@ ExecutionFailed:
     errorNumber = Err.Number
     errorSource = Err.Source
     errorDescription = Err.Description
+    RecordFailure "upload", prepared, errorNumber
     mExecuting = False
     Err.Raise errorNumber, errorSource, errorDescription
 End Function
@@ -276,6 +295,7 @@ Public Function UploadMultipart(ByVal Url As String, ByVal Form As HttpMultipart
     Set uploadTransport = mTransport
     Set UploadMultipart = uploadTransport.UploadMultipart(prepared, Form, snapshotOptions, Progress)
     StoreUploadCookies prepared, UploadMultipart
+    RecordUploadResult prepared, UploadMultipart
     mExecuting = False
     Exit Function
 
@@ -283,6 +303,7 @@ ExecutionFailed:
     errorNumber = Err.Number
     errorSource = Err.Source
     errorDescription = Err.Description
+    RecordFailure "upload", prepared, errorNumber
     mExecuting = False
     Err.Raise errorNumber, errorSource, errorDescription
 End Function
@@ -316,6 +337,12 @@ Private Function ExecuteCore(ByVal Request As HttpRequest, ByVal Options As Http
     Dim snapshotOptions As HttpExecutionOptions
     Dim policy As HttpRetryPolicy
     Dim engine As New HttpReliabilityEngine
+    Dim errorNumber As Long
+    Dim errorSource As String
+    Dim errorDescription As String
+    Dim diagnosticRequest As HttpRequest
+
+    On Error GoTo ExecutionFailed
 
     If Request Is Nothing Then
         HttpErrors.RaiseValidation "HttpClient.Execute", "Request cannot be Nothing."
@@ -338,6 +365,17 @@ Private Function ExecuteCore(ByVal Request As HttpRequest, ByVal Options As Http
     engine.Initialize mReliabilityRuntime
     Set ExecuteCore = engine.Execute(mTransport, snapshot, policy, snapshotOptions)
     StoreResponseCookies snapshot, ExecuteCore
+    RecordResponse snapshot, ExecuteCore
+    Exit Function
+
+ExecutionFailed:
+    errorNumber = Err.Number
+    errorSource = Err.Source
+    errorDescription = Err.Description
+    Set diagnosticRequest = snapshot
+    If diagnosticRequest Is Nothing Then Set diagnosticRequest = Request
+    RecordFailure "execute", diagnosticRequest, errorNumber
+    Err.Raise errorNumber, errorSource, errorDescription
 End Function
 
 Public Function GetResponse(ByVal Url As String, Optional ByVal Query As HttpParams = Nothing, Optional ByVal Options As HttpExecutionOptions = Nothing) As HttpResponse
@@ -441,6 +479,119 @@ Private Sub StoreUploadCookies(ByVal Request As HttpRequest, ByVal Result As Htt
     If Request Is Nothing Or Result Is Nothing Then Exit Sub
     If Request.CookieJar Is Nothing Then Exit Sub
     Request.CookieJar.StoreResponseCookies Request.Url, Result.Headers
+End Sub
+
+Private Sub RecordResponse(ByVal Request As HttpRequest, ByVal Response As HttpResponse)
+    RecordResponseOperation "execute", Request, Response
+End Sub
+
+Private Sub RecordFailure(ByVal operation As String, ByVal Request As HttpRequest, ByVal errorNumber As Long)
+    If Not TryRecordFailure(operation, Request, errorNumber) Then Exit Sub
+End Sub
+
+Private Sub RecordResponseOperation(ByVal operation As String, ByVal Request As HttpRequest, ByVal Response As HttpResponse)
+    If Not TryRecordResponse(operation, Request, Response) Then Exit Sub
+End Sub
+
+Private Sub RecordDownloadResult(ByVal Request As HttpRequest, ByVal Result As HttpDownloadResult)
+    If Not TryRecordDownload(Request, Result) Then Exit Sub
+End Sub
+
+Private Sub RecordUploadResult(ByVal Request As HttpRequest, ByVal Result As HttpUploadResult)
+    If Not TryRecordUpload(Request, Result) Then Exit Sub
+End Sub
+
+Private Function TryRecordFailure(ByVal operation As String, ByVal Request As HttpRequest, ByVal errorNumber As Long) As Boolean
+    On Error GoTo DiagnosticsFailure
+    If mDiagnostics Is Nothing Then Exit Function
+    If Not mDiagnostics.Enabled Then Exit Function
+    mDiagnostics.RecordFailure operation, Request, errorNumber
+    TryRecordFailure = True
+    Exit Function
+DiagnosticsFailure:
+    Err.Clear
+    On Error GoTo 0
+    TryRecordFailure = False
+End Function
+
+Private Function TryRecordResponse(ByVal operation As String, ByVal Request As HttpRequest, ByVal Response As HttpResponse) As Boolean
+    On Error GoTo DiagnosticsFailure
+    If mDiagnostics Is Nothing Then Exit Function
+    If Not mDiagnostics.Enabled Then Exit Function
+    mDiagnostics.RecordResponse operation, Request, Response
+    TryRecordResponse = True
+    Exit Function
+DiagnosticsFailure:
+    Err.Clear
+    On Error GoTo 0
+    TryRecordResponse = False
+End Function
+
+Private Function TryRecordDownload(ByVal Request As HttpRequest, ByVal Result As HttpDownloadResult) As Boolean
+    On Error GoTo DiagnosticsFailure
+    If mDiagnostics Is Nothing Then Exit Function
+    If Not mDiagnostics.Enabled Then Exit Function
+    mDiagnostics.RecordDownload "download", Request, Result
+    TryRecordDownload = True
+    Exit Function
+DiagnosticsFailure:
+    Err.Clear
+    On Error GoTo 0
+    TryRecordDownload = False
+End Function
+
+Private Function TryRecordUpload(ByVal Request As HttpRequest, ByVal Result As HttpUploadResult) As Boolean
+    On Error GoTo DiagnosticsFailure
+    If mDiagnostics Is Nothing Then Exit Function
+    If Not mDiagnostics.Enabled Then Exit Function
+    mDiagnostics.RecordUpload "upload", Request, Result
+    TryRecordUpload = True
+    Exit Function
+DiagnosticsFailure:
+    Err.Clear
+    On Error GoTo 0
+    TryRecordUpload = False
+End Function
+
+Private Sub RecordBatchResponses(ByVal Requests As Collection, ByVal Results As HttpBatchResult)
+    Dim index As Long
+    Dim item As HttpBatchItem
+    Dim Request As HttpRequest
+    Dim Response As HttpResponse
+
+    If mDiagnostics Is Nothing Then Exit Sub
+    If Not mDiagnostics.Enabled Then Exit Sub
+    For index = 1 To Results.Count
+        Set item = Results.ItemAt(index)
+        Set Request = Nothing
+        If Not Requests Is Nothing Then
+            If index <= Requests.Count Then Set Request = Requests(index)
+        End If
+        Set Response = item.Response
+        If Response Is Nothing Then
+            RecordFailure "batch", Request, item.ErrorNumber
+        Else
+            RecordResponseOperation "batch", Request, Response
+        End If
+    Next index
+End Sub
+
+Private Sub RecordBatchFailure(ByVal Requests As Collection, ByVal errorNumber As Long)
+    Dim index As Long
+    Dim Request As HttpRequest
+
+    If mDiagnostics Is Nothing Then Exit Sub
+    If Not mDiagnostics.Enabled Then Exit Sub
+    If Requests Is Nothing Then
+        RecordFailure "batch", Nothing, errorNumber
+    ElseIf Requests.Count = 0 Then
+        RecordFailure "batch", Nothing, errorNumber
+    Else
+        For index = 1 To Requests.Count
+            Set Request = Requests(index)
+            RecordFailure "batch", Request, errorNumber
+        Next index
+    End If
 End Sub
 
 Private Function PrepareRequests(ByVal Requests As Collection) As Collection
@@ -568,4 +719,5 @@ Private Sub Class_Initialize()
     Set mTransport = New WinHttpComTransport
     Set mRetryPolicy = New HttpRetryPolicy
     Set mReliabilityRuntime = New HttpSystemReliabilityRuntime
+    Set mDiagnostics = New HttpDiagnostics
 End Sub

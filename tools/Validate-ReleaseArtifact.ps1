@@ -226,6 +226,8 @@ try {
     [void]$consumerExcel.Run($proxyMacro, $consumerWorkbook.Name, [string]$ready.proxy_target_url, [string]$ready.proxy_url)
     $authMacro = "'$($harnessWorkbook.Name)'!ReleaseBatchSmoke.RunAuthSmoke"
     [void]$consumerExcel.Run($authMacro, $consumerWorkbook.Name, [string]$ready.url)
+    $diagnosticsMacro = "'$($harnessWorkbook.Name)'!ReleaseBatchSmoke.RunDiagnosticsSmoke"
+    [void]$consumerExcel.Run($diagnosticsMacro, $consumerWorkbook.Name, [string]$ready.url)
     $cookieMacro = "'$($harnessWorkbook.Name)'!ReleaseBatchSmoke.RunCookieSmoke"
     [void]$consumerExcel.Run($cookieMacro, $consumerWorkbook.Name, [string]$ready.url)
     $redirectSecurityMacro = "'$($harnessWorkbook.Name)'!ReleaseBatchSmoke.RunRedirectSecuritySmoke"

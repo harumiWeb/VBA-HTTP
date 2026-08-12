@@ -34,3 +34,17 @@ Public Function RedactHeaderValue(ByVal Name As String, ByVal value As String) A
         RedactHeaderValue = value
     End If
 End Function
+
+Public Function RedactedHeaders(ByVal Headers As HttpHeaders) As HttpHeaders
+    Dim output As New HttpHeaders
+    Dim index As Long
+
+    If Headers Is Nothing Then
+        Set RedactedHeaders = output
+        Exit Function
+    End If
+    For index = 1 To Headers.Count
+        output.Add Headers.NameAt(index), RedactHeaderValue(Headers.NameAt(index), Headers.ValueAt(index))
+    Next index
+    Set RedactedHeaders = output
+End Function

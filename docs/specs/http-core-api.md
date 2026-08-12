@@ -49,6 +49,12 @@ redirects on the execution snapshot so a credential-bearing header is never
 forwarded implicitly. `auth-policy.md` defines the explicit loopback-only
 insecure opt-in, secret redaction, and the no-challenge-replay boundary.
 
+`HttpClient.Diagnostics` accepts an opt-in `HttpDiagnostics` collector created
+by `VBAHttp.CreateDiagnostics`. It records bounded top-level operation events
+with query-free targets, stable error categories, and redacted sensitive
+headers; bodies and localized error descriptions are excluded. The schema and
+retention contract are defined by `diagnostics-policy.md`.
+
 `HttpClient.BaseUrl` resolves a relative request URL. An absolute request URL is used as-is. Base and relative URL joining must not discard path segments accidentally and is covered by URL unit tests before network transports are enabled.
 
 `HttpClient.DefaultHeaders` are copied into an execution request. Request headers override the same case-insensitive default name. Execution snapshots isolate in-flight behavior from later mutations of the client or original request.

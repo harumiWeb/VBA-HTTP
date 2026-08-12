@@ -448,6 +448,7 @@ OSが提供するmodern WinHTTP capabilityとcorporate environment対応を安�
 - [~] Basic／Bearerのpreemptive authenticationを実装する（COM/native、HTTPS default、loopback opt-in、redirect suppressionまで完了。Windows integrated／Digest／proxy credentialsはchallenge-replay ADRへ分離）。
 - [x] `IHttpAuthProvider` を実装する（execution snapshotでcloneし、401／407の自動replayは行わない）。
 - [x] credential／secret redaction helperを実装し、sensitive headerがdiagnosticsへ出ないunit gateを追加する。
+- [x] `HttpDiagnostics` のbounded structured event schemaをADR-0019／`docs/specs/diagnostics-policy.md`で確定し、HttpClientとrelease consumer smokeへ統合する。
 - [~] OS version／Office bitness compatibility matrixを作成する（protocol host evidenceと32-bit実測は未完了）。
 
 ### Exit Criteria
@@ -455,7 +456,7 @@ OSが提供するmodern WinHTTP capabilityとcorporate environment対応を安�
 - [~] HTTP/1.1、HTTP/2、対応環境のHTTP/3を識別できる（HTTP/1.1 fallbackとrequested-mask contractは検証済み、TLS/QUIC実測は未完了）。
 - [x] unsupported環境のfallback／errorがspec通りである。
 - [x] HTTP forwarding proxyのlocal integration testsがCOM/nativeで成功する（proxy authentication/HTTPS CONNECTは後続auth sliceの対象）。
-- [~] secretがdiagnosticsやbenchmark outputへ出ない（sensitive header redaction helperとloopback非反射テストは完了、diagnostics／benchmark serializer統合は後続hardening）。
+- [x] secretがdiagnosticsやbenchmark outputへ出ない（diagnostics serializerはquery／user-info／body／descriptionを除外し、sensitive headerを常時redactする。benchmark serializerは既存契約を維持する）。
 - [x] release artifactでprotocol／auth consumer smoke testが成功する（protocol fallbackとBasic／Bearer auth smoke）。
 
 ---
@@ -560,7 +561,7 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 - [x] protocol fallback policy（ADR-0009、`docs/specs/protocol-policy.md`）
 - [x] response decompression ownership、fallback／required、streaming length contract（ADR-0010、`docs/specs/decompression-policy.md`）
 - [~] OS compatibility evidence（matrixを追加、TLS/HTTP2/3と32-bit実測は未完了）
-- [~] diagnostics schemaとsecret redaction（sensitive header redaction helperの契約はADR-0013で確定、schema serializerは後続hardening）。
+- [x] diagnostics schemaとsecret redaction（ADR-0019／`docs/specs/diagnostics-policy.md`、unit、client、release smokeで検証済み）。
 - [x] development-only componentへのproduction依存禁止
 - [x] development workbook、release workbook、source distributionの責務
 

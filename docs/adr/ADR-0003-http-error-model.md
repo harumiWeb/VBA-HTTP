@@ -20,6 +20,9 @@ VBA has no native exception type hierarchy, so the library also needs a stable e
 - A raised library error uses `HttpErrors` for stable number, category, source, and description mapping. Backend-native codes may be retained as diagnostics but are not the primary public error number.
 - Single-request APIs raise transport failures. Future batch APIs capture each failure as an item result so one failed request does not abort unrelated items.
 - Secrets, credentials, and sensitive header values must not appear in public error descriptions.
+- Structured operation evidence uses the opt-in `HttpDiagnostics` collector;
+  its redaction and retention contract is defined by ADR-0019 rather than by
+  localized `Err.Description` text.
 
 ## Consequences
 
@@ -27,7 +30,7 @@ VBA has no native exception type hierarchy, so the library also needs a stable e
 - Retry policy can classify transport failure independently from HTTP status.
 - Consumers must call `RaiseForStatus` when exception-style status handling is desired.
 - Stable error numbers require additive evolution; existing meanings cannot be reassigned.
-- VBA's global `Err` object remains the throw mechanism, so structured diagnostics beyond number/category/source require explicit library helpers or future result objects.
+- VBA's global `Err` object remains the throw mechanism, so structured diagnostics beyond number/category/source require the explicit `HttpDiagnostics` helper defined by ADR-0019.
 
 ## Rationale
 
@@ -37,7 +40,7 @@ VBA has no native exception type hierarchy, so the library also needs a stable e
 
 ## Supersedes
 
-- None
+- `ADR-0019-structured-diagnostics-boundary.md` (structured diagnostics and redaction)
 
 ## Superseded by
 

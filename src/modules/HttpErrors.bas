@@ -81,6 +81,35 @@ Public Function NumberFromCategory(ByVal category As HttpErrorCategory) As Long
     End Select
 End Function
 
+Public Function CategoryName(ByVal category As HttpErrorCategory) As String
+    Select Case category
+    Case HttpErrorNone
+        CategoryName = "none"
+    Case HttpErrorValidation
+        CategoryName = "validation"
+    Case HttpErrorInvalidUrl
+        CategoryName = "invalid_url"
+    Case HttpErrorDns
+        CategoryName = "dns"
+    Case HttpErrorConnection
+        CategoryName = "connection"
+    Case HttpErrorTls
+        CategoryName = "tls"
+    Case HttpErrorTimeout
+        CategoryName = "timeout"
+    Case HttpErrorCancelled
+        CategoryName = "cancelled"
+    Case HttpErrorProtocol
+        CategoryName = "protocol"
+    Case HttpErrorIo
+        CategoryName = "io"
+    Case HttpErrorStatus
+        CategoryName = "status"
+    Case Else
+        CategoryName = "unknown"
+    End Select
+End Function
+
 Public Sub RaiseTransport(ByVal category As HttpErrorCategory, ByVal Source As String, ByVal Description As String)
     Select Case category
     Case HttpErrorInvalidUrl, HttpErrorDns, HttpErrorConnection, HttpErrorTls, HttpErrorTimeout, HttpErrorCancelled, HttpErrorProtocol, HttpErrorIo

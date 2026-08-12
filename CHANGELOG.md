@@ -1,11 +1,16 @@
 ## Unreleased
 
+- Added opt-in structured `HttpDiagnostics` operation events with bounded
+  retention, query/user-info target sanitization, stable error categories, and
+  automatic sensitive-header redaction. Release consumer smoke verifies that
+  authorization, cookie, and query sentinels never appear in the JSON output.
+
 - Added a fail-closed release manifest security gate and deterministic report:
   canonical base/output paths, VBE/atomic-publication evidence, exact
   included/excluded component policy, development-only source boundaries, and
-  checksum verification are checked before release smoke. Certificate-negative
-  fixtures, HTTP/2/HTTP/3 TLS evidence, and integrated auth remain explicitly
-  deferred.
+  checksum verification are checked before release smoke. HTTP/2/HTTP/3 TLS
+  negotiation evidence and integrated/proxy challenge authentication remain
+  explicitly deferred.
 
 - Added a Phase 9 cancellation/timeout stress gate with repeated COM active
   cancellation and request-deadline scenarios, native streaming download

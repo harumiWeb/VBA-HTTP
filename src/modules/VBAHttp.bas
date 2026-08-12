@@ -57,6 +57,11 @@ Public Function CreateCookieJar() As HttpCookieJar
     Set CreateCookieJar = New HttpCookieJar
 End Function
 
+''' Creates an opt-in structured diagnostics collector for referenced-workbook consumers.
+Public Function CreateDiagnostics() As HttpDiagnostics
+    Set CreateDiagnostics = New HttpDiagnostics
+End Function
+
 Public Function CreateBasicAuthProvider(ByVal Username As String, ByVal Password As String, Optional ByVal AllowInsecureHttp As Boolean = False) As IHttpAuthProvider
     Dim provider As New HttpBasicAuthProvider
 
