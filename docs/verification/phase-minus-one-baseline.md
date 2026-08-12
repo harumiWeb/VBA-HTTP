@@ -15,6 +15,8 @@ Recorded: 2026-08-12
 - `tools/Check-Format.ps1`: 11 checked files clean; the single documented `XlflowAssert.bas` formatter exception remains
 - Source was pushed to the managed development workbook and the saved workbook is not older than source.
 - `xlflow test --json`: 3 passed, 0 failed, 0 skipped, 0 todo
+- A separate `git clone --no-local` of commit `a69cd89` resolved the tracked workbook and passed `task verify` without using the original worktree's ignored build or xlflow state.
+- Fresh-clone issues found and fixed during this proof: absent empty source roots and Git line-ending conversion.
 
 ## Release build proof
 

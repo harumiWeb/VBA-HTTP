@@ -136,7 +136,7 @@ fresh cloneから同じ開発・test・release buildを再現できるclean base
 - [x] `build/Release/**`、一時staging、generated manifestは通常の開発差分へ混入しないignore規則を定義する。
 - [x] VBA sourceを編集の正本、開発用xlsmを同期・実行対象とする規約をspec化する。
 - [x] VBEでのproduction VBA直接編集を禁止し、例外時のpull／reconcile手順を文書化する。
-- [ ] fresh cloneで `xlflow status --json` が設定済みworkbookを解決できることを確認する。
+- [x] fresh cloneで `xlflow status --json` が設定済みworkbookを解決できることを確認する。
 - [x] sourceと追跡workbookの初期差分を解消する。
 
 ### Clean xlflow baseline
@@ -145,7 +145,7 @@ fresh cloneから同じ開発・test・release buildを再現できるclean base
 - [ ] 現在format checkで報告されるscaffold 7ファイルを正規化する。
 - [x] `XlflowDebug` の既存analyzer finding 5件を、修正または根拠付き局所抑制で解消する。
 - [x] `XlflowUI` のunused inline suppression warningを解消する。
-- [ ] lint、analyze、format check、testのclean baseline結果を記録する。
+- [x] lint、analyze、format check、testのclean baseline結果を記録する。
 - [ ] analyzer／lintのproject-wide suppressionは、個別対応が不可能な場合だけADRまたはspecへ根拠を残して追加する。
 
 ### Test and benchmark conventions
@@ -184,8 +184,8 @@ fresh cloneから同じ開発・test・release buildを再現できるclean base
 
 ### Exit Criteria
 
-- [ ] fresh cloneで追跡workbookを使って `xlflow test --json` を実行できる。
-- [ ] lint、analyze、format checkがcleanである。
+- [x] fresh cloneで追跡workbookを使って `xlflow test --json` を実行できる。
+- [x] lint、analyze、format checkがcleanである。
 - [x] sample testとTODO testが残っていない。
 - [x] sourceと開発用workbookに意図しない差分がない。
 - [x] build dry-runが意図したproduction componentだけをincludeする。
