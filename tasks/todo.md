@@ -445,9 +445,9 @@ OSが提供するmodern WinHTTP capabilityとcorporate environment対応を安�
 - [x] unsupported option、plain HTTP、required mismatchのfallback／`HttpErrorProtocol`を実装する。
 - [x] gzip／deflate decompressionをADR-0010と`docs/specs/decompression-policy.md`で確定し、native WinHTTP option 118、COM拒否、loopback／release smokeを実装する。
 - [x] OS default、no-proxy、manual HTTP proxyをADR-0012と`docs/specs/proxy-policy.md`で確定し、COM/native transportとloopback fixtureで検証する。
-- [ ] Basic、Bearer、Windows authenticationを実装する。
-- [ ] `IHttpAuthProvider` を実装する。
-- [ ] credential／secret redactionを実装する。
+- [~] Basic／Bearerのpreemptive authenticationを実装する（COM/native、HTTPS default、loopback opt-in、redirect suppressionまで完了。Windows integrated／Digest／proxy credentialsはchallenge-replay ADRへ分離）。
+- [x] `IHttpAuthProvider` を実装する（execution snapshotでcloneし、401／407の自動replayは行わない）。
+- [x] credential／secret redaction helperを実装し、sensitive headerがdiagnosticsへ出ないunit gateを追加する。
 - [~] OS version／Office bitness compatibility matrixを作成する（protocol host evidenceと32-bit実測は未完了）。
 
 ### Exit Criteria
@@ -455,8 +455,8 @@ OSが提供するmodern WinHTTP capabilityとcorporate environment対応を安�
 - [~] HTTP/1.1、HTTP/2、対応環境のHTTP/3を識別できる（HTTP/1.1 fallbackとrequested-mask contractは検証済み、TLS/QUIC実測は未完了）。
 - [x] unsupported環境のfallback／errorがspec通りである。
 - [x] HTTP forwarding proxyのlocal integration testsがCOM/nativeで成功する（proxy authentication/HTTPS CONNECTは後続auth sliceの対象）。
-- [ ] secretがdiagnosticsやbenchmark outputへ出ない。
-- [~] release artifactでprotocol／auth consumer smoke testが成功する（protocol fallback smokeは追加、authは未実装）。
+- [~] secretがdiagnosticsやbenchmark outputへ出ない（sensitive header redaction helperとloopback非反射テストは完了、diagnostics／benchmark serializer統合は後続hardening）。
+- [x] release artifactでprotocol／auth consumer smoke testが成功する（protocol fallbackとBasic／Bearer auth smoke）。
 
 ---
 
@@ -551,7 +551,7 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 - [x] dual transportとtransport selection policy
 - [x] public `HttpClient` の同期、batch、download、upload API（Phase 1〜7で実装済み）
 - [x] `IHttpTransport` と `IHttpProgressSink` の契約（auth providerとは分離）
-- [ ] `IHttpAuthProvider` の契約（Phase 8で確定する）。
+- [x] `IHttpAuthProvider` の契約（ADR-0013／`docs/specs/auth-policy.md`で確定）。
 - [x] buffered／streaming request・response bodyのownership（buffered bodyはPhase 1、downloadはADR-0007、uploadはADR-0008/specで確定）
 - [x] error分類とVBA error／result objectの境界
 - [ ] retry、deadline、redirect、cancellationの優先順位
@@ -559,7 +559,7 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 - [x] protocol fallback policy（ADR-0009、`docs/specs/protocol-policy.md`）
 - [x] response decompression ownership、fallback／required、streaming length contract（ADR-0010、`docs/specs/decompression-policy.md`）
 - [~] OS compatibility evidence（matrixを追加、TLS/HTTP2/3と32-bit実測は未完了）
-- [ ] diagnostics schemaとsecret redaction
+- [~] diagnostics schemaとsecret redaction（sensitive header redaction helperの契約はADR-0013で確定、schema serializerは後続hardening）。
 - [x] development-only componentへのproduction依存禁止
 - [x] development workbook、release workbook、source distributionの責務
 

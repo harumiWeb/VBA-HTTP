@@ -247,6 +247,58 @@ func TestHeadersAndEcho(t *testing.T) {
 	}
 }
 
+func TestAuthEndpointsVerifyWithoutReflectingCredentials(t *testing.T) {
+	server := httptest.NewServer(newTestServer().routes())
+	defer server.Close()
+
+	cases := []struct {
+		name       string
+		path       string
+		credential string
+		challenge  string
+	}{
+		{name: "basic", path: "/auth/basic", credential: basicAuthValue, challenge: `Basic realm="vba-http-test", charset="UTF-8"`},
+		{name: "bearer", path: "/auth/bearer", credential: bearerAuthValue, challenge: `Bearer realm="vba-http-test", error="invalid_token"`},
+	}
+	for _, test := range cases {
+		t.Run(test.name, func(t *testing.T) {
+			missing := get(t, server.URL+test.path)
+			missingBody, err := io.ReadAll(missing.Body)
+			missing.Body.Close()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if missing.StatusCode != http.StatusUnauthorized || missing.Header.Get("WWW-Authenticate") != test.challenge {
+				t.Fatalf("missing auth response = %d %q", missing.StatusCode, missing.Header.Get("WWW-Authenticate"))
+			}
+			if bytes.Contains(missingBody, []byte(test.credential)) {
+				t.Fatal("challenge body reflected the credential")
+			}
+
+			request, err := http.NewRequest(http.MethodGet, server.URL+test.path, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			request.Header.Set("Authorization", test.credential)
+			response, err := http.DefaultClient.Do(request)
+			if err != nil {
+				t.Fatal(err)
+			}
+			body, err := io.ReadAll(response.Body)
+			response.Body.Close()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if response.StatusCode != http.StatusNoContent || response.Header.Get("X-Auth-Verified") != "1" {
+				t.Fatalf("valid auth response = %d %q", response.StatusCode, response.Header.Get("X-Auth-Verified"))
+			}
+			if bytes.Contains(body, []byte(test.credential)) {
+				t.Fatal("success body reflected the credential")
+			}
+		})
+	}
+}
+
 func TestUploadHashAndChallenge(t *testing.T) {
 	server := httptest.NewServer(newTestServer().routes())
 	defer server.Close()

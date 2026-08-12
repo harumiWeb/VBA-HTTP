@@ -1,5 +1,11 @@
 ## Unreleased
 
+- Added snapshot-safe preemptive Basic/Bearer authentication providers for COM
+  and native requests, deterministic loopback auth endpoints, redirect
+  suppression, secret-header redaction helpers, and release consumer auth smoke.
+  Windows integrated/Digest authentication, proxy credentials, and challenge
+  replay remain explicitly deferred.
+
 - Added shared default, direct, and manual HTTP proxy routing via
   `HttpProxyOptions` for COM and native transports, with deterministic loopback
   forwarding tests. Proxy credentials and CONNECT authentication remain

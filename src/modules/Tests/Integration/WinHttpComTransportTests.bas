@@ -82,6 +82,46 @@ Public Sub Test_ComTransport_AppliesRedirectPolicy()
 End Sub
 
 '@Tag("integration")
+Public Sub Test_ComTransport_BasicAndBearerAuth()
+    Dim client As New HttpClient
+    Dim provider As IHttpAuthProvider
+    Dim response As HttpResponse
+
+    client.BaseUrl = RequireBaseUrl()
+    Set provider = VBAHttp.CreateBasicAuthProvider("user", "pass", True)
+    Set client.AuthProvider = provider
+    Set response = client.GetResponse("/auth/basic")
+    XlflowAssert.AssertEquals 204, response.StatusCode
+    XlflowAssert.AssertEquals "1", response.Headers.GetValue("X-Auth-Verified")
+
+    Set provider = VBAHttp.CreateBasicAuthProvider("user", "wrong", True)
+    Set client.AuthProvider = provider
+    Set response = client.GetResponse("/auth/basic")
+    XlflowAssert.AssertEquals 401, response.StatusCode
+
+    Set provider = VBAHttp.CreateBearerAuthProvider("vba-http-token", True)
+    Set client.AuthProvider = provider
+    Set response = client.GetResponse("/auth/bearer")
+    XlflowAssert.AssertEquals 204, response.StatusCode
+    XlflowAssert.AssertEquals "1", response.Headers.GetValue("X-Auth-Verified")
+End Sub
+
+'@Tag("integration")
+Public Sub Test_ComTransport_AuthProviderDisablesRedirects()
+    Dim client As New HttpClient
+    Dim provider As IHttpAuthProvider
+    Dim response As HttpResponse
+
+    client.BaseUrl = RequireBaseUrl()
+    Set provider = VBAHttp.CreateBasicAuthProvider("user", "pass", True)
+    Set client.AuthProvider = provider
+    Set response = client.GetResponse("/redirect/1")
+
+    XlflowAssert.AssertEquals 302, response.StatusCode
+    XlflowAssert.AssertEquals "/redirect/0", response.Headers.GetValue("Location")
+End Sub
+
+'@Tag("integration")
 Public Sub Test_ComTransport_ReturnsHttpFailureStatus()
     Dim client As New HttpClient
     Dim response As HttpResponse

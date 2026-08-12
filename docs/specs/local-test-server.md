@@ -31,6 +31,8 @@
 | `GET /stream/{size}` | Returns the same pattern with periodic flushes and no declared length. |
 | `GET /sha256/{size}` | Returns the expected SHA-256 digest and byte count for the generated pattern. |
 | `GET /headers` | Returns method, path, query, and request headers as JSON. |
+| `GET /auth/basic` | Verifies the fixed test-only Basic credential and returns 204 plus `X-Auth-Verified: 1`; missing or wrong credentials return 401 with a deterministic challenge and never reflect the value. |
+| `GET /auth/bearer` | Verifies the fixed test-only Bearer token and returns 204 plus `X-Auth-Verified: 1`; missing or wrong credentials return 401 with a deterministic challenge and never reflect the value. |
 | `POST /echo` | Streams the request body back with its content type. |
 | `GET /redirect/{count}` | Returns 302 toward the next lower count and 200 at zero. |
 | `GET /flaky/{failCount}` | Returns 503 for the first N attempts and 200 afterward. |

@@ -61,6 +61,19 @@ Public Sub Test_Request_CloneCopiesProxyOptions()
     XlflowAssert.AssertNotSame options, copy.ProxyOptions
 End Sub
 
+Public Sub Test_Request_CloneCopiesAuthProvider()
+    Dim Request As New HttpRequest
+    Dim provider As IHttpAuthProvider
+    Dim copy As HttpRequest
+
+    Set provider = VBAHttp.CreateBearerAuthProvider("token", True)
+    Set Request.AuthProvider = provider
+    Set copy = Request.Clone()
+
+    XlflowAssert.AssertIsNotNothing copy.AuthProvider
+    XlflowAssert.AssertNotSame provider, copy.AuthProvider
+End Sub
+
 '@ExpectedError(-2147200503, "Maximum redirects must be between 1 and 100.", "HttpRequest.MaxRedirects")
 Public Sub Test_Request_RejectsZeroRedirectLimit()
     Dim Request As New HttpRequest

@@ -21,6 +21,10 @@ library.
 - `HttpRequest.FollowRedirects` defaults to `True` and
   `HttpRequest.MaxRedirects` defaults to 10. The transport applies both WinHTTP
   options before sending. Automatic HTTPS-to-HTTP redirects remain disabled.
+- The execution snapshot may contain a preemptive Basic or Bearer
+  `IHttpAuthProvider`; the client has already materialized its `Authorization`
+  header before `Open`/`Send`. Such snapshots always set `FollowRedirects` to
+  `False`. The COM backend does not perform 401/407 challenge replay.
 
 ## Response mapping
 

@@ -38,6 +38,17 @@ and the streaming download length contract.
 `proxy-policy.md` defines OS/default, direct, and manual routing plus the
 credential boundary.
 
+`IHttpAuthProvider` can be assigned to `HttpClient.AuthProvider` or
+`HttpRequest.AuthProvider`. The request value overrides the client default and
+the provider is cloned into the execution snapshot after default headers are
+merged. The first release provides preemptive Basic and Bearer header
+providers through `VBAHttp.CreateBasicAuthProvider` and
+`VBAHttp.CreateBearerAuthProvider`. Providers reject an existing
+`Authorization` header, require HTTPS by default, and disable automatic
+redirects on the execution snapshot so a credential-bearing header is never
+forwarded implicitly. `auth-policy.md` defines the explicit loopback-only
+insecure opt-in, secret redaction, and the no-challenge-replay boundary.
+
 `HttpClient.BaseUrl` resolves a relative request URL. An absolute request URL is used as-is. Base and relative URL joining must not discard path segments accidentally and is covered by URL unit tests before network transports are enabled.
 
 `HttpClient.DefaultHeaders` are copied into an execution request. Request headers override the same case-insensitive default name. Execution snapshots isolate in-flight behavior from later mutations of the client or original request.

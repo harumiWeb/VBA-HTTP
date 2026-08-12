@@ -116,6 +116,28 @@ Public Sub RunProxySmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As S
     End If
 End Sub
 
+Public Sub RunAuthSmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As String)
+    Dim client As Object
+    Dim provider As Object
+    Dim response As Object
+
+    Set client = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateClient")
+    client.BaseUrl = baseUrl
+    Set provider = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateBasicAuthProvider", "user", "pass", True)
+    Set client.AuthProvider = provider
+    Set response = client.GetResponse("/auth/basic")
+    If response.StatusCode <> 204 Or response.Headers.GetValue("X-Auth-Verified") <> "1" Then
+        Err.Raise vbObjectError + 751, "ReleaseBatchSmoke.RunAuthSmoke", "Release Basic authentication smoke returned an unexpected response."
+    End If
+
+    Set provider = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateBearerAuthProvider", "vba-http-token", True)
+    Set client.AuthProvider = provider
+    Set response = client.GetResponse("/auth/bearer")
+    If response.StatusCode <> 204 Or response.Headers.GetValue("X-Auth-Verified") <> "1" Then
+        Err.Raise vbObjectError + 752, "ReleaseBatchSmoke.RunAuthSmoke", "Release Bearer authentication smoke returned an unexpected response."
+    End If
+End Sub
+
 Public Sub RunUploadSmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As String, ByVal sourcePath As String)
     Dim client As Object
     Dim form As Object

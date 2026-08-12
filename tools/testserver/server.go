@@ -5,6 +5,7 @@ import (
 	"compress/flate"
 	"compress/gzip"
 	"context"
+	"crypto/subtle"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -22,6 +23,8 @@ const (
 	maximumBodySize = int64(2 * 1024 * 1024 * 1024)
 	streamChunkSize = 64 * 1024
 	compressionFixture = "VBA-HTTP compression fixture: 0123456789\n"
+	basicAuthValue    = "Basic dXNlcjpwYXNz"
+	bearerAuthValue   = "Bearer vba-http-token"
 )
 
 type testServer struct {
@@ -55,6 +58,8 @@ func (s *testServer) routes() http.Handler {
 	mux.HandleFunc("GET /compress/gzip", s.compressGzip)
 	mux.HandleFunc("GET /compress/deflate", s.compressDeflate)
 	mux.HandleFunc("GET /headers", s.headers)
+	mux.HandleFunc("GET /auth/basic", s.authBasic)
+	mux.HandleFunc("GET /auth/bearer", s.authBearer)
 	mux.HandleFunc("POST /echo", s.echo)
 	mux.HandleFunc("PUT /echo", s.echo)
 	mux.HandleFunc("PATCH /echo", s.echo)
@@ -221,6 +226,30 @@ func (s *testServer) headers(w http.ResponseWriter, r *http.Request) {
 		"path":    r.URL.Path,
 		"query":   r.URL.Query(),
 	})
+}
+
+func (s *testServer) authBasic(w http.ResponseWriter, r *http.Request) {
+	if constantTimeEqual(r.Header.Get("Authorization"), basicAuthValue) {
+		w.Header().Set("X-Auth-Verified", "1")
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	w.Header().Set("WWW-Authenticate", `Basic realm="vba-http-test", charset="UTF-8"`)
+	w.WriteHeader(http.StatusUnauthorized)
+}
+
+func (s *testServer) authBearer(w http.ResponseWriter, r *http.Request) {
+	if constantTimeEqual(r.Header.Get("Authorization"), bearerAuthValue) {
+		w.Header().Set("X-Auth-Verified", "1")
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	w.Header().Set("WWW-Authenticate", `Bearer realm="vba-http-test", error="invalid_token"`)
+	w.WriteHeader(http.StatusUnauthorized)
+}
+
+func constantTimeEqual(actual, expected string) bool {
+	return subtle.ConstantTimeCompare([]byte(actual), []byte(expected)) == 1
 }
 
 func (s *testServer) echo(w http.ResponseWriter, r *http.Request) {

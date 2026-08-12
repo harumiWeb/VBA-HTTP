@@ -18,6 +18,7 @@ Private mReliabilityRuntime As IHttpReliabilityRuntime
 Private mProtocolOptions As New HttpProtocolOptions
 Private mDecompressionOptions As New HttpDecompressionOptions
 Private mProxyOptions As New HttpProxyOptions
+Private mAuthProvider As IHttpAuthProvider
 
 Public Property Get BaseUrl() As String
     BaseUrl = mBaseUrl
@@ -89,6 +90,22 @@ Public Property Set ProxyOptions(ByVal value As HttpProxyOptions)
     Else
         value.Validate
         Set mProxyOptions = value.Clone()
+    End If
+End Property
+
+Public Property Get AuthProvider() As IHttpAuthProvider
+    Set AuthProvider = mAuthProvider
+End Property
+
+Public Property Set AuthProvider(ByVal value As IHttpAuthProvider)
+    Dim copy As IHttpAuthProvider
+
+    If value Is Nothing Then
+        Set mAuthProvider = Nothing
+    Else
+        Set copy = value.Clone()
+        If copy Is Nothing Then HttpErrors.RaiseValidation "HttpClient.AuthProvider", "Auth provider Clone returned Nothing."
+        Set mAuthProvider = copy
     End If
 End Property
 
@@ -358,6 +375,11 @@ Private Function PrepareRequest(ByVal Request As HttpRequest) As HttpRequest
     If snapshot.ProxyOptions Is Nothing Then Set snapshot.ProxyOptions = mProxyOptions
     ApplyQuery snapshot
     ApplyDefaultHeaders snapshot
+    If snapshot.AuthProvider Is Nothing Then Set snapshot.AuthProvider = mAuthProvider
+    If Not snapshot.AuthProvider Is Nothing Then
+        snapshot.AuthProvider.Apply snapshot
+        snapshot.FollowRedirects = False
+    End If
     Set PrepareRequest = snapshot
 End Function
 

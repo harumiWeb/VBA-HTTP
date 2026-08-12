@@ -20,5 +20,6 @@
 - `protocol-policy.md`: native HTTP/2／HTTP/3 opt-in、fallback／required behavior、transport boundary、compatibility evidence
 - `decompression-policy.md`: native gzip／deflate response decoding, header ownership, fallback, and streaming length contract
 - `proxy-policy.md`: OS/default, direct, and manual proxy routing, validation, and transport mapping
+- `auth-policy.md`: preemptive Basic/Bearer providers, TLS/redirect boundary, redaction, and deferred challenge authentication
 - `release-checksum.md`: deterministic SHA-256 sidecar generation, validation, and atomic evidence publication
 - `compatibility-matrix.md`: observed Windows/Office/protocol evidence and promotion requirements

@@ -25,3 +25,8 @@ Public Sub Test_Factory_CreatesReliabilityConfigurationObjects()
     XlflowAssert.AssertIsNotNothing VBAHttp.CreateDecompressionOptions()
     XlflowAssert.AssertIsNotNothing VBAHttp.CreateProxyOptions()
 End Sub
+
+Public Sub Test_Factory_CreatesAuthenticationProviders()
+    XlflowAssert.AssertIsNotNothing VBAHttp.CreateBasicAuthProvider("user", "pass")
+    XlflowAssert.AssertIsNotNothing VBAHttp.CreateBearerAuthProvider("token", True)
+End Sub

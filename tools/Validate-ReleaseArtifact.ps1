@@ -217,6 +217,8 @@ try {
     [void]$consumerExcel.Run($decompressionMacro, $consumerWorkbook.Name, [string]$ready.url)
     $proxyMacro = "'$($harnessWorkbook.Name)'!ReleaseBatchSmoke.RunProxySmoke"
     [void]$consumerExcel.Run($proxyMacro, $consumerWorkbook.Name, [string]$ready.proxy_target_url, [string]$ready.proxy_url)
+    $authMacro = "'$($harnessWorkbook.Name)'!ReleaseBatchSmoke.RunAuthSmoke"
+    [void]$consumerExcel.Run($authMacro, $consumerWorkbook.Name, [string]$ready.url)
     $uploadMacro = "'$($harnessWorkbook.Name)'!ReleaseBatchSmoke.RunUploadSmoke"
     [void]$consumerExcel.Run($uploadMacro, $consumerWorkbook.Name, [string]$ready.url, $uploadPath)
 }
@@ -264,4 +266,4 @@ finally {
     }
 }
 
-Write-Output "Release artifact is valid: $($actualComponents.Count) components; external COM/native GET, protocol fallback, decompression, proxy, download, batch, retry, deadline, file-upload, and multipart-upload smoke passed."
+Write-Output "Release artifact is valid: $($actualComponents.Count) components; external COM/native GET, protocol fallback, decompression, proxy, authentication, download, batch, retry, deadline, file-upload, and multipart-upload smoke passed."

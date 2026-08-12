@@ -70,6 +70,12 @@ source-stability failure raises through `HttpErrors`, closes native handles,
 and leaves the source file untouched. Bytes already accepted by a remote server
 cannot be rolled back.
 
+An `IHttpAuthProvider` may add a preemptive Basic or Bearer header to the
+execution snapshot, but it does not create a challenge callback or replay
+contract. The provider therefore also disables automatic redirects. Windows
+integrated authentication, proxy credentials, and replayable streaming sources
+remain separate future capabilities.
+
 ## Verification
 
 - Unit tests cover result/status/auth-challenge semantics, multipart boundary

@@ -52,6 +52,20 @@ Public Function CreateProxyOptions() As HttpProxyOptions
     Set CreateProxyOptions = New HttpProxyOptions
 End Function
 
+Public Function CreateBasicAuthProvider(ByVal Username As String, ByVal Password As String, Optional ByVal AllowInsecureHttp As Boolean = False) As IHttpAuthProvider
+    Dim provider As New HttpBasicAuthProvider
+
+    provider.Initialize Username, Password, AllowInsecureHttp
+    Set CreateBasicAuthProvider = provider
+End Function
+
+Public Function CreateBearerAuthProvider(ByVal Token As String, Optional ByVal AllowInsecureHttp As Boolean = False) As IHttpAuthProvider
+    Dim provider As New HttpBearerAuthProvider
+
+    provider.Initialize Token, AllowInsecureHttp
+    Set CreateBearerAuthProvider = provider
+End Function
+
 ''' Creates an ordered multipart form for referenced-workbook consumers.
 Public Function CreateMultipartForm() As HttpMultipartForm
     Set CreateMultipartForm = New HttpMultipartForm

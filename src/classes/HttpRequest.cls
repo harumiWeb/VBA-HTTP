@@ -20,6 +20,7 @@ Private mMaxRedirects As Long
 Private mProtocolOptions As HttpProtocolOptions
 Private mDecompressionOptions As HttpDecompressionOptions
 Private mProxyOptions As HttpProxyOptions
+Private mAuthProvider As IHttpAuthProvider
 
 Public Property Get Method() As String
     Method = mMethod
@@ -148,6 +149,22 @@ Public Property Set ProxyOptions(ByVal value As HttpProxyOptions)
     End If
 End Property
 
+Public Property Get AuthProvider() As IHttpAuthProvider
+    Set AuthProvider = mAuthProvider
+End Property
+
+Public Property Set AuthProvider(ByVal value As IHttpAuthProvider)
+    Dim copy As IHttpAuthProvider
+
+    If value Is Nothing Then
+        Set mAuthProvider = Nothing
+    Else
+        Set copy = value.Clone()
+        If copy Is Nothing Then HttpErrors.RaiseValidation "HttpRequest.AuthProvider", "Auth provider Clone returned Nothing."
+        Set mAuthProvider = copy
+    End If
+End Property
+
 Public Function Clone() As HttpRequest
     Dim copy As New HttpRequest
 
@@ -162,6 +179,7 @@ Public Function Clone() As HttpRequest
     If Not mProtocolOptions Is Nothing Then Set copy.ProtocolOptions = mProtocolOptions
     If Not mDecompressionOptions Is Nothing Then Set copy.DecompressionOptions = mDecompressionOptions
     If Not mProxyOptions Is Nothing Then Set copy.ProxyOptions = mProxyOptions
+    If Not mAuthProvider Is Nothing Then Set copy.AuthProvider = mAuthProvider
     Set Clone = copy
 End Function
 

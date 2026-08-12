@@ -116,6 +116,25 @@ Proxy credentials and HTTPS CONNECT authentication are deliberately handled by
 the later authentication policy. See
 [`docs/specs/proxy-policy.md`](docs/specs/proxy-policy.md).
 
+Preemptive Basic and Bearer authentication is available through immutable
+provider snapshots. Credentials require HTTPS unless an explicit insecure
+opt-in is used for a controlled loopback test; providers reject conflicting
+`Authorization` headers and disable automatic redirects:
+
+```vb
+Dim auth As IHttpAuthProvider
+
+Set auth = VBAHttp.CreateBearerAuthProvider("opaque-token")
+Set client.AuthProvider = auth
+Set response = client.GetResponse("https://example.com/protected")
+```
+
+`VBAHttp.CreateBasicAuthProvider` uses UTF-8 RFC 7617 encoding. 401/407
+responses are returned normally and are never replayed automatically. Windows
+integrated authentication, proxy credentials, and OAuth flows are outside the
+current provider contract; see
+[`docs/specs/auth-policy.md`](docs/specs/auth-policy.md).
+
 The native transport uses synchronous WinHTTP calls, OS certificate validation, and deterministic handle cleanup. Buffered native requests still reject active cancellation and total-deadline options because a blocking call cannot observe them; streaming downloads support cooperative cancellation and total-deadline checkpoints between bounded reads.
 
 For a large file, use the native client and let the library publish only after the temporary file is complete:
@@ -168,7 +187,7 @@ Set response = client.PostResponse("https://example.com/jobs", Nothing, options)
 
 `Retry-After` delta-seconds and HTTP-date are supported. Cancellation has priority over the total deadline, which includes every attempt and retry wait.
 
-Use `VBAHttp.CreateClient()` when referencing the distributed workbook from another VBA project because VBA class modules are `PublicNotCreatable`. `CreateRetryPolicy`, `CreateExecutionOptions`, `CreateBatchOptions`, and `CreateCancellationToken` expose the same configuration objects across that boundary. Source-vendored consumers may use `New`. The default transport can still be replaced through `HttpClient.Transport` for tests or custom backends.
+Use `VBAHttp.CreateClient()` when referencing the distributed workbook from another VBA project because VBA class modules are `PublicNotCreatable`. `CreateRetryPolicy`, `CreateExecutionOptions`, `CreateBatchOptions`, `CreateCancellationToken`, and the protocol/decompression/proxy/authentication factories expose the same configuration objects across that boundary. Source-vendored consumers may use `New`. The default transport can still be replaced through `HttpClient.Transport` for tests or custom backends.
 
 ## Contributor verification
 

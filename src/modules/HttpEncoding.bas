@@ -1,6 +1,7 @@
 Attribute VB_Name = "HttpEncoding"
 Option Explicit
 
+Private Const Base64Alphabet As String = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 Private Const UnicodeBmpMax As Long = 65535
 Private Const UnicodeSupplementaryBase As Long = 65536
 Private Const Utf16HighSurrogateMin As Long = 55296
@@ -81,6 +82,51 @@ Public Function EncodeUtf8(ByVal value As String) As Variant
 
     ReDim Preserve output(0 To byteCount - 1)
     EncodeUtf8 = output
+End Function
+
+Public Function EncodeBase64(ByVal value As Variant) As String
+    Dim index As Long
+    Dim upperBound As Long
+    Dim firstByte As Long
+    Dim secondByte As Long
+    Dim thirdByte As Long
+    Dim byteCount As Long
+    Dim result As String
+
+    If Not HasByteArray(value) Then Exit Function
+    index = LBound(value) ' xlflow:disable-line VBA227
+    upperBound = UBound(value) ' xlflow:disable-line VBA227
+    Do While index <= upperBound ' xlflow:disable-line VBA227
+        firstByte = CLng(value(index)) ' xlflow:disable-line VBA227
+        index = index + 1
+        byteCount = 1
+        secondByte = 0
+        thirdByte = 0
+        If index <= upperBound Then
+            secondByte = CLng(value(index)) ' xlflow:disable-line VBA227
+            index = index + 1
+            byteCount = 2
+        End If
+        If index <= upperBound Then
+            thirdByte = CLng(value(index)) ' xlflow:disable-line VBA227
+            index = index + 1
+            byteCount = 3
+        End If
+
+        result = result & Base64Character(firstByte \ 4)
+        result = result & Base64Character(((firstByte And 3) * 16) Or (secondByte \ 16))
+        If byteCount >= 2 Then
+            result = result & Base64Character(((secondByte And 15) * 4) Or (thirdByte \ 64))
+        Else
+            result = result & "="
+        End If
+        If byteCount = 3 Then
+            result = result & Base64Character(thirdByte And 63)
+        Else
+            result = result & "="
+        End If
+    Loop
+    EncodeBase64 = result
 End Function
 
 Public Function DecodeUtf8(ByVal bytes As Variant) As String
@@ -254,4 +300,8 @@ Private Function IsUnreservedByte(ByVal value As Long) As Boolean
         (value >= 97 And value <= 122) Or _
         (value >= 48 And value <= 57) Or _
         value = 45 Or value = 46 Or value = 95 Or value = 126
+End Function
+
+Private Function Base64Character(ByVal index As Long) As String
+    Base64Character = Mid$(Base64Alphabet, index + 1, 1)
 End Function
