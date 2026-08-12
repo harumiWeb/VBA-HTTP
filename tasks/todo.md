@@ -443,7 +443,7 @@ OSが提供するmodern WinHTTP capabilityとcorporate environment対応を安�
 - [x] native HTTP/2 opt-inと`HttpResponse.ProtocolUsed`によるnegotiated protocol取得を実装する。
 - [~] HTTP/3 opt-inのWinHTTP flagとvalidationを実装する（TLS/QUIC host evidenceはcompatibility matrix待ち）。
 - [x] unsupported option、plain HTTP、required mismatchのfallback／`HttpErrorProtocol`を実装する。
-- [ ] gzip／deflate decompressionを実装する。
+- [x] gzip／deflate decompressionをADR-0010と`docs/specs/decompression-policy.md`で確定し、native WinHTTP option 118、COM拒否、loopback／release smokeを実装する。
 - [ ] OS default proxyとmanual proxyを実装する。
 - [ ] Basic、Bearer、Windows authenticationを実装する。
 - [ ] `IHttpAuthProvider` を実装する。
@@ -557,6 +557,7 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 - [ ] retry、deadline、redirect、cancellationの優先順位
 - [x] native handle lifecycleとnative callback禁止
 - [x] protocol fallback policy（ADR-0009、`docs/specs/protocol-policy.md`）
+- [x] response decompression ownership、fallback／required、streaming length contract（ADR-0010、`docs/specs/decompression-policy.md`）
 - [~] OS compatibility evidence（matrixを追加、TLS/HTTP2/3と32-bit実測は未完了）
 - [ ] diagnostics schemaとsecret redaction
 - [x] development-only componentへのproduction依存禁止

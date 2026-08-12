@@ -115,6 +115,24 @@ Public Sub Test_Client_PropagatesDefaultProtocolOptionsToSnapshot()
     XlflowAssert.AssertNotSame options, transport.LastRequest.ProtocolOptions
 End Sub
 
+Public Sub Test_Client_PropagatesDefaultDecompressionOptionsToSnapshot()
+    Dim client As New HttpClient
+    Dim transport As New MockHttpTransport
+    Dim configuredResponse As New HttpResponse
+    Dim options As New HttpDecompressionOptions
+
+    configuredResponse.Initialize 204
+    transport.SetResponse configuredResponse
+    Set client.Transport = transport
+    options.AllowGzip = True
+    Set client.DecompressionOptions = options
+
+    Call client.GetResponse("https://example.test/items")
+
+    XlflowAssert.AssertTrue transport.LastRequest.DecompressionOptions.AllowGzip
+    XlflowAssert.AssertNotSame options, transport.LastRequest.DecompressionOptions
+End Sub
+
 '@ExpectedError(-2147200502, "URL must contain a host.", "HttpClient.Execute")
 Public Sub Test_Client_RejectsAbsoluteUrlWithoutHost()
     Dim client As New HttpClient
@@ -147,5 +165,15 @@ Public Sub Test_Client_ComTransportRejectsAdvancedProtocolOptions()
 
     options.AllowHttp2 = True
     Set client.ProtocolOptions = options
+    Call client.GetResponse("https://example.test/")
+End Sub
+
+'@ExpectedError(-2147200503, "Response decompression options require the native WinHTTP transport.", "WinHttpComTransport.Execute")
+Public Sub Test_Client_ComTransportRejectsDecompressionOptions()
+    Dim client As New HttpClient
+    Dim options As New HttpDecompressionOptions
+
+    options.AllowGzip = True
+    Set client.DecompressionOptions = options
     Call client.GetResponse("https://example.test/")
 End Sub

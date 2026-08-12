@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"compress/flate"
+	"compress/gzip"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -91,6 +93,48 @@ func TestSHA256DescribesGeneratedPayload(t *testing.T) {
 	}
 	if payload.Algorithm != "sha256" || payload.Bytes != 200_000 || payload.Digest != patternHash(200_000) {
 		t.Fatalf("unexpected hash payload: %#v", payload)
+	}
+}
+
+func TestCompressedEndpointsUseDeterministicWireEncoding(t *testing.T) {
+	server := httptest.NewServer(newTestServer().routes())
+	defer server.Close()
+
+	client := &http.Client{Transport: &http.Transport{DisableCompression: true}}
+	for _, test := range []struct {
+		path     string
+		encoding string
+		open     func(io.Reader) (io.ReadCloser, error)
+	}{
+		{path: "/compress/gzip", encoding: "gzip", open: func(reader io.Reader) (io.ReadCloser, error) { return gzip.NewReader(reader) }},
+		{path: "/compress/deflate", encoding: "deflate", open: func(reader io.Reader) (io.ReadCloser, error) { return flate.NewReader(reader), nil }},
+	} {
+		t.Run(test.encoding, func(t *testing.T) {
+			response, err := client.Get(server.URL + test.path)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer response.Body.Close()
+			wire, err := io.ReadAll(response.Body)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if response.StatusCode != http.StatusOK || response.Header.Get("Content-Encoding") != test.encoding || response.Header.Get("Vary") != "Accept-Encoding" {
+				t.Fatalf("status/headers = %d %q %q", response.StatusCode, response.Header.Get("Content-Encoding"), response.Header.Get("Vary"))
+			}
+			decoded, err := test.open(bytes.NewReader(wire))
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer decoded.Close()
+			body, err := io.ReadAll(decoded)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if string(body) != compressionFixture {
+				t.Fatalf("decoded body = %q, want %q", body, compressionFixture)
+			}
+		})
 	}
 }
 

@@ -33,6 +33,19 @@ Public Sub Test_Request_CloneCopiesProtocolOptions()
     XlflowAssert.AssertNotSame options, copy.ProtocolOptions
 End Sub
 
+Public Sub Test_Request_CloneCopiesDecompressionOptions()
+    Dim Request As New HttpRequest
+    Dim options As New HttpDecompressionOptions
+    Dim copy As HttpRequest
+
+    options.AllowGzip = True
+    Set Request.DecompressionOptions = options
+    Set copy = Request.Clone()
+
+    XlflowAssert.AssertTrue copy.DecompressionOptions.AllowGzip
+    XlflowAssert.AssertNotSame options, copy.DecompressionOptions
+End Sub
+
 '@ExpectedError(-2147200503, "Maximum redirects must be between 1 and 100.", "HttpRequest.MaxRedirects")
 Public Sub Test_Request_RejectsZeroRedirectLimit()
     Dim Request As New HttpRequest

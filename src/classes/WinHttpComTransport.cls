@@ -47,6 +47,7 @@ Private Function ExecuteCore(ByVal Request As HttpRequest) As HttpResponse
         HttpErrors.RaiseValidation TransportSource, "Request cannot be Nothing."
     End If
     ValidateProtocolOptions Request
+    ValidateDecompressionOptions Request
 
     Set backend = CreateObject("WinHttp.WinHttpRequest.5.1")
     backend.SetTimeouts Request.Timeouts.ResolveMilliseconds, Request.Timeouts.ConnectMilliseconds, Request.Timeouts.SendMilliseconds, Request.Timeouts.ReceiveMilliseconds
@@ -92,6 +93,7 @@ Private Function ExecuteAttemptCore(ByVal Request As HttpRequest, ByVal Options 
     If Request Is Nothing Then HttpErrors.RaiseValidation TransportSource, "Request cannot be Nothing."
     If Options Is Nothing Then HttpErrors.RaiseValidation TransportSource, "Attempt options cannot be Nothing."
     ValidateProtocolOptions Request
+    ValidateDecompressionOptions Request
     If AttemptCancellationRequested(Options) Then Err.Raise HttpErrCancelled, TransportSource, "HTTP operation was cancelled."
 
     Set operation = CreateAsyncOperation(Request, 1, Options.DeadlineMilliseconds)
@@ -423,6 +425,7 @@ Private Function CreateAsyncOperation(ByVal Request As HttpRequest, ByVal itemIn
 
     On Error GoTo TransportFailure
     ValidateProtocolOptions Request
+    ValidateDecompressionOptions Request
     Set backend = CreateObject("WinHttp.WinHttpRequest.5.1")
     backend.SetTimeouts Request.Timeouts.ResolveMilliseconds, Request.Timeouts.ConnectMilliseconds, Request.Timeouts.SendMilliseconds, Request.Timeouts.ReceiveMilliseconds
     backend.Option(WinHttpOptionEnableRedirects) = Request.FollowRedirects
@@ -450,6 +453,15 @@ Private Sub ValidateProtocolOptions(ByVal Request As HttpRequest)
     Request.ProtocolOptions.Validate
     If Request.ProtocolOptions.HasOverride Then
         HttpErrors.RaiseValidation TransportSource, "HTTP/2 and HTTP/3 protocol options require the native WinHTTP transport."
+    End If
+End Sub
+
+Private Sub ValidateDecompressionOptions(ByVal Request As HttpRequest)
+    If Request Is Nothing Then Exit Sub
+    If Request.DecompressionOptions Is Nothing Then Exit Sub
+    Request.DecompressionOptions.Validate
+    If Request.DecompressionOptions.HasOverride Then
+        HttpErrors.RaiseValidation TransportSource, "Response decompression options require the native WinHTTP transport."
     End If
 End Sub
 

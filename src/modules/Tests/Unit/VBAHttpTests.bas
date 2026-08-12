@@ -22,4 +22,5 @@ Public Sub Test_Factory_CreatesReliabilityConfigurationObjects()
     XlflowAssert.AssertIsNotNothing VBAHttp.CreateBatchOptions()
     XlflowAssert.AssertIsNotNothing VBAHttp.CreateCancellationToken()
     XlflowAssert.AssertIsNotNothing VBAHttp.CreateProtocolOptions()
+    XlflowAssert.AssertIsNotNothing VBAHttp.CreateDecompressionOptions()
 End Sub

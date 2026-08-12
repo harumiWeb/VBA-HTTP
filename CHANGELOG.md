@@ -2,6 +2,9 @@
 
 ### Added
 
+- Added native `HttpDecompressionOptions` for bounded WinHTTP gzip/deflate
+  response decoding, deterministic fallback/required behavior, COM validation,
+  loopback integration coverage, and release-consumer decompression smoke.
 - Added native `HttpProtocolOptions` with HTTP/2/HTTP/3 opt-in, explicit fallback or required mode, negotiated-protocol reporting, COM-backend validation, and release-consumer protocol smoke coverage.
 - Added native constant-memory `HttpClient.UploadFile` and `UploadMultipart` APIs with deterministic content lengths, bounded `WinHttpWriteData` chunks, UTF-8 multipart fields, progress/cancellation checkpoints, source-preserving failure semantics, and authentication-challenge reporting.
 - Added deterministic loopback upload endpoints, file/multipart integration coverage, a 1 GiB upload stress harness, and release-consumer upload smoke coverage.

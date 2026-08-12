@@ -42,6 +42,11 @@ Public Function CreateProtocolOptions() As HttpProtocolOptions
     Set CreateProtocolOptions = New HttpProtocolOptions
 End Function
 
+''' Creates native response decompression options for consumers.
+Public Function CreateDecompressionOptions() As HttpDecompressionOptions
+    Set CreateDecompressionOptions = New HttpDecompressionOptions
+End Function
+
 ''' Creates an ordered multipart form for referenced-workbook consumers.
 Public Function CreateMultipartForm() As HttpMultipartForm
     Set CreateMultipartForm = New HttpMultipartForm

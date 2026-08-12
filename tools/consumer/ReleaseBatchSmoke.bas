@@ -70,6 +70,23 @@ Public Sub RunProtocolSmoke(ByVal releaseWorkbookName As String, ByVal baseUrl A
     End If
 End Sub
 
+Public Sub RunDecompressionSmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As String)
+    Dim client As Object
+    Dim options As Object
+    Dim response As Object
+
+    Set client = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateNativeClient")
+    Set options = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateDecompressionOptions")
+    options.AllowGzip = True
+    Set client.DecompressionOptions = options
+    client.BaseUrl = baseUrl
+
+    Set response = client.GetResponse("/compress/gzip")
+    If response.StatusCode <> 200 Or response.Text <> "VBA-HTTP compression fixture: 0123456789" & vbLf Then
+        Err.Raise vbObjectError + 748, "ReleaseBatchSmoke.RunDecompressionSmoke", "Release decompression smoke returned an unexpected response."
+    End If
+End Sub
+
 Public Sub RunUploadSmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As String, ByVal sourcePath As String)
     Dim client As Object
     Dim form As Object

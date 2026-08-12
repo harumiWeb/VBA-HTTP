@@ -16,7 +16,8 @@ For every request the transport performs this sequence on the VBA thread:
    path (fragments are not sent);
 2. open a WinHTTP session using the default OS proxy configuration;
 3. connect to the host and open a request handle;
-4. apply timeout and redirect options and the optional native protocol policy;
+4. apply timeout and redirect options, the optional native protocol policy,
+   and optional response decompression;
 5. add validated request headers, then send the buffered or streaming body with
    its exact byte count;
 6. receive the response, query status and raw CRLF headers, and read all body
@@ -65,6 +66,13 @@ evidence.
   otherwise the response reports the negotiated legacy protocol as `HTTP/1.1`.
 - Advanced protocol flags are applied only to HTTPS URLs. The default has no
   override, and plain HTTP fallback remains HTTP/1.1.
+- `HttpDecompressionOptions` applies WinHTTP option 118 before headers/body are
+  sent. Native WinHTTP owns `Accept-Encoding` and returns decoded gzip/deflate
+  bytes; a caller-supplied `Accept-Encoding` with an active override is
+  rejected. Allow-fallback skips invalid-option capability misses, while
+  required mode raises `HttpErrorProtocol`. The COM transport rejects active
+  decompression options. Streaming downloads report unknown content length
+  while decoding is active because wire length may not equal bytes written.
 
 ## Resource regression gate
 

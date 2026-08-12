@@ -37,3 +37,14 @@ Public Enum HttpProtocolMode
     HttpProtocolAllowFallback = 0
     HttpProtocolRequired = 1
 End Enum
+
+Public Enum HttpDecompressionFlag
+    HttpDecompressionGzip = 1
+    HttpDecompressionDeflate = 2
+    HttpDecompressionAll = 3
+End Enum
+
+Public Enum HttpDecompressionMode
+    HttpDecompressionAllowFallback = 0
+    HttpDecompressionRequired = 1
+End Enum

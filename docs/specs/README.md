@@ -18,4 +18,5 @@
 - `streaming-download.md`: native constant-memory download、atomic publication、progress、cancellation、cleanup contract
 - `streaming-upload.md`: native constant-memory file／multipart upload、source ownership、progress、cancellation、challenge contract
 - `protocol-policy.md`: native HTTP/2／HTTP/3 opt-in、fallback／required behavior、transport boundary、compatibility evidence
+- `decompression-policy.md`: native gzip／deflate response decoding, header ownership, fallback, and streaming length contract
 - `compatibility-matrix.md`: observed Windows/Office/protocol evidence and promotion requirements

@@ -4,7 +4,7 @@ VBA-HTTP is a Windows Excel/VBA HTTP client designed for deterministic testing, 
 
 ## Development status
 
-Phase 6 adds constant-memory downloads and Phase 7 adds file/multipart uploads on the synchronous native WinHTTP backend. Phase 8 adds an explicit native-only HTTP/2/HTTP/3 negotiation policy with deterministic fallback. The default remains the late-bound `WinHttp.WinHttpRequest.5.1` transport; the native backend provides pointer-safe handles, negotiated protocol reporting, and bounded file streaming without a WinHTTP type-library reference.
+Phase 6 adds constant-memory downloads and Phase 7 adds file/multipart uploads on the synchronous native WinHTTP backend. Phase 8 adds explicit native-only HTTP/2/HTTP/3 negotiation and gzip/deflate response decompression policies with deterministic fallback. The default remains the late-bound `WinHttp.WinHttpRequest.5.1` transport; the native backend provides pointer-safe handles, negotiated protocol reporting, bounded file streaming, and OS-owned response decoding without a WinHTTP type-library reference.
 
 ```vb
 Dim client As HttpClient
@@ -78,6 +78,24 @@ stable `HttpErrorProtocol` category. The COM transport rejects advanced
 protocol flags because its late-bound option surface has no HTTP/2/HTTP/3
 control. See [`docs/specs/protocol-policy.md`](docs/specs/protocol-policy.md)
 for the compatibility and evidence rules.
+
+Response decompression is also native-only. Select gzip/deflate explicitly; the
+default leaves response bytes and `Accept-Encoding` unchanged:
+
+```vb
+Dim decompression As HttpDecompressionOptions
+
+Set decompression = VBAHttp.CreateDecompressionOptions()
+decompression.AllowGzip = True
+decompression.Mode = HttpDecompressionAllowFallback
+Set nativeClient.DecompressionOptions = decompression
+Set nativeResponse = nativeClient.GetResponse("https://example.com/api")
+Debug.Print nativeResponse.Text  ' decoded identity text
+```
+
+The COM backend rejects an active decompression option. See
+[`docs/specs/decompression-policy.md`](docs/specs/decompression-policy.md) for
+the `Accept-Encoding`, fallback, and streaming length contract.
 
 The native transport uses synchronous WinHTTP calls, OS certificate validation, and deterministic handle cleanup. Buffered native requests still reject active cancellation and total-deadline options because a blocking call cannot observe them; streaming downloads support cooperative cancellation and total-deadline checkpoints between bounded reads.
 

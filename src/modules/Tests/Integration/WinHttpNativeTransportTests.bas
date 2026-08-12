@@ -65,6 +65,91 @@ Public Sub Test_NativeTransport_RequiredProtocolRejectsPlainHttp()
 End Sub
 
 '@Tag("integration")
+Public Sub Test_NativeTransport_DecompressesGzipResponse()
+    Dim client As New HttpClient
+    Dim options As New HttpDecompressionOptions
+    Dim response As HttpResponse
+
+    client.BaseUrl = RequireBaseUrl()
+    options.AllowGzip = True
+    Set client.DecompressionOptions = options
+    Set client.Transport = New WinHttpNativeTransport
+
+    Set response = client.GetResponse("/compress/gzip")
+
+    XlflowAssert.AssertEquals 200, response.StatusCode
+    XlflowAssert.AssertEquals CompressionFixtureText(), response.Text
+End Sub
+
+'@Tag("integration")
+Public Sub Test_NativeTransport_DecompressesDeflateResponse()
+    Dim client As New HttpClient
+    Dim options As New HttpDecompressionOptions
+    Dim response As HttpResponse
+
+    client.BaseUrl = RequireBaseUrl()
+    options.AllowDeflate = True
+    Set client.DecompressionOptions = options
+    Set client.Transport = New WinHttpNativeTransport
+
+    Set response = client.GetResponse("/compress/deflate")
+
+    XlflowAssert.AssertEquals 200, response.StatusCode
+    XlflowAssert.AssertEquals CompressionFixtureText(), response.Text
+End Sub
+
+'@Tag("integration")
+'@ExpectedError(-2147200503, "Accept-Encoding cannot be supplied when response decompression is enabled.")
+Public Sub Test_NativeTransport_RejectsConflictingAcceptEncoding()
+    Dim client As New HttpClient
+    Dim options As New HttpDecompressionOptions
+
+    client.BaseUrl = RequireBaseUrl()
+    options.AllowGzip = True
+    Set client.DecompressionOptions = options
+    client.DefaultHeaders.SetValue "Accept-Encoding", "identity"
+    Set client.Transport = New WinHttpNativeTransport
+
+    Call client.GetResponse("/compress/gzip")
+End Sub
+
+'@Tag("integration")
+Public Sub Test_NativeTransport_DownloadsDecompressedResponseWithUnknownLength()
+    Dim client As New HttpClient
+    Dim options As New HttpExecutionOptions
+    Dim decompression As New HttpDecompressionOptions
+    Dim result As HttpDownloadResult
+    Dim destination As String
+    Dim errorNumber As Long
+    Dim errorSource As String
+    Dim errorDescription As String
+
+    destination = NewDownloadDestination("compressed")
+    On Error GoTo Cleanup
+    decompression.AllowGzip = True
+    Set client.DecompressionOptions = decompression
+    client.BaseUrl = RequireBaseUrl()
+    Set client.Transport = New WinHttpNativeTransport
+    Set result = client.DownloadFile("/compress/gzip", destination, options)
+
+    XlflowAssert.AssertTrue result.Published
+    XlflowAssert.AssertFalse result.ContentLengthKnown
+    XlflowAssert.AssertEquals - 1, result.ContentLength
+    XlflowAssert.AssertEquals CCur(Len(CompressionFixtureText())), result.BytesWritten
+    XlflowAssert.AssertEquals Len(CompressionFixtureText()), FileLen(destination)
+    DeleteDownloadFile destination
+    Exit Sub
+
+Cleanup:
+    errorNumber = Err.Number
+    errorSource = Err.Source
+    errorDescription = Err.Description
+    Err.Clear
+    DeleteDownloadFile destination
+    Err.Raise errorNumber, errorSource, errorDescription
+End Sub
+
+'@Tag("integration")
 Public Sub Test_NativeTransport_SendsBufferedMethods()
     AssertTextEcho "POST"
     AssertTextEcho "PUT"
@@ -554,6 +639,10 @@ Private Function RequireBaseUrl() As String
         XlflowAssert.AssertInconclusive "VBA_HTTP_TEST_BASE_URL is not set; run task test:integration."
         Exit Function
     End If
+End Function
+
+Private Function CompressionFixtureText() As String
+    CompressionFixtureText = "VBA-HTTP compression fixture: 0123456789" & vbLf
 End Function
 
 Private Function CaptureDownloadError(ByVal client As HttpClient, ByVal Url As String, ByVal DestinationPath As String, ByVal Options As HttpExecutionOptions, ByVal Progress As IHttpProgressSink, ByRef errorSource As String) As Long

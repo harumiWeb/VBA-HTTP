@@ -60,8 +60,8 @@ try {
     }
     $result = $testJson | Out-String | ConvertFrom-Json
     $tests = @($result.tests)
-    if ($result.status -ne "ok" -or $tests.Count -ne 45 -or @($tests | Where-Object status -ne "passed").Count -ne 0) {
-        throw "Integration suite did not return forty-five passing tests."
+    if ($result.status -ne "ok" -or $tests.Count -ne 49 -or @($tests | Where-Object status -ne "passed").Count -ne 0) {
+        throw "Integration suite did not return forty-nine passing tests."
     }
 }
 finally {

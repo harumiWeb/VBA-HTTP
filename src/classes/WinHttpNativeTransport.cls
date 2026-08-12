@@ -177,7 +177,15 @@ Private Function DownloadCore(ByVal Request As HttpRequest, ByVal DestinationPat
     If Not WinHttpNativeApi.ReceiveResponse(nativeRequest.Value) Then RaiseNativeFailure "ReceiveResponse", DownloadSource
     ReadResponseMetadata nativeRequest, statusCode, reasonPhrase, responseHeaders, protocolUsed, DownloadSource
 
-    contentLengthKnown = TryParseContentLength(responseHeaders, contentLength)
+    If TryParseContentLength(responseHeaders, contentLength) Then
+        contentLengthKnown = True
+    Else
+        contentLengthKnown = False
+    End If
+    If HasActiveDecompression(Request) Then
+        contentLengthKnown = False
+        contentLength = -1
+    End If
     If Not contentLengthKnown Then contentLength = -1
     Set result = New HttpDownloadResult
     result.Initialize statusCode, reasonPhrase, responseHeaders, protocolUsed, destination, contentLength, contentLengthKnown, HttpTiming.ElapsedMilliseconds(started, HttpTiming.CounterValue())
@@ -395,6 +403,7 @@ Private Sub ApplyRequestOptions(ByVal nativeRequest As WinHttpRequestHandle, ByV
     If Not WinHttpNativeApi.SetOptionLong(nativeRequest.Value, WinHttpNativeApi.WinHttpOptionRedirectPolicy, redirectFlag) Then RaiseNativeFailure "SetRedirects", Source
     If Not WinHttpNativeApi.SetOptionLong(nativeRequest.Value, WinHttpNativeApi.WinHttpOptionMaxAutomaticRedirects, Request.MaxRedirects) Then RaiseNativeFailure "SetMaxRedirects", Source
     ApplyProtocolOptions nativeRequest, Request.Url, Request.ProtocolOptions, Source
+    ApplyDecompressionOptions nativeRequest, Request.Headers, Request.DecompressionOptions, Source
 End Sub
 
 Private Sub ApplyProtocolOptions(ByVal nativeRequest As WinHttpRequestHandle, ByVal Url As String, ByVal Options As HttpProtocolOptions, ByVal Source As String)
@@ -425,6 +434,28 @@ Private Sub ApplyProtocolOptions(ByVal nativeRequest As WinHttpRequestHandle, By
             End If
             RaiseNativeFailure "RequireHttpProtocol", Source
         End If
+    End If
+End Sub
+
+Private Sub ApplyDecompressionOptions(ByVal nativeRequest As WinHttpRequestHandle, ByVal Headers As HttpHeaders, ByVal Options As HttpDecompressionOptions, ByVal Source As String)
+    Dim errorCode As Long
+
+    If Len(Source) = 0 Then Source = TransportSource
+    If Options Is Nothing Then Exit Sub
+    Options.Validate
+    If Not Options.HasOverride Then Exit Sub
+    If Not Headers Is Nothing Then
+        If Headers.Contains("Accept-Encoding") Then
+            HttpErrors.RaiseValidation Source, "Accept-Encoding cannot be supplied when response decompression is enabled."
+        End If
+    End If
+    If Not WinHttpNativeApi.SetOptionLong(nativeRequest.Value, WinHttpNativeApi.WinHttpOptionDecompression, Options.EnabledEncodings) Then
+        errorCode = WinHttpNativeApi.LastErrorCode()
+        If Options.Mode = HttpDecompressionAllowFallback And errorCode = WinHttpNativeApi.WinHttpErrorInvalidOption Then Exit Sub
+        If Options.Mode = HttpDecompressionRequired And errorCode = WinHttpNativeApi.WinHttpErrorInvalidOption Then
+            HttpErrors.RaiseTransport HttpErrorProtocol, Source, "Response decompression is not supported by this WinHTTP runtime."
+        End If
+        RaiseNativeFailure "SetDecompression", Source
     End If
 End Sub
 
@@ -604,6 +635,12 @@ Private Function ProgressTotal(ByVal contentLength As Currency, ByVal contentLen
     Else
         ProgressTotal = -1
     End If
+End Function
+
+Private Function HasActiveDecompression(ByVal Request As HttpRequest) As Boolean
+    If Request Is Nothing Then Exit Function
+    If Request.DecompressionOptions Is Nothing Then Exit Function
+    HasActiveDecompression = Request.DecompressionOptions.HasOverride
 End Function
 
 Private Function AddByteCount(ByVal currentValue As Currency, ByVal increment As Long) As Currency

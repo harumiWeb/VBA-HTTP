@@ -1,6 +1,9 @@
 package main
 
 import (
+	"bytes"
+	"compress/flate"
+	"compress/gzip"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -18,6 +21,7 @@ import (
 const (
 	maximumBodySize = int64(2 * 1024 * 1024 * 1024)
 	streamChunkSize = 64 * 1024
+	compressionFixture = "VBA-HTTP compression fixture: 0123456789\n"
 )
 
 type testServer struct {
@@ -48,6 +52,8 @@ func (s *testServer) routes() http.Handler {
 	mux.HandleFunc("GET /bytes/{size}", s.bytes)
 	mux.HandleFunc("GET /stream/{size}", s.stream)
 	mux.HandleFunc("GET /sha256/{size}", s.sha256)
+	mux.HandleFunc("GET /compress/gzip", s.compressGzip)
+	mux.HandleFunc("GET /compress/deflate", s.compressDeflate)
 	mux.HandleFunc("GET /headers", s.headers)
 	mux.HandleFunc("POST /echo", s.echo)
 	mux.HandleFunc("PUT /echo", s.echo)
@@ -176,6 +182,36 @@ func (s *testServer) sha256(w http.ResponseWriter, r *http.Request) {
 		"bytes":     size,
 		"digest":    patternHash(size),
 	})
+}
+
+func (s *testServer) compressGzip(w http.ResponseWriter, _ *http.Request) {
+	writeCompressed(w, "gzip")
+}
+
+func (s *testServer) compressDeflate(w http.ResponseWriter, _ *http.Request) {
+	writeCompressed(w, "deflate")
+}
+
+func writeCompressed(w http.ResponseWriter, encoding string) {
+	var buffer bytes.Buffer
+	var writer io.WriteCloser
+	if encoding == "gzip" {
+		writer = gzip.NewWriter(&buffer)
+	} else {
+		writer, _ = flate.NewWriter(&buffer, flate.DefaultCompression)
+	}
+	if _, err := writer.Write([]byte(compressionFixture)); err != nil {
+		return
+	}
+	if err := writer.Close(); err != nil {
+		return
+	}
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("Content-Encoding", encoding)
+	w.Header().Set("Vary", "Accept-Encoding")
+	w.Header().Set("Content-Length", strconv.Itoa(buffer.Len()))
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(buffer.Bytes())
 }
 
 func (s *testServer) headers(w http.ResponseWriter, r *http.Request) {

@@ -28,6 +28,11 @@ native-only HTTP/2/HTTP/3 opt-in; its default has no override. The complete
 fallback, required-mode, and compatibility contract is in
 `protocol-policy.md`.
 
+`HttpDecompressionOptions` can be assigned to `HttpClient` or `HttpRequest` for
+native-only gzip/deflate response decoding. Its default has no override;
+`decompression-policy.md` defines header ownership, fallback/required behavior,
+and the streaming download length contract.
+
 `HttpClient.BaseUrl` resolves a relative request URL. An absolute request URL is used as-is. Base and relative URL joining must not discard path segments accidentally and is covered by URL unit tests before network transports are enabled.
 
 `HttpClient.DefaultHeaders` are copied into an execution request. Request headers override the same case-insensitive default name. Execution snapshots isolate in-flight behavior from later mutations of the client or original request.

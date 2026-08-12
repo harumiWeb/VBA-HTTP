@@ -16,6 +16,7 @@ Private mExecuting As Boolean
 Private mRetryPolicy As HttpRetryPolicy
 Private mReliabilityRuntime As IHttpReliabilityRuntime
 Private mProtocolOptions As New HttpProtocolOptions
+Private mDecompressionOptions As New HttpDecompressionOptions
 
 Public Property Get BaseUrl() As String
     BaseUrl = mBaseUrl
@@ -61,6 +62,19 @@ Public Property Set ProtocolOptions(ByVal value As HttpProtocolOptions)
     Else
         value.Validate
         Set mProtocolOptions = value.Clone()
+    End If
+End Property
+
+Public Property Get DecompressionOptions() As HttpDecompressionOptions
+    Set DecompressionOptions = mDecompressionOptions
+End Property
+
+Public Property Set DecompressionOptions(ByVal value As HttpDecompressionOptions)
+    If value Is Nothing Then
+        Set mDecompressionOptions = New HttpDecompressionOptions
+    Else
+        value.Validate
+        Set mDecompressionOptions = value.Clone()
     End If
 End Property
 
@@ -326,6 +340,7 @@ Private Function PrepareRequest(ByVal Request As HttpRequest) As HttpRequest
     Set snapshot = Request.Clone()
     snapshot.Url = ResolveUrl(snapshot.Url)
     If snapshot.ProtocolOptions Is Nothing Then Set snapshot.ProtocolOptions = mProtocolOptions
+    If snapshot.DecompressionOptions Is Nothing Then Set snapshot.DecompressionOptions = mDecompressionOptions
     ApplyQuery snapshot
     ApplyDefaultHeaders snapshot
     Set PrepareRequest = snapshot

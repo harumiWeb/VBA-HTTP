@@ -11,6 +11,7 @@ the focused compile, integration, and release-consumer smoke checks.
 | Windows x64 Office, required protocol on plain HTTP | `rejection-tested` | Required-mode integration must raise `HttpErrorProtocol` before a response |
 | HTTPS HTTP/2 negotiation | `pending` | TLS fixture, Windows/WinHTTP version, Office bitness, requested mask, and `ProtocolUsed` |
 | HTTPS HTTP/3 negotiation | `pending` | QUIC-capable Windows/WinHTTP host, fixture, requested mask, and `ProtocolUsed` |
+| Native WinHTTP gzip/deflate decompression | `verified` | x64 loopback buffered/download tests and release consumer smoke; option 118 requires Windows 8.1+ |
 | Windows 32-bit Office, native declarations | `pending` | Real 32-bit compile, loopback integration, and release build evidence |
 | COM transport with advanced protocol options | `rejected-by-contract` | Public contract test must reject non-empty options without network I/O |
 
