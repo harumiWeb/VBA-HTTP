@@ -46,7 +46,8 @@ Before a release build:
 4. Run `task release:checksum` to generate the deterministic
    `VBA-HTTP.xlsm.checksum.json` sidecar for the artifact and build manifest.
 5. Verify the build manifest reports successful source application, VBE compile, save, close, and atomic publication, and verify both SHA-256 values in the sidecar.
-6. Run `task release:smoke` to inspect the actual VBA component collection and call `Main.Run` without injecting test code into the artifact.
+6. Run `task release:security` (also invoked by `task release:smoke`) to validate canonical base/output paths, component boundaries, excluded paths, and the checksum sidecar before opening Excel.
+7. Run `task release:smoke` to inspect the actual VBA component collection and call `Main.Run` without injecting test code into the artifact.
 
 Generated release artifacts and staging files are not committed. The tracked development workbook is never overwritten by a release build.
 
@@ -54,6 +55,11 @@ The checksum sidecar contract, schema, and failure behavior are defined in
 `release-checksum.md`. The sidecar is generated and replaced atomically in the
 same directory as the artifact; a stale or missing sidecar fails the external
 release smoke gate.
+
+The manifest security boundary and deterministic report are defined in
+`release-security.md`. `Validate-ReleaseArtifact.ps1` invokes that gate before
+component inspection, so direct smoke invocation cannot bypass the lexical
+source/exclusion checks.
 
 ## Documentation gates
 

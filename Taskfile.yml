@@ -94,6 +94,11 @@ tasks:
     cmds:
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-ReleaseChecksums.ps1
 
+  test:release-security:
+    desc: Verify release manifest security validation and fail-closed tamper cases
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-ReleaseSecurity.ps1
+
   testserver:run:
     desc: Start the local HTTP server on an OS-selected port
     dir: tools/testserver
@@ -167,6 +172,11 @@ tasks:
     cmds:
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Validate-ReleaseArtifact.ps1
 
+  release:security:
+    desc: Validate release manifest boundaries and write deterministic security evidence
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Validate-ReleaseSecurity.ps1 -ReportPath .xlflow/release-security/release-security.json
+
   verify:
     desc: Run source, test, and release-plan verification
     cmds:
@@ -175,6 +185,7 @@ tasks:
       - task: test:integration
       - task: testserver:test
       - task: test:release-checksum
+      - task: test:release-security
       - task: build:plan
 
   hooks:install:

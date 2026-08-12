@@ -16,6 +16,13 @@ if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) {
     throw "Release manifest does not exist: $manifestPath"
 }
 
+# Run the fail-closed manifest/source-boundary check before opening Excel or
+# executing any consumer smoke macro. The report is intentionally kept under
+# .xlflow so a routine release validation does not dirty the source worktree.
+& (Join-Path $PSScriptRoot "Validate-ReleaseSecurity.ps1") `
+    -ArtifactPath $resolvedArtifact `
+    -ReportPath (Join-Path $projectRoot ".xlflow\release-security\release-security.json")
+
 $policy = Get-Content -LiteralPath $policyPath -Raw | ConvertFrom-Json
 $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
 

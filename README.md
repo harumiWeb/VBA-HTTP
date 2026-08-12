@@ -201,6 +201,6 @@ task verify
 task release:build
 ```
 
-Tests and benchmarks use only the deterministic loopback server. Release workbooks are generated with `xlflow build` and exclude tests, benchmarks, xlflow helpers, development modules, and test-only classes.
+Tests and benchmarks use only the deterministic loopback server. Release workbooks are generated with `xlflow build` and exclude tests, benchmarks, xlflow helpers, development modules, and test-only classes. The release gate verifies the manifest base/output, VBE/atomic-publication evidence, component source boundaries, and checksum before opening Excel; see [`docs/specs/release-security.md`](docs/specs/release-security.md).
 
 Current contracts are documented in [`docs/specs/http-core-api.md`](docs/specs/http-core-api.md), [`docs/specs/native-winhttp-transport.md`](docs/specs/native-winhttp-transport.md), [`docs/specs/streaming-download.md`](docs/specs/streaming-download.md), [`docs/specs/streaming-upload.md`](docs/specs/streaming-upload.md), [`docs/specs/bounded-concurrency.md`](docs/specs/bounded-concurrency.md), and [`docs/specs/reliability-policy.md`](docs/specs/reliability-policy.md), with architectural decisions under [`docs/adr/`](docs/adr/).

@@ -477,14 +477,14 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 - [x] 10,000 sequential／scheduled request stress testsを追加する（10,000 warmup後の10,000測定区間）。
 - [x] repeated cancellation／timeout stress testsを追加する（COM active cancellation／request deadline、native download cancellationの3 scenario。`task test:cancellation-stress`で25 iteration、recovery 204、PID-scoped handle gate、destination/temp cleanupの証跡を生成済み。COM receive-timeoutの反復はabort後handle増加を検出したため、既存単発integrationを維持し別hardening課題とする）。
 - [x] process memory／native handle leak checksを自動化する（PID scoped、idle handle delta gate、memory peak evidence）。
-- [ ] security policyとthreat reviewを文書化する。
-- [ ] release manifestのincluded component一覧をsecurity reviewする。
+- [x] security policyとthreat reviewを文書化する（manifest境界、checksum、残余リスクを`docs/adr/ADR-0017-*`、`docs/specs/release-security.md`、`docs/verification/phase-nine-security-review.md`へ記録）。
+- [x] release manifestのincluded component一覧をsecurity reviewする（`task release:security`のfail-closed検査と証跡レポート）。
 
 ### Exit Criteria
 
 - [ ] known critical bugとrelease blocker bugが0件である。
 - [x] 10,000 request測定区間後にpersistent resource growthがない（x64実測、native delta <=8／COM delta <=32）。
-- [ ] redirect、credential、certificate security testsが成功する。
+- [ ] redirect、credential、certificate security testsが成功する（redirect／credentialは完了、TLS certificate-negative fixtureは残課題）。
 - [ ] release artifactのcomponent構成がreview済みである。
 
 ---

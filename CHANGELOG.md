@@ -1,5 +1,12 @@
 ## Unreleased
 
+- Added a fail-closed release manifest security gate and deterministic report:
+  canonical base/output paths, VBE/atomic-publication evidence, exact
+  included/excluded component policy, development-only source boundaries, and
+  checksum verification are checked before release smoke. Certificate-negative
+  fixtures, HTTP/2/HTTP/3 TLS evidence, integrated auth, and cookie persistence
+  remain explicitly deferred.
+
 - Added a Phase 9 cancellation/timeout stress gate with repeated COM active
   cancellation and request-deadline scenarios, native streaming download
   cancellation, recovery requests, and
