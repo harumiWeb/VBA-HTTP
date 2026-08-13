@@ -371,7 +371,7 @@ streamingとadvanced protocolの土台となる安全なNative WinHTTP transport
 
 ### Exit Criteria
 
-- [x] x64 compile evidenceがある（`benchmarks/results/office-bitness-x64.json`で143 passing／78 integration、VBE compile、consumer smokeを実証）。
+- [x] x64 compile evidenceがある（`benchmarks/results/office-bitness-x64.json`で149 passing／78 integration、VBE compile、consumer smokeを実証）。
 - [~] 32-bit Office compile evidenceを取得する（`Run-OfficeBitnessValidation.ps1 -ExpectedArchitecture X86`の実機実行待ち）。
 - [x] repeated request後にpersistent handle growthがない。
 - [x] COM transportと同じpublic response／error contractを満たす。

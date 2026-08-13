@@ -670,15 +670,25 @@ End Sub
 Private Sub ApplyQuery(ByVal Request As HttpRequest)
     Dim queryText As String
     Dim separator As String
+    Dim fragmentIndex As Long
+    Dim urlWithoutFragment As String
+    Dim fragment As String
 
     queryText = Request.Query.ToQueryString()
     If Len(queryText) = 0 Then Exit Sub
-    If InStr(1, Request.Url, "?", vbBinaryCompare) > 0 Then
+    fragmentIndex = InStr(1, Request.Url, "#", vbBinaryCompare)
+    If fragmentIndex > 0 Then
+        urlWithoutFragment = Left$(Request.Url, fragmentIndex - 1)
+        fragment = Mid$(Request.Url, fragmentIndex)
+    Else
+        urlWithoutFragment = Request.Url
+    End If
+    If InStr(1, urlWithoutFragment, "?", vbBinaryCompare) > 0 Then
         separator = "&"
     Else
         separator = "?"
     End If
-    Request.Url = Request.Url & separator & queryText
+    Request.Url = urlWithoutFragment & separator & queryText & fragment
 End Sub
 
 Private Sub ApplyDefaultHeaders(ByVal Request As HttpRequest)

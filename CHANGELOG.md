@@ -11,6 +11,8 @@
   are ignored instead of entering the jar.
 - Hardened Office bitness validation to prove ownership of a new Excel PID
   before quitting its metadata COM instance.
+- Fixed query-parameter merging so parameters are inserted before a URL
+  fragment instead of being appended after it.
 
 - Added an Excel-free native declaration ABI gate that verifies the VBA7
   `PtrSafe`/`LongPtr` and legacy `Long` WinHTTP branches, including the

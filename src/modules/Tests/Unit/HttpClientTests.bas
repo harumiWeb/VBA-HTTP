@@ -45,6 +45,23 @@ Public Sub Test_Client_MergesQueryAndOverridesDefaultHeaders()
     XlflowAssert.AssertEquals "application/json", client.DefaultHeaders.GetValue("Accept")
 End Sub
 
+Public Sub Test_Client_AppendsQueryBeforeUrlFragment()
+    Dim client As New HttpClient
+    Dim transport As New MockHttpTransport
+    Dim configuredResponse As New HttpResponse
+    Dim Request As New HttpRequest
+
+    configuredResponse.Initialize 204
+    transport.SetResponse configuredResponse
+    Set client.Transport = transport
+    Request.Url = "https://example.test/items#fragment"
+    Request.Query.Add "q", "a b"
+
+    Call client.Execute(Request)
+
+    XlflowAssert.AssertEquals "https://example.test/items?q=a%20b#fragment", transport.LastRequest.Url
+End Sub
+
 Public Sub Test_Client_ResponseIsIndependentFromMockTemplate()
     Dim client As New HttpClient
     Dim transport As New MockHttpTransport
