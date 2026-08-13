@@ -10,3 +10,10 @@
   explicit session `xlflow push --session --no-save --json`, then a separate
   `xlflow save --session --json`, and confirm the warning is gone before
   committing the development workbook.
+
+## Excel process ownership
+
+- Stress runners must snapshot and exclude pre-existing Excel PIDs and must
+  never terminate a process they did not create. A concurrent user-launched
+  Excel process is intentionally treated as an inconclusive observation; do
+  not broaden cleanup commands to `Get-Process Excel` or a name-only kill.

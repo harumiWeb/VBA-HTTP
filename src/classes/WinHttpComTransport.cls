@@ -110,7 +110,7 @@ Private Function ExecuteAttemptCore(ByVal Request As HttpRequest, ByVal Options 
     lastYield = HttpTiming.CounterValue()
     Do
         If AttemptCancellationRequested(Options) Then
-            If Not TryAbortOperation(operation, abortNumber, abortSource, abortDescription) Then Err.Raise abortNumber, abortSource, abortDescription
+            If Not TryAbortOperation(operation, abortNumber, abortSource, abortDescription, ComAbortCancellationDrainMilliseconds) Then Err.Raise abortNumber, abortSource, abortDescription
             Err.Raise HttpErrCancelled, TransportSource, "HTTP operation was cancelled."
         End If
         If operation.DeadlineExceeded(HttpTiming.CounterValue()) Then
@@ -136,7 +136,7 @@ AttemptFailed:
     errorDescription = Err.Description
     If Not operation Is Nothing Then
         If Not operation.Backend Is Nothing Then
-            If Not TryAbortOperation(operation, abortNumber, abortSource, abortDescription) Then
+            If Not TryAbortOperation(operation, abortNumber, abortSource, abortDescription, ComAbortDrainMilliseconds) Then
                 errorDescription = errorDescription & " WinHTTP abort cleanup also failed."
             End If
         End If
@@ -228,7 +228,7 @@ Private Function ExecuteManyCore(ByVal Requests As Collection, ByVal Options As 
                     HandleBatchFailure work, policy, abortNumber, abortSource, abortDescription, elapsed, runtime, completedCount
                 End If
             ElseIf Not TryPollOperation(operation, completed, errorNumber, errorSource, errorDescription) Then
-                abortSucceeded = TryAbortOperation(operation, abortNumber, abortSource, abortDescription)
+                abortSucceeded = TryAbortOperation(operation, abortNumber, abortSource, abortDescription, ComAbortDrainMilliseconds)
                 If Not abortSucceeded Then errorDescription = errorDescription & " WinHTTP abort cleanup also failed."
                 running.Remove index
                 HandleBatchFailure work, policy, errorNumber, errorSource, errorDescription, elapsed, runtime, completedCount
@@ -340,6 +340,7 @@ Private Sub CompleteOutstanding(ByVal running As Collection, ByRef workItems() A
     Dim abortNumber As Long
     Dim abortSource As String
     Dim abortDescription As String
+    Dim drainMilliseconds As Long
 
     If running Is Nothing Then
         Err.Raise HttpErrProtocol, TransportSource, "Batch scheduler lost its running-operation collection."
@@ -348,7 +349,8 @@ Private Sub CompleteOutstanding(ByVal running As Collection, ByRef workItems() A
     For index = running.Count To 1 Step - 1
         Set operation = running(index)
         Set work = workItems(operation.Index)
-        If TryAbortOperation(operation, abortNumber, abortSource, abortDescription) Then
+        If cancelled Then drainMilliseconds = ComAbortCancellationDrainMilliseconds
+        If TryAbortOperation(operation, abortNumber, abortSource, abortDescription, drainMilliseconds) Then
             If cancelled Then
                 work.CompleteCancelled
             Else
@@ -409,10 +411,10 @@ FinishFailed:
     TryFinishOperation = False
 End Function
 
-Private Function TryAbortOperation(ByVal operation As WinHttpComOperation, ByRef errorNumber As Long, ByRef errorSource As String, ByRef errorDescription As String) As Boolean
+Private Function TryAbortOperation(ByVal operation As WinHttpComOperation, ByRef errorNumber As Long, ByRef errorSource As String, ByRef errorDescription As String, Optional ByVal drainMilliseconds As Long = 0) As Boolean
     On Error GoTo AbortFailed
     operation.Backend.Abort
-    HttpTiming.Pause ComAbortCancellationDrainMilliseconds
+    If drainMilliseconds > 0 Then HttpTiming.Pause drainMilliseconds
     operation.ReleaseBackend
     TryAbortOperation = True
     Exit Function

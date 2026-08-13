@@ -27,12 +27,16 @@ host-specific allocator variation.
 ## Process evidence
 
 The runner records Excel PIDs present before each scenario and samples only new
-processes. VBA writes `start`, `done`, and waits for `release` markers. The
-runner captures process handles, working set, and private bytes before the
-measured loop, at peak, one second after completion, and after a further idle
-second. A missing marker, lost process, failed test, or exceeded idle handle
-limit fails closed. Memory values are evidence for same-host comparison, not a
-universal pass threshold.
+processes. Existing Excel processes are baseline-only and are never terminated;
+the runner does not assume ownership of an unrelated user session. VBA writes
+`start`, `done`, and waits for `release` markers. The runner captures process
+handles, working set, and private bytes before the measured loop, at peak, one
+second after completion, and at one-second intervals for up to 30 seconds while
+COM teardown settles. A missing marker, lost process, failed test, or exceeded
+idle handle limit fails closed. Memory values are evidence for same-host
+comparison, not a universal pass threshold. Do not start another Excel process
+during the gate: a concurrently launched process is intentionally treated as
+unowned and can make the PID-scoped observation inconclusive.
 
 ## Result contract
 

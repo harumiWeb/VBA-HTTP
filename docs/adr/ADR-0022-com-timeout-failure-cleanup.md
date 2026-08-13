@@ -28,9 +28,10 @@ the original transport error.
 - Apply the same best-effort cleanup when asynchronous operation creation fails;
   operation cancellation paths continue to use their existing bounded abort
   helper.
-- Do not pool or reuse a failed COM request object. A future mitigation for
-  repeated receive-timeout handle growth must be measured separately and must
-  not change request isolation or retry semantics implicitly.
+- Do not pool or reuse a failed COM request object. The canonical 25-iteration
+  loopback stress result now demonstrates stable idle handles on the current
+  x64 host; rerun the same gate on each supported Office host before
+  promotion.
 
 ## Consequences
 
@@ -41,17 +42,19 @@ the original transport error.
   x64 host.
 - Cleanup failure is observable only as a sanitized suffix; credentials, URLs,
   headers, response bodies, and raw COM descriptions remain excluded.
-- This reduces avoidable failure-path lifetime but does not claim that WinHTTP
-  or the COM wrapper has zero repeated receive-timeout growth. The dedicated
-  stress/risk gate remains required before v1.0 promotion.
+- This reduces avoidable failure-path lifetime. The dedicated stress/risk gate
+  is now passed on the current x64 host, while host-specific allocator
+  variation remains a compatibility obligation rather than a claim of a
+  universal zero-growth guarantee.
 
 ## Evidence
 
 - Code: `src/classes/WinHttpComTransport.cls`
 - Contract: `docs/specs/buffered-com-transport.md`
 - Existing mapping test: `WinHttpComTransportTests.Test_ComTransport_MapsReceiveTimeout`
-- Residual risk: `docs/security/risk-register.json` issue
-  `com-receive-timeout-abort-growth`
+- Repeated evidence: `benchmarks/results/phase9-cancellation-stress.json`
+  (`com_receive_timeout`, 25 iterations, idle handle delta within the COM
+  budget)
 
 ## Supersedes
 

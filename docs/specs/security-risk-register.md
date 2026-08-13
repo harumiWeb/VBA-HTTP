@@ -22,6 +22,8 @@ request data.
 `tools/Validate-SecurityRiskRegister.ps1` is run by `task verify` and by the
 release security validator before Excel opens. It prints a deterministic count
 summary and fails closed for missing, malformed, duplicate, or contradictory
-records. The current register intentionally keeps HTTP/2/3/32-bit evidence,
-integrated/proxy challenge authentication, and repeated COM receive-timeout
-handle growth as future-v1 work without making them current release blockers.
+records. The current register intentionally keeps HTTP/2/3/32-bit evidence and
+integrated/proxy challenge authentication as future-v1 work without making
+them current release blockers. Repeated COM receive-timeout handle growth is
+mitigated on the current x64 host by the canonical cancellation stress result;
+the same evidence must be rerun on each supported Office host.

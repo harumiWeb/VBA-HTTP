@@ -27,11 +27,13 @@ promise and must not claim stronger interruption semantics.
   Every iteration performs a loopback recovery `GET /status/204`; COM retry
   policy is explicitly limited to one attempt so retry behavior cannot hide a
   cancellation or timeout.
-- The PowerShell runner starts the deterministic local server, records only
-  Excel processes created for the scenario, waits for VBA start/done markers,
-  captures before/peak/after/idle process snapshots, opens a release marker,
-  and publishes JSON atomically. Native idle handle growth must be <=8 and COM
-  growth <=32. Memory peaks are recorded but remain host-dependent evidence.
+- The PowerShell runner starts the deterministic local server, records the
+  existing Excel PID baseline, samples only newly created processes, waits for
+  VBA start/done markers, captures before/peak/after/idle process snapshots,
+  opens a release marker, and publishes JSON atomically. Existing user Excel
+  processes are never terminated. Native idle handle growth must be <=8 and
+  COM growth <=32. Memory peaks are recorded but remain host-dependent
+  evidence; concurrent user-launched Excel is an inconclusive run condition.
 - The result is loopback-only, contains no credentials or request headers, and
   is validated against the checked-in schema. Native total-deadline interruption
   during a blocking receive and repeated `Application.OnTime` active-cancel

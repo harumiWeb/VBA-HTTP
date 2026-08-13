@@ -22,6 +22,7 @@ The current blocker assertion is separately recorded in
 | VBE compile/save/close and publication | Required manifest validation fields and `atomic_replace` | covered |
 | Caller credentials and redirect headers | Auth provider, sensitive-header redaction, and redirect suppression specs/tests | covered by existing auth/redirect gates |
 | TLS trust and certificate rejection | Self-signed loopback fixture is rejected by both COM/native transports and maps to `HttpErrorTls`; no ignore-certificate option exists | covered |
+| Repeated COM receive-timeout cleanup | ADR-0022 `Abort`/bounded drain plus canonical 25-iteration loopback stress with idle handle budget | mitigated on current x64 host |
 | HTTP/2/HTTP/3 TLS and Office bitness | Compatibility evidence is still environment-dependent (current proof is x64) | deferred |
 | Integrated/proxy challenge auth | Explicitly outside the preemptive Basic/Bearer contract and challenge replay | deferred |
 | Current release blockers | Versioned risk register and fail-closed validator | covered (0) |
@@ -46,9 +47,10 @@ without embedding host paths or secrets.
 ## Review outcome
 
 Manifest/component integrity is accepted for the current x64 release path.
-The risk register contains zero current release blockers; its three deferred
-items remain future-v1 evidence obligations and are not silently treated as
-passed compatibility.
+The risk register contains zero current release blockers; two deferred items
+remain future-v1 evidence obligations and the repeated COM timeout item is
+mitigated on the current x64 host. The mitigation is not silently treated as
+cross-bitness compatibility evidence.
 This record does not declare the broader protocol/auth compatibility matrix
 complete; HTTP/2/HTTP/3 negotiation evidence, 32-bit Office evidence, and
 integrated/proxy challenge authentication remain explicit follow-up gates. The

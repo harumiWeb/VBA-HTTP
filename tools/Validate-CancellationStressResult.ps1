@@ -23,7 +23,7 @@ if ([int]$result.parameters.iterations -lt 1 -or [int]$result.parameters.iterati
 if ([int]$result.parameters.com_cancellation_requests -ne 4 -or [int]$result.parameters.com_deadline_requests -ne 4) { throw "Cancellation result COM workload is invalid." }
 if ([int]$result.parameters.com_timeout_receive_milliseconds -ne 1000 -or [int]$result.parameters.com_timeout_delay_milliseconds -ne 10000) { throw "Cancellation result receive-timeout workload is invalid." }
 if ([int]$result.parameters.native_download_bytes -ne 65536 -or [int]$result.parameters.native_download_cancel_after_bytes -ne 65536) { throw "Cancellation result download workload is invalid." }
-if ([int]$result.parameters.idle_wait_ms -ne 1000) { throw "Cancellation result timeout/sampling parameters are invalid." }
+if ([int]$result.parameters.idle_wait_ms -ne 1000 -or [int]$result.parameters.idle_settle_max_ms -ne 30000) { throw "Cancellation result timeout/sampling parameters are invalid." }
 if ([int]$result.parameters.handle_delta_limits.native -ne 8 -or [int]$result.parameters.handle_delta_limits.com -ne 32) { throw "Cancellation result handle limits are invalid." }
 
 $scenarios = @($result.results)

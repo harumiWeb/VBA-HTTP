@@ -67,6 +67,19 @@ function Copy-Snapshot([object]$Snapshot) {
     }
 }
 
+function Wait-ScenarioExcelCleanup([int[]]$BaselineProcessIds, [string]$ScenarioName) {
+    $cleanupDeadline = [DateTime]::UtcNow.AddSeconds(30)
+    while ([DateTime]::UtcNow -lt $cleanupDeadline) {
+        $remaining = @(Get-Process -Name EXCEL -ErrorAction SilentlyContinue | Where-Object { $BaselineProcessIds -notcontains $_.Id })
+        if ($remaining.Count -eq 0) { return }
+        Start-Sleep -Milliseconds 250
+    }
+    $remainingIds = @(Get-Process -Name EXCEL -ErrorAction SilentlyContinue | Where-Object { $BaselineProcessIds -notcontains $_.Id } | ForEach-Object { $_.Id })
+    if ($remainingIds.Count -gt 0) {
+        throw "$ScenarioName left Excel test processes running after release: $($remainingIds -join ',')."
+    }
+}
+
 function Write-ReleaseMarker([string]$Path) {
     [IO.File]::WriteAllText($Path, "release`n", [Text.UTF8Encoding]::new($false))
 }
@@ -129,7 +142,10 @@ function Run-CancellationScenario([object]$Definition) {
                 if (-not $afterSnapshot.observed) { throw "$($Definition.Name) lost its Excel process before the after snapshot." }
                 $after = Copy-Snapshot $afterSnapshot
                 $idleAfter = $null
-                for ($idleAttempt = 1; $idleAttempt -le 10; $idleAttempt++) {
+                # COM may release an aborted request asynchronously after the
+                # release marker.  Keep the strict handle gate, but allow the
+                # host up to 30 seconds to settle before declaring growth.
+                for ($idleAttempt = 1; $idleAttempt -le 30; $idleAttempt++) {
                     Start-Sleep -Milliseconds 1000
                     $idleSnapshot = Get-ExcelSnapshot $baselineProcessIds
                     if (-not $idleSnapshot.observed) { throw "$($Definition.Name) lost its Excel process before the idle snapshot." }
@@ -159,9 +175,9 @@ function Run-CancellationScenario([object]$Definition) {
         $handleDelta = [long]$after.handles - [long]$before.handles
         $idleHandleDelta = [long]$idleAfter.handles - [long]$before.handles
         if ($idleHandleDelta -gt [long]$Definition.HandleDeltaLimit) {
-            throw "$($Definition.Name) persistent handle growth exceeded $($Definition.HandleDeltaLimit): $idleHandleDelta."
+            throw "$($Definition.Name) persistent handle growth exceeded $($Definition.HandleDeltaLimit): $idleHandleDelta (before handles=$($before.handles), after handles=$($after.handles), idle handles=$($idleAfter.handles), before processes=$($before.process_count), after processes=$($after.process_count), idle processes=$($idleAfter.process_count))."
         }
-        [ordered]@{
+        $scenarioResult = [ordered]@{
             scenario = $Definition.Name
             transport = $Definition.Transport
             iterations = $Iterations
@@ -176,6 +192,8 @@ function Run-CancellationScenario([object]$Definition) {
             process_after = $after
             process_idle_after = $idleAfter
         }
+        Wait-ScenarioExcelCleanup $baselineProcessIds $Definition.Name
+        $scenarioResult
     }
     finally {
         if ($null -ne $testProcess) {
@@ -271,6 +289,7 @@ try {
             native_download_bytes = 65536
             native_download_cancel_after_bytes = 65536
             idle_wait_ms = 1000
+            idle_settle_max_ms = 30000
             handle_delta_limits = [ordered]@{ native = 8; com = 32 }
         }
         results = @($scenarioResults)

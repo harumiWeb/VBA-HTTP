@@ -74,8 +74,8 @@ the transport makes a best-effort `Abort` call. The original mapped error is
 preserved if that cleanup call fails. A 250 ms bounded drain follows a
 synchronous failure and asynchronous cancellation so WinHTTP can finish
 COM-handle teardown. The drain applies only to abort paths; repeated
-receive-timeout handle stability remains a separate stress/risk gate and is not
-claimed by this contract.
+receive-timeout stability is verified by the canonical Phase 9 stress result
+on the current x64 host and must be rerun for each supported Office host.
 
 ## Scope
 
@@ -87,5 +87,6 @@ advanced protocol selection remains a later phase.
 ## Evidence
 
 - Integration suite: `src/modules/Tests/Integration/WinHttpComTransportTests.bas`
+- Repeated timeout evidence: `benchmarks/results/phase9-cancellation-stress.json`
 - Unit suite: `src/modules/Tests/Unit/HttpRequestTests.bas`
 - Loopback runner: `tools/Run-IntegrationTests.ps1`

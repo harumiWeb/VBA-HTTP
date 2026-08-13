@@ -3,7 +3,7 @@
 - Added best-effort `Abort` cleanup plus a bounded 250 ms teardown drain for
   synchronous failures and asynchronous cancellation before releasing
   `WinHttpRequest` objects. Original timeout/error mapping is preserved;
-  repeated receive-timeout handle stability remains a tracked future-v1 gate.
+  canonical x64 stress evidence now covers repeated receive-timeout cleanup.
 
 - Extended the cancellation stress gate with repeated synchronous COM
   receive-timeout cycles and a dedicated idle-handle budget.
@@ -11,8 +11,8 @@
 - Added a machine-validated Phase 9 security-risk register with an explicit
   zero-current-blocker gate, fail-closed tamper tests, and release-security
   integration. Deferred HTTP/2/HTTP/3 and 32-bit evidence, integrated/proxy
-  challenge authentication, and repeated COM receive-timeout handle growth
-  remain visible as future-v1 obligations.
+  challenge authentication remain visible as future-v1 obligations; repeated
+  COM receive-timeout growth is mitigated by the canonical x64 stress result.
 
 - Added the public API quick reference, contributor proof-loop guide, consumer
   examples, distribution/install/rollback specification, and repeatable XLSM
@@ -46,11 +46,11 @@
 
 - Added a Phase 9 cancellation/timeout stress gate with repeated COM active
   cancellation and request-deadline scenarios, native streaming download
-  cancellation, recovery requests, and
+  cancellation, repeated COM receive-timeout cycles, recovery requests, and
   PID-scoped idle handle evidence. The gate is loopback-only and excluded from
-  release workbooks. The existing single COM receive-timeout integration test
-  remains separate because repeated COM aborts currently expose handle-growth
-  behavior requiring a follow-up fix.
+  release workbooks. Existing Excel PIDs are baseline-only and are never
+  terminated; the canonical current-host result is retained as release
+  evidence.
 
 - Added deterministic loopback response-boundary coverage for UTF-8 Unicode,
   exact binary GET bodies, and malformed UTF-8 rejection across the COM and

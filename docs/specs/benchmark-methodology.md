@@ -71,13 +71,15 @@ only the idle handle delta is a hard gate. The complete result is stored at
 
 ## Phase 9 cancellation and timeout stress scenario
 
-`task test:cancellation-stress` runs the three transport-capability scenarios
+`task test:cancellation-stress` runs the four transport-capability scenarios
 defined by `cancellation-stress.md`. The default 25 iterations exercise COM
-active cancellation and request deadlines, plus native streaming download
-cancellation. The existing single COM receive-timeout integration remains the
-regression boundary. Each cycle performs a
-loopback recovery request and the runner records PID-scoped handle and memory
-snapshots. The result is atomically written to
+active cancellation, request deadlines, repeated synchronous receive timeouts,
+and native streaming download cancellation. Each cycle performs a loopback
+recovery request and the runner records PID-scoped handle and memory snapshots.
+The idle handle gate samples for up to 30 seconds so asynchronous COM teardown
+is not confused with persistent growth. Existing Excel PIDs are excluded and
+never terminated; concurrent user-launched Excel makes the observation
+inconclusive and should be avoided. The result is atomically written to
 `benchmarks/results/phase9-cancellation-stress.json` and validated by
 `benchmarks/schema/cancellation-stress-result.schema.json`. This gate does not
 claim that a native total deadline interrupts a blocking `ReceiveResponse`.

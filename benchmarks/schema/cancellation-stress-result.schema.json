@@ -29,7 +29,7 @@
     },
     "parameters": {
       "type": "object",
-      "required": ["iterations", "com_cancellation_requests", "com_deadline_requests", "com_timeout_receive_milliseconds", "com_timeout_delay_milliseconds", "native_download_bytes", "native_download_cancel_after_bytes", "idle_wait_ms", "handle_delta_limits"],
+      "required": ["iterations", "com_cancellation_requests", "com_deadline_requests", "com_timeout_receive_milliseconds", "com_timeout_delay_milliseconds", "native_download_bytes", "native_download_cancel_after_bytes", "idle_wait_ms", "idle_settle_max_ms", "handle_delta_limits"],
       "properties": {
         "iterations": { "type": "integer", "minimum": 1, "maximum": 1000 },
         "com_cancellation_requests": { "const": 4 },
@@ -39,6 +39,7 @@
         "native_download_bytes": { "const": 65536 },
         "native_download_cancel_after_bytes": { "const": 65536 },
         "idle_wait_ms": { "const": 1000 },
+        "idle_settle_max_ms": { "const": 30000 },
         "handle_delta_limits": {
           "type": "object",
           "required": ["native", "com"],
