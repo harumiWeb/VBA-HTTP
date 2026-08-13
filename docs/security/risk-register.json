@@ -10,8 +10,8 @@
       "severity": "high",
       "blocks_current_release": false,
       "blocks_v1": true,
-      "required_evidence": "Fail-closed protocol-host runner on a trusted TLS/QUIC endpoint plus real 32-bit Office compile/integration/release smoke",
-      "evidence": "docs/specs/protocol-host-validation.md; docs/specs/compatibility-matrix.md; docs/specs/office-bitness-validation.md"
+      "required_evidence": "HTTP/3 on a trusted QUIC endpoint plus real 32-bit Office compile/integration/release smoke; x64 HTTP/2 is already recorded separately",
+      "evidence": "benchmarks/results/protocol-host-http2.json; docs/specs/protocol-host-validation.md; docs/specs/compatibility-matrix.md; docs/specs/office-bitness-validation.md"
     },
     {
       "id": "integrated-proxy-challenge-auth",

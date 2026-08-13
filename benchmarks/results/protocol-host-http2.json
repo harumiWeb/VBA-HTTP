@@ -1,0 +1,48 @@
+{
+    "schema_version":  1,
+    "benchmark":  "protocol-host-validation",
+    "status":  "passed",
+    "run_utc":  "2026-08-13T05:53:40.2706301Z",
+    "source_revision":  "dcb4694a7bfe03f27d35c8c490ddeb30e053aa4a",
+    "requested_protocol":  "HTTP/2",
+    "observed_protocol":  "HTTP/2",
+    "mode":  "required",
+    "external_network":  true,
+    "target":  {
+                   "scheme":  "https",
+                   "host":  "nghttp2.org",
+                   "port":  443
+               },
+    "bridge":  {
+                   "name":  "xlflow-excel-bridge",
+                   "version":  "1.0.0",
+                   "runtime":  ".NET 8.0.30",
+                   "architecture":  "X64"
+               },
+    "office":  {
+                   "version":  "16.0",
+                   "build":  "17932",
+                   "operating_system":  "Windows (64-bit) NT 10.00"
+               },
+    "environment":  {
+                        "windows":  "Microsoft Windows NT 10.0.22631.0",
+                        "winhttp":  {
+                                        "enabled_protocol_option":  133,
+                                        "used_protocol_option":  134,
+                                        "required_protocol_option":  145,
+                                        "observed_protocol":  "HTTP/2"
+                                    }
+                    },
+    "artifact":  {
+                     "name":  "VBA-HTTP.xlsm",
+                     "sha256":  "fb2e1a1d0bfaf7a4ce35d49003564e332d643b3656f4bb680a20b802cb371228",
+                     "manifest_sha256":  "b5f53ea3a6523b5cfdf756984dcfb98d9271d574ca91a28d4a8c22807b7ec7b2"
+                 },
+    "build":  {
+                  "vbe_compile":  "passed",
+                  "source_applied":  true,
+                  "workbook_saved":  true,
+                  "workbook_closed":  true,
+                  "excel_cleanup":  "clean"
+              }
+}

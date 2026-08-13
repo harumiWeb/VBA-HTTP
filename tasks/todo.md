@@ -444,7 +444,7 @@ OSが提供するmodern WinHTTP capabilityとcorporate environment対応を安�
 - [x] native HTTP/2 opt-inと`HttpResponse.ProtocolUsed`によるnegotiated protocol取得を実装する。
 - [x] HTTP/3 opt-inのWinHTTP flagとvalidationを実装する（requested-mask、unsupported fallback、required errorをnative transportで検証済み）。
 - [x] HTTP/2／HTTP/3 negotiated-host evidenceのfail-closed収集runner、redacted schema、validatorを追加する（ADR-0025／`tools/Run-ProtocolHostValidation.ps1`）。
-- [~] HTTP/2のTLS negotiated-host evidenceを実機で取得する（trusted endpoint／対応Windows・WinHTTP host待ち）。
+- [x] HTTP/2のTLS negotiated-host evidenceをx64実機で取得する（`benchmarks/results/protocol-host-http2.json`、trusted `nghttp2.org:443`、required mode、`ProtocolUsed=HTTP/2`）。
 - [~] HTTP/3のTLS/QUIC negotiated-host evidenceを実機で取得する（対応Windows/WinHTTP hostとfixture待ち）。
 - [x] unsupported option、plain HTTP、required mismatchのfallback／`HttpErrorProtocol`を実装する。
 - [x] gzip／deflate decompressionをADR-0010と`docs/specs/decompression-policy.md`で確定し、native WinHTTP option 118、COM拒否、loopback／release smokeを実装する。
@@ -455,12 +455,12 @@ OSが提供するmodern WinHTTP capabilityとcorporate environment対応を安�
 - [x] credential／secret redaction helperを実装し、sensitive headerがdiagnosticsへ出ないunit gateを追加する。
 - [x] `HttpDiagnostics` のbounded structured event schemaをADR-0019／`docs/specs/diagnostics-policy.md`で確定し、HttpClientとrelease consumer smokeへ統合する。
 - [x] OS version／Office bitness compatibility matrixを作成する（`docs/specs/compatibility-matrix.md`）。
-- [~] matrixのprotocol host evidenceと32-bit実測を完了する（host runnerは実装済み、対応host／fixtureでの実測待ち）。
+- [~] matrixのprotocol host evidenceと32-bit実測を完了する（x64 HTTP/2は実測済み、HTTP/3とx86 Officeは実機証跡待ち）。
 
 ### Exit Criteria
 
 - [x] HTTP/1.1 fallbackとrequested-mask contractを識別できる（plain HTTP、unsupported、required mismatchを検証済み）。
-- [~] TLS上のHTTP/2と対応環境のHTTP/3 negotiated protocolを識別する（TLS/QUIC fixtureとhost evidence待ち）。
+- [~] TLS上のHTTP/2と対応環境のHTTP/3 negotiated protocolを識別する（x64 HTTP/2は`benchmarks/results/protocol-host-http2.json`で実測済み、HTTP/3はTLS/QUIC host evidence待ち）。
 - [x] unsupported環境のfallback／errorがspec通りである。
 - [x] HTTP forwarding proxyとfixed Basic proxy-challengeのlocal integration testsがCOM/nativeで成功する（HTTPS CONNECTと実Windows domain authはcompatibility gateとして継続）。
 - [x] secretがdiagnosticsやbenchmark outputへ出ない（diagnostics serializerはquery／user-info／body／descriptionを除外し、sensitive headerを常時redactする。benchmark serializerは既存契約を維持する）。
@@ -548,10 +548,10 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 
 - [x] concurrency、streaming、resource stabilityの実測証跡がある。
 - [x] 現行x64のquality gateが成功する（unit、integration、lint、analyze、format、VBE、release smokeを検証済み）。
-- [~] v1.0 promotion quality gateを完了する（32-bit／HTTP/2・HTTP/3 negotiated／host-specific challenge-auth evidenceは未完了）。
+- [~] v1.0 promotion quality gateを完了する（x64 HTTP/2は実測済み、32-bit／HTTP/3 negotiated／host-specific challenge-auth evidenceは未完了）。
 - [x] API、security、compatibility documentationが完成している（現行contract、matrix、security gate、deferred riskを文書化済み）。
 - [x] test、benchmark、xlflow支援コードを含まないproduction-only artifactを生成できる（XLSM/XLAM build・manifest・checksum・smoke済み）。
-- [~] v1.0 promotion evidenceを完了する（32-bit／HTTP/2・HTTP/3 negotiated／host-specific challenge-auth riskは未解消）。
+- [~] v1.0 promotion evidenceを完了する（x64 HTTP/2は`benchmarks/results/protocol-host-http2.json`、32-bit／HTTP/3 negotiated／host-specific challenge-auth riskは未解消）。
 - [x] build manifestからrelease構成を再現・監査できる。
 
 ---
@@ -570,7 +570,7 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 - [x] native handle lifecycleとnative callback禁止
 - [x] protocol fallback policy（ADR-0009、`docs/specs/protocol-policy.md`）
 - [x] response decompression ownership、fallback／required、streaming length contract（ADR-0010、`docs/specs/decompression-policy.md`）
-- [~] OS compatibility evidence（matrixを追加、TLS/HTTP2/3と32-bit実測は未完了）
+- [~] OS compatibility evidence（x64 HTTP/2 host evidenceを追加、HTTP/3と32-bit実測は未完了）
 - [x] diagnostics schemaとsecret redaction（ADR-0019／`docs/specs/diagnostics-policy.md`、unit、client、release smokeで検証済み）。
 - [x] development-only componentへのproduction依存禁止
 - [x] development workbook、release workbook、source distributionの責務

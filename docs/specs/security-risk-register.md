@@ -22,13 +22,13 @@ request data.
 `tools/Validate-SecurityRiskRegister.ps1` is run by `task verify` and by the
 release security validator before Excel opens. It prints a deterministic count
 summary and fails closed for missing, malformed, duplicate, or contradictory
-records. The current register intentionally keeps HTTP/2/3/32-bit evidence and
-host-specific integrated/proxy challenge authentication as future-v1 work
-without making them current release blockers. The bounded loopback challenge
-contract is covered by ADR-0023; domain/CONNECT fixtures remain deferred.
-The protocol-host runner provides the required evidence workflow, but no
-passing record is present until a trusted TLS/QUIC host and each Office
-bitness produce exact negotiated-protocol results.
+records. The current register intentionally keeps HTTP/3/QUIC and 32-bit
+evidence plus host-specific integrated/proxy challenge authentication as
+future-v1 work without making them current release blockers. The bounded
+loopback challenge contract is covered by ADR-0023; domain/CONNECT fixtures
+remain deferred. The protocol-host runner has produced a passing x64 HTTP/2
+record at benchmarks/results/protocol-host-http2.json; that record is
+host-specific and does not satisfy the remaining HTTP/3 or x86 requirements.
 Repeated COM receive-timeout handle growth is
 mitigated on the current x64 host by the canonical cancellation stress result;
 the same evidence must be rerun on each supported Office host.

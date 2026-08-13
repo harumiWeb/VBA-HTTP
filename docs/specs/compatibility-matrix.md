@@ -10,7 +10,7 @@ the focused compile, integration, and release-consumer smoke checks.
 | Windows x64 Office, native protocol option unavailable | `fallback-tested` | Plain HTTP fallback test; response must report `HTTP/1.1` |
 | Windows x64 Office, required protocol on plain HTTP | `rejection-tested` | Required-mode integration must raise `HttpErrorProtocol` before a response |
 | Windows x64 Office, untrusted HTTPS certificate | `verified-rejection` | Loopback self-signed fixture must map COM/native failures to `HttpErrorTls` without a certificate-ignore option |
-| HTTPS HTTP/2 negotiation | `pending` | `tools/Run-ProtocolHostValidation.ps1` on a trusted TLS endpoint; Windows/WinHTTP version, Office bitness, requested mask, and exact `ProtocolUsed` |
+| HTTPS HTTP/2 negotiation | `verified-host-specific` | x64 record at `benchmarks/results/protocol-host-http2.json` against `nghttp2.org:443`; required HTTP/2, Office 16.0 build 17932, Windows x64, and exact `ProtocolUsed=HTTP/2` |
 | HTTPS HTTP/3 negotiation | `pending` | Same fail-closed host runner on a QUIC-capable Windows/WinHTTP endpoint; requested mask and exact `ProtocolUsed` |
 | Native WinHTTP gzip/deflate decompression | `verified` | x64 loopback buffered/download tests and release consumer smoke; option 118 requires Windows 8.1+ |
 | WinHTTP default/direct/manual HTTP proxy routing | `integration-tested` | x64 COM/native loopback proxy tests; WinHTTP access-type mapping and release smoke; HTTPS CONNECT remains pending |
@@ -36,7 +36,8 @@ Each future host run should record:
 - focused test, full suite, and release-consumer smoke results.
 
 The current loopback server is intentionally plain HTTP/1.1, so it cannot
-prove negotiated HTTP/2 or HTTP/3 support.
+prove negotiated HTTP/2 or HTTP/3 support. The recorded HTTP/2 result is
+host-specific and does not promote HTTP/3 or the 32-bit Office row.
 
 The host-evidence runner and schema are defined in
 `docs/specs/protocol-host-validation.md`. A passing record is required before

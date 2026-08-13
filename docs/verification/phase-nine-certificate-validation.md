@@ -22,5 +22,6 @@ normal OS trust decision without introducing a certificate-ignore switch.
 - No test imports the certificate into the OS store, sets a WinHTTP security
   bypass flag, or logs certificate/private-key material.
 
-HTTP/2/HTTP/3 negotiated-protocol evidence and 32-bit Office execution remain
-separate compatibility-matrix gates.
+The x64 HTTP/2 negotiated-protocol record is archived at
+benchmarks/results/protocol-host-http2.json. HTTP/3/QUIC negotiated evidence
+and 32-bit Office execution remain separate compatibility-matrix gates.

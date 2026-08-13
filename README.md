@@ -80,8 +80,10 @@ control. See [`docs/specs/protocol-policy.md`](docs/specs/protocol-policy.md)
 for the compatibility and evidence rules.
 
 The offline loopback server intentionally speaks HTTP/1.1, so negotiated
-HTTP/2/HTTP/3 promotion requires the separate fail-closed host runner. After a
-release build, set `VBA_HTTP_PROTOCOL_HOST_URL` and
+HTTP/2/HTTP/3 promotion requires the separate fail-closed host runner. The
+current x64 HTTP/2 record is archived at
+`benchmarks/results/protocol-host-http2.json`; it does not promote HTTP/3 or
+32-bit Office. After a release build, set `VBA_HTTP_PROTOCOL_HOST_URL` and
 `VBA_HTTP_PROTOCOL_EXPECTED`, then run `task protocol:host`; it records only
 path-free target metadata and the exact `ProtocolUsed` result.
 

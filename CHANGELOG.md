@@ -15,7 +15,7 @@
 
 - Added a machine-validated Phase 9 security-risk register with an explicit
   zero-current-blocker gate, fail-closed tamper tests, and release-security
-  integration. Deferred HTTP/2/HTTP/3 and 32-bit evidence plus host-specific
+  integration. Deferred HTTP/3/QUIC and 32-bit evidence plus host-specific
   integrated/proxy challenge fixtures remain visible as future-v1 obligations;
   repeated
   COM receive-timeout growth is mitigated by the canonical x64 stress result.
@@ -41,7 +41,9 @@
 - Added an opt-in fail-closed protocol-host evidence runner for required
   HTTPS HTTP/2/HTTP/3 negotiation. It records only path-free target metadata,
   artifact hashes, Office/Windows/WinHTTP metadata, bridge/bitness, and exact `ProtocolUsed`; the normal
-  loopback suite remains offline and the real HTTP/3 host gate remains pending.
+  loopback suite remains offline. The current x64 HTTP/2 host record is
+  archived in `benchmarks/results/protocol-host-http2.json`; HTTP/3/QUIC and
+  x86 evidence remain pending.
 
 - Added opt-in structured `HttpDiagnostics` operation events with bounded
   retention, query/user-info target sanitization, stable error categories, and
@@ -51,9 +53,10 @@
 - Added a fail-closed release manifest security gate and deterministic report:
   canonical base/output paths, VBE/atomic-publication evidence, exact
   included/excluded component policy, development-only source boundaries, and
-  checksum verification are checked before release smoke. HTTP/2/HTTP/3 TLS
-  negotiation evidence and host-specific integrated/proxy challenge fixtures
-  remain explicitly deferred.
+  checksum verification are checked before release smoke. HTTP/3/QUIC and
+  32-bit TLS negotiation evidence plus host-specific integrated/proxy
+  challenge fixtures remain explicitly deferred; x64 HTTP/2 evidence is
+  archived separately.
 
 - Added a Phase 9 cancellation/timeout stress gate with repeated COM active
   cancellation and request-deadline scenarios, native streaming download

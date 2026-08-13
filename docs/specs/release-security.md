@@ -51,9 +51,11 @@ artifact, manifest, and checksum together.
 
 ## Deferred security topics
 
-The gate does not mark the following as implemented: HTTP/2/HTTP/3 TLS/Office
-compatibility evidence or host-specific integrated/proxy challenge
-authentication. The bounded loopback challenge contract is implemented by
+The gate does not mark the following as implemented: HTTP/3/QUIC or 32-bit
+TLS/Office compatibility evidence, or host-specific integrated/proxy challenge
+authentication. The x64 HTTP/2 host record is retained as
+`benchmarks/results/protocol-host-http2.json` but does not satisfy those
+remaining gates. The bounded loopback challenge contract is implemented by
 ADR-0023, but real Windows-domain and proxy/CONNECT evidence remain
 release-review items and are listed in the report and
 `docs/verification/phase-nine-security-review.md`.

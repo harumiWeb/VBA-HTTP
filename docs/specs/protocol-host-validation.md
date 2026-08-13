@@ -32,6 +32,12 @@ must not contain user-info, and is never written in full to the evidence
 file.  The runner requires a compiled release artifact, its manifest, and its
 checksum sidecar; it does not alter the development workbook.
 
+The external consumer uses `VBAHttp.CreateRequest()` and sets all four
+`HttpTimeouts` phases to 15 seconds before executing the required native
+request. A host that cannot complete TLS or protocol negotiation therefore
+fails in a bounded interval instead of inheriting the normal 300-second
+receive default.
+
 ## Evidence schema
 
 The default output is
@@ -70,6 +76,10 @@ field whose name could contain a secret or request payload.
 - A passing HTTP/2 result promotes only the selected host/bitness HTTP/2 row.
 - A passing HTTP/3 result requires a QUIC-capable host and promotes only the
   selected host/bitness HTTP/3 row.
+- The current x64 HTTP/2 record is
+  `benchmarks/results/protocol-host-http2.json` (trusted `nghttp2.org:443`,
+  required mode, exact `ProtocolUsed=HTTP/2`). It does not promote HTTP/3 or
+  any x86 Office row.
 - No host result changes the offline integration contract or permits a
   certificate-ignore option.
 
