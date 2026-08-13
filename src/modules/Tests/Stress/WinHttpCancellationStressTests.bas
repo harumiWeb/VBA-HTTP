@@ -33,6 +33,10 @@ Public Sub Test_CancellationStress_ComActiveCancellation()
     WriteRecoveryRequest client
     RunComActiveCancellation client, baseUrl
     WriteRecoveryRequest client
+    RunComActiveCancellation client, baseUrl
+    WriteRecoveryRequest client
+    RunComActiveCancellation client, baseUrl
+    WriteRecoveryRequest client
     WriteMarker startMarker
     HttpTiming.Pause 1000
 

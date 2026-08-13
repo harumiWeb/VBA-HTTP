@@ -13,14 +13,16 @@ deterministic Go test server. The stress module lives under
 | `com_receive_timeout` | `WinHttpComTransport` | repeated synchronous `GET /delay/10000` requests with a 1,000 ms receive timeout | every attempt maps to `HttpErrorTimeout`; recovery succeeds | <=32 |
 | `native_download_cancellation` | `WinHttpNativeTransport` | 64 KiB `GET /stream/65536`, progress cancellation at 64 KiB | `HttpErrCancelled`, 8-byte sentinel and temp-file count unchanged; recovery succeeds | <=8 |
 
-Each selected scenario runs exactly the configured number of iterations
+The COM active-cancel method performs three unmeasured cancellation warmups
+before its start marker; all methods then pause one second after the marker to
+separate Excel/COM startup from measured work. Each selected scenario runs exactly the configured number of iterations
 (default 25, allowed range 1..1000), uses a fresh cancellation token/options for
 each cycle, and sets `MaxAttempts=1` where retries could obscure the result.
 The COM active-cancel scenario uses the existing cooperative `DoEvents` polling
 boundary and does not introduce a native callback.
 
 The receive-timeout scenario exercises the synchronous COM failure path. Its
-bounded 250 ms abort drain is part of ADR-0022; the scenario is the evidence
+bounded 250 ms abort drain is part of ADR-0022. The scenario is the evidence
 gate for repeated timeout cleanup rather than a claim that WinHTTP has no
 host-specific allocator variation.
 
