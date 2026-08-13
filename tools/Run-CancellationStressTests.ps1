@@ -84,7 +84,7 @@ function Write-ReleaseMarker([string]$Path) {
     [IO.File]::WriteAllText($Path, "release`n", [Text.UTF8Encoding]::new($false))
 }
 
-function Run-CancellationScenario([object]$Definition) {
+function Run-CancellationScenario([object]$Definition, [int[]]$ProcessBaselineIds) {
     $scenarioRoot = Join-Path $artifactDirectory $Definition.Name
     [void](New-Item -ItemType Directory -Path $scenarioRoot -Force)
     $startPath = Join-Path $scenarioRoot "start.marker"
@@ -105,7 +105,10 @@ function Run-CancellationScenario([object]$Definition) {
     $peak = $null
     $startedAt = $null
     $finishedAt = $null
-    $baselineProcessIds = Get-ExcelProcessIds
+    # Keep one baseline for the complete gate.  A per-scenario baseline could
+    # accidentally reclassify a leaked prior test process as user-owned and
+    # hide it from the next scenario's handle measurement.
+    $baselineProcessIds = @($ProcessBaselineIds)
 
     try {
         [Environment]::SetEnvironmentVariable("VBA_HTTP_CANCELLATION_ITERATIONS", [string]$Iterations, "Process")
@@ -265,8 +268,9 @@ try {
     if ($Scenario -eq "all" -and $selectedDefinitions.Count -ne 4) { throw "The complete cancellation stress gate requires all four scenarios." }
 
     $scenarioResults = [System.Collections.Generic.List[object]]::new()
+    $processBaselineIds = Get-ExcelProcessIds
     foreach ($definition in $selectedDefinitions) {
-        $scenarioResults.Add((Run-CancellationScenario $definition))
+        $scenarioResults.Add((Run-CancellationScenario $definition $processBaselineIds))
     }
 
     $sourceCommit = ((& git rev-parse HEAD) | Out-String).Trim()
