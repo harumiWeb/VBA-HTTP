@@ -6,7 +6,7 @@
   "required": [
     "schema_version", "benchmark", "status", "run_utc", "source_revision",
     "requested_protocol", "observed_protocol", "mode", "external_network",
-    "target", "bridge", "artifact", "build"
+    "target", "bridge", "office", "environment", "artifact", "build"
   ],
   "properties": {
     "schema_version": { "const": 1 },
@@ -36,6 +36,35 @@
         "version": { "type": "string", "minLength": 1 },
         "runtime": { "type": "string", "minLength": 1 },
         "architecture": { "enum": ["X86", "X64"] }
+      },
+      "additionalProperties": false
+    },
+    "office": {
+      "type": "object",
+      "required": ["version", "build", "operating_system"],
+      "properties": {
+        "version": { "type": "string", "minLength": 1 },
+        "build": { "type": "string", "minLength": 1 },
+        "operating_system": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "environment": {
+      "type": "object",
+      "required": ["windows", "winhttp"],
+      "properties": {
+        "windows": { "type": "string", "minLength": 1 },
+        "winhttp": {
+          "type": "object",
+          "required": ["enabled_protocol_option", "used_protocol_option", "required_protocol_option", "observed_protocol"],
+          "properties": {
+            "enabled_protocol_option": { "const": 133 },
+            "used_protocol_option": { "const": 134 },
+            "required_protocol_option": { "const": 145 },
+            "observed_protocol": { "enum": ["HTTP/2", "HTTP/3"] }
+          },
+          "additionalProperties": false
+        }
       },
       "additionalProperties": false
     },

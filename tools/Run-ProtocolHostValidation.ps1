@@ -48,6 +48,18 @@ function Get-ExcelProcessIds {
     return @($processes | ForEach-Object { [int]$_.Id })
 }
 
+function Assert-CleanWorktreeExcept([string]$AllowedPath) {
+    $relativeAllowed = [IO.Path]::GetRelativePath($projectRoot, $AllowedPath).Replace("\\", "/")
+    $entries = @(& git status --porcelain 2>$null)
+    foreach ($entry in $entries) {
+        if ([string]::IsNullOrWhiteSpace($entry)) { continue }
+        $path = $entry.Substring(3).Trim().Replace("\\", "/")
+        if ($path -ne $relativeAllowed) {
+            throw "Protocol host evidence requires a clean source worktree; unexpected change: $path"
+        }
+    }
+}
+
 if ([string]::IsNullOrWhiteSpace($Url)) { throw "Set -Url or VBA_HTTP_PROTOCOL_HOST_URL to a trusted HTTPS endpoint." }
 if ([string]::IsNullOrWhiteSpace($ExpectedProtocol)) { throw "Set -ExpectedProtocol or VBA_HTTP_PROTOCOL_EXPECTED to HTTP/2 or HTTP/3." }
 $ExpectedProtocol = $ExpectedProtocol.ToUpperInvariant()
@@ -68,6 +80,7 @@ $resolvedOutput = if ([string]::IsNullOrWhiteSpace($OutputPath)) {
     Join-Path $projectRoot ("benchmarks\results\protocol-host-{0}.json" -f $ExpectedProtocol.ToLowerInvariant().Replace("/", ""))
 }
 else { Resolve-ProjectPath $OutputPath }
+Assert-CleanWorktreeExcept $resolvedOutput
 foreach ($requiredPath in @($resolvedArtifact, $resolvedManifest, $resolvedChecksum)) {
     if (-not (Test-Path -LiteralPath $requiredPath -PathType Leaf)) { throw "Required release input is missing: $requiredPath" }
 }
@@ -88,8 +101,6 @@ if ($manifest.validation.vbe_compile -ne "passed" -or
 $doctor = Invoke-JsonCommand "xlflow" @("doctor", "--json")
 $architecture = [string]$doctor.bridge.architecture
 if ($architecture -notin @("X86", "X64")) { throw "xlflow did not report an X86 or X64 bridge." }
-$gitStatus = @(& git status --porcelain 2>$null)
-if ($gitStatus.Count -ne 0) { throw "Protocol host evidence requires a clean source worktree." }
 $sourceRevision = ((& git rev-parse HEAD 2>$null) | Out-String).Trim()
 if ($sourceRevision -notmatch '^[0-9a-fA-F]{40,64}$') { throw "Could not determine the source revision." }
 
@@ -102,6 +113,7 @@ $consumerWorkbook = $null
 $harnessWorkbook = $null
 $harnessComponent = $null
 $observedProtocol = $null
+$office = $null
 try {
     $excel = New-Object -ComObject Excel.Application
     $afterExcelIds = @(Get-ExcelProcessIds)
@@ -114,6 +126,11 @@ try {
     $excel.DisplayAlerts = $false
     $excel.EnableEvents = $false
     $excel.AutomationSecurity = 1
+    $office = [ordered]@{
+        version = [string]$excel.Version
+        build = [string]$excel.Build
+        operating_system = [string]$excel.OperatingSystem
+    }
     $workbooks = $excel.Workbooks
     $consumerWorkbook = $workbooks.Open($resolvedArtifact, 0, $true)
     $harnessWorkbook = $workbooks.Add()
@@ -166,6 +183,16 @@ $record = [ordered]@{
         version = [string]$doctor.bridge.version
         runtime = [string]$doctor.bridge.runtime
         architecture = $architecture
+    }
+    office = $office
+    environment = [ordered]@{
+        windows = [Environment]::OSVersion.VersionString
+        winhttp = [ordered]@{
+            enabled_protocol_option = 133
+            used_protocol_option = 134
+            required_protocol_option = 145
+            observed_protocol = $observedProtocol
+        }
     }
     artifact = [ordered]@{
         name = [IO.Path]::GetFileName($resolvedArtifact)

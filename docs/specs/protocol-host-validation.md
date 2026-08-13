@@ -50,6 +50,9 @@ Required fields:
 - `external_network`: `true`;
 - `target`: `scheme=https`, non-empty `host`, and numeric `port`;
 - `bridge`: xlflow bridge name/version/runtime and `X86` or `X64` architecture;
+- `office`: Excel version, build, and operating-system strings;
+- `environment`: Windows version plus WinHTTP option IDs 133 (enable), 134
+  (used), and 145 (required), with the observed protocol;
 - `artifact`: basename plus 64-character SHA-256 values for artifact and
   manifest;
 - `build`: VBE compile, source application, save, close, and cleanup evidence.

@@ -26,6 +26,9 @@ records. The current register intentionally keeps HTTP/2/3/32-bit evidence and
 host-specific integrated/proxy challenge authentication as future-v1 work
 without making them current release blockers. The bounded loopback challenge
 contract is covered by ADR-0023; domain/CONNECT fixtures remain deferred.
+The protocol-host runner provides the required evidence workflow, but no
+passing record is present until a trusted TLS/QUIC host and each Office
+bitness produce exact negotiated-protocol results.
 Repeated COM receive-timeout handle growth is
 mitigated on the current x64 host by the canonical cancellation stress result;
 the same evidence must be rerun on each supported Office host.

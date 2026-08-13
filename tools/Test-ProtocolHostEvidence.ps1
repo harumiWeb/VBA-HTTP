@@ -24,6 +24,8 @@ function New-ValidRecord {
         external_network = $true
         target = [ordered]@{ scheme = "https"; host = "h2.example.test"; port = 443 }
         bridge = [ordered]@{ name = "xlflow-excel-bridge"; version = "1.0.0"; runtime = ".NET 8"; architecture = "X64" }
+        office = [ordered]@{ version = "16.0"; build = "12345"; operating_system = "Windows" }
+        environment = [ordered]@{ windows = "Microsoft Windows"; winhttp = [ordered]@{ enabled_protocol_option = 133; used_protocol_option = 134; required_protocol_option = 145; observed_protocol = "HTTP/2" } }
         artifact = [ordered]@{ name = "VBA-HTTP.xlsm"; sha256 = ("a" * 64); manifest_sha256 = ("b" * 64) }
         build = [ordered]@{ vbe_compile = "passed"; source_applied = $true; workbook_saved = $true; workbook_closed = $true; excel_cleanup = "clean" }
     }
@@ -42,6 +44,7 @@ try {
         @{ Name = "http"; Change = { param($r) $r.target.scheme = "http" } },
         @{ Name = "secret"; Change = { param($r) $r.authorization = "Basic hidden" } },
         @{ Name = "bad-hash"; Change = { param($r) $r.artifact.sha256 = "bad" } }
+        @{ Name = "unknown"; Change = { param($r) $r.unexpected = "not allowed" } }
     )
     foreach ($case in $cases) {
         $record = New-ValidRecord

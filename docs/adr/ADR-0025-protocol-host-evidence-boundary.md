@@ -23,9 +23,10 @@ external network access into the normal test suite.
   status failure, or protocol mismatch fails closed and publishes no passing
   evidence.
 - Store only path-free target metadata (scheme, host, and port), artifact and
-  manifest SHA-256 values, source revision, Office/bridge metadata, requested
-  protocol, observed protocol, and UTC time.  Reject credentials, query/body
-  values, headers, and local filesystem paths in the evidence schema.
+  manifest SHA-256 values, source revision, Office/bridge/Windows/WinHTTP
+  metadata, requested protocol, observed protocol, and UTC time. Reject
+  credentials, query/body values, headers, and local filesystem paths in the
+  evidence schema.
 - Keep this runner out of `task verify` and ordinary deterministic integration
   tests.  A host owner explicitly invokes it after selecting a trusted TLS
   endpoint and archives the result with the release artifact.

@@ -35,7 +35,7 @@
 
 - Added an opt-in fail-closed protocol-host evidence runner for required
   HTTPS HTTP/2/HTTP/3 negotiation. It records only path-free target metadata,
-  artifact hashes, bridge/bitness, and exact `ProtocolUsed`; the normal
+  artifact hashes, Office/Windows/WinHTTP metadata, bridge/bitness, and exact `ProtocolUsed`; the normal
   loopback suite remains offline and the real HTTP/3 host gate remains pending.
 
 - Added opt-in structured `HttpDiagnostics` operation events with bounded

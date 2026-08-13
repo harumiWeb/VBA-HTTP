@@ -29,6 +29,15 @@ function Assert-Sha256([string]$Value, [string]$Label) {
     }
 }
 
+function Assert-OnlyProperties($Object, [string[]]$Allowed, [string]$Location) {
+    if ($null -eq $Object) { throw "$Location is missing." }
+    foreach ($property in $Object.PSObject.Properties) {
+        if ($Allowed -notcontains $property.Name) {
+            throw "$Location contains an unsupported property '$($property.Name)'."
+        }
+    }
+}
+
 function Assert-NoSensitiveField($Object, [string]$Location = "root") {
     if ($null -eq $Object) { return }
     if ($Object -is [System.Collections.IDictionary]) {
@@ -62,6 +71,7 @@ if ([int](Require-Property $result "schema_version") -ne 1 -or
     [string](Require-Property $result "benchmark") -ne "protocol-host-validation") {
     throw "Protocol host evidence schema identity is invalid."
 }
+Assert-OnlyProperties $result @("schema_version", "benchmark", "status", "run_utc", "source_revision", "requested_protocol", "observed_protocol", "mode", "external_network", "target", "bridge", "office", "environment", "artifact", "build") "root"
 if ([string](Require-Property $result "status") -ne "passed" -or
     [string](Require-Property $result "mode") -ne "required" -or
     [bool](Require-Property $result "external_network") -ne $true) {
@@ -86,6 +96,7 @@ if ([string](Require-Property $result "source_revision") -notmatch '^[0-9a-fA-F]
 }
 
 $target = Require-Property $result "target"
+Assert-OnlyProperties $target @("scheme", "host", "port") "target"
 if ([string](Require-Property $target "scheme") -ne "https" -or
     [string]::IsNullOrWhiteSpace([string](Require-Property $target "host"))) {
     throw "Protocol host target must contain an HTTPS scheme and host."
@@ -94,6 +105,7 @@ $port = [int](Require-Property $target "port")
 if ($port -lt 1 -or $port -gt 65535) { throw "Protocol host target port is invalid." }
 
 $bridge = Require-Property $result "bridge"
+Assert-OnlyProperties $bridge @("name", "version", "runtime", "architecture") "bridge"
 if ([string](Require-Property $bridge "architecture") -notin @("X86", "X64") -or
     [string]::IsNullOrWhiteSpace([string](Require-Property $bridge "name")) -or
     [string]::IsNullOrWhiteSpace([string](Require-Property $bridge "version")) -or
@@ -102,6 +114,7 @@ if ([string](Require-Property $bridge "architecture") -notin @("X86", "X64") -or
 }
 
 $artifact = Require-Property $result "artifact"
+Assert-OnlyProperties $artifact @("name", "sha256", "manifest_sha256") "artifact"
 if ([string]::IsNullOrWhiteSpace([string](Require-Property $artifact "name"))) {
     throw "Protocol host artifact name is missing."
 }
@@ -109,12 +122,35 @@ Assert-Sha256 ([string](Require-Property $artifact "sha256")) "artifact.sha256"
 Assert-Sha256 ([string](Require-Property $artifact "manifest_sha256")) "artifact.manifest_sha256"
 
 $build = Require-Property $result "build"
+Assert-OnlyProperties $build @("vbe_compile", "source_applied", "workbook_saved", "workbook_closed", "excel_cleanup") "build"
 if ([string](Require-Property $build "vbe_compile") -ne "passed" -or
     [bool](Require-Property $build "source_applied") -ne $true -or
     [bool](Require-Property $build "workbook_saved") -ne $true -or
     [bool](Require-Property $build "workbook_closed") -ne $true -or
     [string](Require-Property $build "excel_cleanup") -ne "clean") {
     throw "Protocol host evidence does not prove a clean release build."
+}
+
+$office = Require-Property $result "office"
+Assert-OnlyProperties $office @("version", "build", "operating_system") "office"
+if ([string]::IsNullOrWhiteSpace([string](Require-Property $office "version")) -or
+    [string]::IsNullOrWhiteSpace([string](Require-Property $office "build")) -or
+    [string]::IsNullOrWhiteSpace([string](Require-Property $office "operating_system"))) {
+    throw "Office metadata is incomplete."
+}
+
+$environment = Require-Property $result "environment"
+Assert-OnlyProperties $environment @("windows", "winhttp") "environment"
+if ([string]::IsNullOrWhiteSpace([string](Require-Property $environment "windows"))) {
+    throw "Windows metadata is missing."
+}
+$winhttp = Require-Property $environment "winhttp"
+Assert-OnlyProperties $winhttp @("enabled_protocol_option", "used_protocol_option", "required_protocol_option", "observed_protocol") "environment.winhttp"
+if ([int](Require-Property $winhttp "enabled_protocol_option") -ne 133 -or
+    [int](Require-Property $winhttp "used_protocol_option") -ne 134 -or
+    [int](Require-Property $winhttp "required_protocol_option") -ne 145 -or
+    [string](Require-Property $winhttp "observed_protocol") -ne $observed) {
+    throw "WinHTTP protocol option metadata is inconsistent."
 }
 
 Assert-NoSensitiveField $result
