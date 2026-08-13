@@ -8,11 +8,11 @@ not the place to edit production code.
 
 - Windows with Excel and VBIDE access (the current proof path is x64 Office).
 - Go for the deterministic loopback test server.
-- `xlflow`, Task, and Lefthook available on `PATH`.
+- `xlflow`, Task, Lefthook, and PSScriptAnalyzer available on `PATH`.
 - A repository checkout with the tracked development workbook present.
 
 Run `task hooks:install` once to install the pre-commit hook. The hook stops on
-any lint, analyzer, formatter, or class-source failure.
+any VBA lint/analyzer, PowerShell analyzer, formatter, or class-source failure.
 
 ## Source layout
 
@@ -30,7 +30,8 @@ excluded directories.
 
 1. Update the relevant ADR/spec before changing a public contract.
 2. Implement the smallest focused change and add a regression or focused test.
-3. Run `task check` (the same gates used by Lefthook).
+3. Run `task check` (the same gates used by Lefthook, including
+   `task powershell:lint`).
 4. Start or attach an xlflow session, then run:
 
    ```powershell

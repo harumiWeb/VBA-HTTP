@@ -23,7 +23,7 @@ function Invoke-Validator([string]$Path) {
     }
 }
 
-function Replace-All([string]$Value, [string]$OldValue, [string]$NewValue) {
+function Convert-Text([string]$Value, [string]$OldValue, [string]$NewValue) {
     return $Value.Replace($OldValue, $NewValue)
 }
 
@@ -42,9 +42,9 @@ try {
         throw "SetOptionLong must pass the explicit DWORD buffer address in both VBA7 and legacy branches."
     }
     $mutations = @{
-        "missing-vba7-guard.bas" = Replace-All $source "#If VBA7 Then" "#If VBA6 Then"
-        "legacy-longptr.bas" = Replace-All $source "ByVal pwszUserAgent As Long, ByVal dwAccessType" "ByVal pwszUserAgent As LongPtr, ByVal dwAccessType"
-        "wrong-upload-sentinel.bas" = Replace-All $source "WinHttpIgnoreRequestTotalLength As Long = 0" "WinHttpIgnoreRequestTotalLength As Long = -1"
+        "missing-vba7-guard.bas" = Convert-Text $source "#If VBA7 Then" "#If VBA6 Then"
+        "legacy-longptr.bas" = Convert-Text $source "ByVal pwszUserAgent As Long, ByVal dwAccessType" "ByVal pwszUserAgent As LongPtr, ByVal dwAccessType"
+        "wrong-upload-sentinel.bas" = Convert-Text $source "WinHttpIgnoreRequestTotalLength As Long = 0" "WinHttpIgnoreRequestTotalLength As Long = -1"
     }
 
     foreach ($entry in $mutations.GetEnumerator()) {

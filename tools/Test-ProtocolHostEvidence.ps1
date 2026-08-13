@@ -11,7 +11,7 @@ $schemaPath = Join-Path $root "benchmarks\schema\protocol-host-evidence.schema.j
 $schema = Get-Content -LiteralPath $schemaPath -Raw | ConvertFrom-Json
 $schemaWinHttp = $schema.properties.environment.properties.winhttp
 if ($schemaWinHttp.required -notcontains "preflight" -or
-    $schemaWinHttp.properties.preflight.properties.protocol_used_flag -eq $null) {
+    $null -eq $schemaWinHttp.properties.preflight.properties.protocol_used_flag) {
     throw "Protocol host JSON schema does not describe the required capability preflight."
 }
 
@@ -19,7 +19,7 @@ function Write-Record([string]$Path, $Record) {
     $Record | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $Path -Encoding UTF8
 }
 
-function New-ValidRecord {
+function Get-ValidRecord {
     return [ordered]@{
         schema_version = 1
         benchmark = "protocol-host-validation"
@@ -43,7 +43,7 @@ try {
     if (Test-Path -LiteralPath $testRoot) { Remove-Item -LiteralPath $testRoot -Recurse -Force }
     [void](New-Item -ItemType Directory -Path $testRoot -Force)
     $validPath = Join-Path $testRoot "valid.json"
-    Write-Record $validPath (New-ValidRecord)
+    Write-Record $validPath (Get-ValidRecord)
     & powershell -NoProfile -ExecutionPolicy Bypass -File $validator -Path $validPath -ExpectedProtocol "HTTP/2"
     if ($LASTEXITCODE -ne 0) { throw "Valid protocol host evidence was rejected." }
 
@@ -57,7 +57,7 @@ try {
         @{ Name = "unknown"; Change = { param($r) $r.unexpected = "not allowed" } }
     )
     foreach ($case in $cases) {
-        $record = New-ValidRecord
+        $record = Get-ValidRecord
         & $case.Change $record
         $casePath = Join-Path $testRoot ($case.Name + ".json")
         Write-Record $casePath $record

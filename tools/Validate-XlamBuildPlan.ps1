@@ -15,7 +15,7 @@ function Resolve-ProjectPath([string]$Path) {
     return [IO.Path]::GetFullPath((Join-Path $projectRoot $Path))
 }
 
-function To-RepoPath([string]$Path) {
+function ConvertTo-RepoPath([string]$Path) {
     $resolved = [IO.Path]::GetFullPath($Path)
     $root = [IO.Path]::GetFullPath($projectRoot).TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar
     if (-not $resolved.StartsWith($root, [StringComparison]::OrdinalIgnoreCase)) {
@@ -34,8 +34,8 @@ if (-not (Test-Path -LiteralPath $resolvedBase -PathType Leaf)) {
     throw "XLAM base workbook does not exist: $resolvedBase"
 }
 
-$expectedBase = To-RepoPath $resolvedBase
-$expectedOutput = To-RepoPath $resolvedOutput
+$expectedBase = ConvertTo-RepoPath $resolvedBase
+$expectedOutput = ConvertTo-RepoPath $resolvedOutput
 if ($expectedBase -ne "build/VBA-HTTP.xlam" -or $expectedOutput -ne "build/Release/VBA-HTTP.xlam") {
     throw "XLAM build target must use build/VBA-HTTP.xlam -> build/Release/VBA-HTTP.xlam."
 }

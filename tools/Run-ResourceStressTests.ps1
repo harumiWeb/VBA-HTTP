@@ -29,7 +29,7 @@ if (-not $resolvedOutput.StartsWith($resultsDirectory + [IO.Path]::DirectorySepa
     throw "OutputPath must remain under benchmarks/results."
 }
 
-function Get-ExcelProcessIds {
+function Get-ExcelProcessId {
     @(Get-Process -Name EXCEL -ErrorAction SilentlyContinue | ForEach-Object { [int]$_.Id })
 }
 
@@ -47,8 +47,7 @@ function Get-ExcelSnapshot([int[]]$BaselineProcessIds) {
             $observed = $true
         }
         catch {
-            # A process can exit between enumeration and sampling. The next
-            # sample will either observe it again or report unavailable.
+            Write-Debug "An Excel process exited during the resource-stress sample. The next sample will retry."
         }
     }
     [ordered]@{
@@ -74,7 +73,7 @@ function Write-ReleaseMarker([string]$Path) {
     [IO.File]::WriteAllText($Path, "release`n", [Text.UTF8Encoding]::new($false))
 }
 
-function Run-ResourceScenario([string]$Name, [string]$Filter, [int]$HandleDeltaLimit) {
+function Invoke-ResourceScenario([string]$Name, [string]$Filter, [int]$HandleDeltaLimit) {
     $scenarioRoot = Join-Path $artifactDirectory $Name
     [void](New-Item -ItemType Directory -Path $scenarioRoot -Force)
     $startPath = Join-Path $scenarioRoot "start.marker"
@@ -96,7 +95,7 @@ function Run-ResourceScenario([string]$Name, [string]$Filter, [int]$HandleDeltaL
     $peak = $null
     $startedAt = $null
     $finishedAt = $null
-    $baselineProcessIds = Get-ExcelProcessIds
+    $baselineProcessIds = Get-ExcelProcessId
 
     try {
         [Environment]::SetEnvironmentVariable("VBA_HTTP_RESOURCE_ITERATIONS", [string]$Iterations, "Process")
@@ -181,7 +180,7 @@ function Run-ResourceScenario([string]$Name, [string]$Filter, [int]$HandleDeltaL
     finally {
         if ($null -ne $testProcess) {
             if (-not $testProcess.HasExited) {
-                try { Write-ReleaseMarker $releasePath } catch { }
+                try { Write-ReleaseMarker $releasePath } catch { Write-Debug "Could not publish the resource release marker during cleanup: $_" }
                 Start-Sleep -Milliseconds 500
                 if (-not $testProcess.HasExited) { $testProcess.Kill(); [void]$testProcess.WaitForExit(5000) }
             }
@@ -228,10 +227,10 @@ try {
 
     $scenarioResults = [System.Collections.Generic.List[object]]::new()
     if ($Scenario -in @("all", "sequential")) {
-        $scenarioResults.Add((Run-ResourceScenario "sequential_native" "WinHttpResourceStressTests.Test_ResourceStress_SequentialNative" 8))
+        $scenarioResults.Add((Invoke-ResourceScenario "sequential_native" "WinHttpResourceStressTests.Test_ResourceStress_SequentialNative" 8))
     }
     if ($Scenario -in @("all", "scheduled")) {
-        $scenarioResults.Add((Run-ResourceScenario "scheduled_com" "WinHttpResourceStressTests.Test_ResourceStress_ScheduledCom" 32))
+        $scenarioResults.Add((Invoke-ResourceScenario "scheduled_com" "WinHttpResourceStressTests.Test_ResourceStress_ScheduledCom" 32))
     }
     if ($scenarioResults.Count -eq 0) { throw "No resource stress scenario was selected." }
     if ($Scenario -eq "all" -and $scenarioResults.Count -ne 2) { throw "The complete resource stress gate requires both scenarios." }

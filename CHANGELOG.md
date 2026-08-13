@@ -1,5 +1,9 @@
 ## Unreleased
 
+- Added a repository PSScriptAnalyzer settings contract and
+  `task powershell:lint` gate for all `tools/*.ps1`; warnings and errors now
+  stop the Lefthook pre-commit check.
+
 - Established the MIT license for project-authored source, documentation,
   tooling, examples, and generated release workbooks. Added the canonical
   `LICENSE`, third-party notice inventory, license ADR/spec, and a pre-commit

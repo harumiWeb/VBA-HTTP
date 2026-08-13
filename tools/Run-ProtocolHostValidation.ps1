@@ -176,7 +176,7 @@ $capabilityPreflight = Invoke-ProtocolCapabilityPreflight $targetUri $ExpectedPr
 $sourceRevision = ((& git rev-parse HEAD 2>$null) | Out-String).Trim()
 if ($sourceRevision -notmatch '^[0-9a-fA-F]{40,64}$') { throw "Could not determine the source revision." }
 
-$baselineExcelIds = @(Get-ExcelProcessIds)
+$baselineExcelIds = @(Get-ExcelProcessId)
 $ownedExcelIds = @()
 $ownsExcel = $false
 $excel = $null
@@ -252,7 +252,7 @@ finally {
         if ($ownsExcel) { try { $excel.Quit() } catch { Write-Warning "Could not quit owned protocol validation Excel: $_" } }
         [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($excel)
     }
-    Stop-OwnedExcelProcesses $ownedExcelIds "protocol host validation"
+    Stop-OwnedExcelProcess $ownedExcelIds "protocol host validation"
 }
 
 $record = [ordered]@{

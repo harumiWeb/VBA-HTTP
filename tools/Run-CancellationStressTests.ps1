@@ -27,7 +27,7 @@ if (-not $resolvedOutput.StartsWith($resultsDirectory + [IO.Path]::DirectorySepa
     throw "OutputPath must remain under benchmarks/results."
 }
 
-function Get-ExcelProcessIds {
+function Get-ExcelProcessId {
     @(Get-Process -Name EXCEL -ErrorAction SilentlyContinue | ForEach-Object { [int]$_.Id })
 }
 
@@ -45,7 +45,7 @@ function Get-ExcelSnapshot([int[]]$BaselineProcessIds) {
             $observed = $true
         }
         catch {
-            # A process can exit between enumeration and sampling.
+            Write-Debug "An Excel process exited during the cancellation-stress sample."
         }
     }
     [ordered]@{
@@ -84,7 +84,7 @@ function Write-ReleaseMarker([string]$Path) {
     [IO.File]::WriteAllText($Path, "release`n", [Text.UTF8Encoding]::new($false))
 }
 
-function Run-CancellationScenario([object]$Definition, [int[]]$ProcessBaselineIds) {
+function Invoke-CancellationScenario([object]$Definition, [int[]]$ProcessBaselineIds) {
     $scenarioRoot = Join-Path $artifactDirectory $Definition.Name
     [void](New-Item -ItemType Directory -Path $scenarioRoot -Force)
     $startPath = Join-Path $scenarioRoot "start.marker"
@@ -201,7 +201,7 @@ function Run-CancellationScenario([object]$Definition, [int[]]$ProcessBaselineId
     finally {
         if ($null -ne $testProcess) {
             if (-not $testProcess.HasExited) {
-                try { Write-ReleaseMarker $releasePath } catch { }
+                try { Write-ReleaseMarker $releasePath } catch { Write-Debug "Could not publish the cancellation release marker during cleanup: $_" }
                 Start-Sleep -Milliseconds 500
                 if (-not $testProcess.HasExited) { $testProcess.Kill(); [void]$testProcess.WaitForExit(5000) }
             }
@@ -268,9 +268,9 @@ try {
     if ($Scenario -eq "all" -and $selectedDefinitions.Count -ne 4) { throw "The complete cancellation stress gate requires all four scenarios." }
 
     $scenarioResults = [System.Collections.Generic.List[object]]::new()
-    $processBaselineIds = Get-ExcelProcessIds
+    $processBaselineIds = Get-ExcelProcessId
     foreach ($definition in $selectedDefinitions) {
-        $scenarioResults.Add((Run-CancellationScenario $definition $processBaselineIds))
+        $scenarioResults.Add((Invoke-CancellationScenario $definition $processBaselineIds))
     }
 
     $sourceCommit = ((& git rev-parse HEAD) | Out-String).Trim()

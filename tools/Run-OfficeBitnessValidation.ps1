@@ -41,7 +41,7 @@ function Publish-Json([string]$Path, $Document) {
 
 function Get-OfficeInfo {
     $excel = $null
-    $baselineIds = @(Get-ExcelProcessIds)
+    $baselineIds = @(Get-ExcelProcessId)
     $ownedIds = @()
     try {
         $excel = New-Object -ComObject Excel.Application
@@ -55,11 +55,11 @@ function Get-OfficeInfo {
     finally {
         if ($null -ne $excel) {
             if ($ownedIds.Count -gt 0) {
-                try { $excel.Quit() } catch {}
+                try { $excel.Quit() } catch { Write-Debug "Excel metadata instance was already closed: $_" }
             }
             [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($excel)
         }
-        Stop-OwnedExcelProcesses $ownedIds "Office metadata validation"
+        Stop-OwnedExcelProcess $ownedIds "Office metadata validation"
     }
 }
 

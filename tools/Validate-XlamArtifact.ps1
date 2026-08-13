@@ -12,7 +12,7 @@ function Resolve-ProjectPath([string]$Path) {
     return [IO.Path]::GetFullPath((Join-Path $projectRoot $Path))
 }
 
-function To-RepoPath([string]$Path) {
+function ConvertTo-RepoPath([string]$Path) {
     $resolved = [IO.Path]::GetFullPath($Path)
     $root = [IO.Path]::GetFullPath($projectRoot).TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar
     if (-not $resolved.StartsWith($root, [StringComparison]::OrdinalIgnoreCase)) {
@@ -26,7 +26,7 @@ $manifestPath = "$resolvedArtifact.build.json"
 if ([IO.Path]::GetExtension($resolvedArtifact).ToLowerInvariant() -ne ".xlam") {
     throw "XLAM artifact validation requires a .xlam artifact."
 }
-if ((To-RepoPath $resolvedArtifact) -ne "build/Release/VBA-HTTP.xlam") {
+if ((ConvertTo-RepoPath $resolvedArtifact) -ne "build/Release/VBA-HTTP.xlam") {
     throw "XLAM artifact must be build/Release/VBA-HTTP.xlam."
 }
 foreach ($path in @($resolvedArtifact, $manifestPath)) {
@@ -82,9 +82,9 @@ try {
 finally {
     if ($null -ne $component) { [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($component) }
     if ($null -ne $components) { [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($components) }
-    if ($null -ne $workbook) { try { $workbook.Close($false) } catch {}; [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($workbook) }
+    if ($null -ne $workbook) { try { $workbook.Close($false) } catch { Write-Debug "XLAM workbook was already closed: $_" }; [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($workbook) }
     if ($null -ne $workbooks) { [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($workbooks) }
-    if ($null -ne $excel) { try { $excel.Quit() } catch {}; [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($excel) }
+    if ($null -ne $excel) { try { $excel.Quit() } catch { Write-Debug "XLAM Excel instance was already closed: $_" }; [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($excel) }
 }
 
 if ($null -ne (Compare-Object @($policy.included | Sort-Object) @($actualComponents | Sort-Object))) {

@@ -34,7 +34,7 @@ function Resolve-InputPath([string]$Path) {
     return [IO.Path]::GetFullPath((Join-Path $projectRoot $Path))
 }
 
-function Normalize-RepoPath([string]$Path) {
+function ConvertTo-RepoPath([string]$Path) {
     if ([string]::IsNullOrWhiteSpace($Path)) {
         throw "A manifest path cannot be empty."
     }
@@ -57,10 +57,10 @@ function Get-RepoRelativePath([string]$Path) {
     if (-not $resolved.StartsWith($rootWithSeparator, [StringComparison]::OrdinalIgnoreCase)) {
         throw "Path is outside the validation root: $Path"
     }
-    return Normalize-RepoPath $resolved.Substring($rootWithSeparator.Length)
+    return ConvertTo-RepoPath $resolved.Substring($rootWithSeparator.Length)
 }
 
-function Require-Property($Object, [string]$Name) {
+function Assert-Property($Object, [string]$Name) {
     if ($null -eq $Object) {
         throw "Manifest record is null while reading '$Name'."
     }
@@ -92,7 +92,7 @@ function Assert-Unique([string[]]$Values, [string]$Description) {
 }
 
 function Assert-SourcePath([string]$Path, [bool]$AllowDevelopmentSegment, [string]$Description) {
-    $normalized = Normalize-RepoPath $Path
+    $normalized = ConvertTo-RepoPath $Path
     $allowedRoot = $normalized.StartsWith('src/classes/', [StringComparison]::OrdinalIgnoreCase) -or
         $normalized.StartsWith('src/modules/', [StringComparison]::OrdinalIgnoreCase) -or
         $normalized.StartsWith('src/workbook/', [StringComparison]::OrdinalIgnoreCase)
@@ -119,7 +119,7 @@ function Assert-SourcePath([string]$Path, [bool]$AllowDevelopmentSegment, [strin
 }
 
 function Assert-ComponentRecord($Component, [bool]$Excluded, [hashtable]$SeenNames, [hashtable]$SeenPaths) {
-    $name = [string](Require-Property $Component 'name')
+    $name = [string](Assert-Property $Component 'name')
     if ($name -notmatch '^[A-Za-z][A-Za-z0-9_]*$') {
         throw "Component name is not a safe VBA identifier: $name"
     }
@@ -128,11 +128,11 @@ function Assert-ComponentRecord($Component, [bool]$Excluded, [hashtable]$SeenNam
     }
     $SeenNames[$name] = $true
 
-    $type = [string](Require-Property $Component 'type')
+    $type = [string](Assert-Property $Component 'type')
     if (@('class', 'standard', 'document') -notcontains $type) {
         throw "Component '$name' has an unsupported type: $type"
     }
-    $sourcePath = Assert-SourcePath ([string](Require-Property $Component 'source_path')) $Excluded "Component '$name' source_path"
+    $sourcePath = Assert-SourcePath ([string](Assert-Property $Component 'source_path')) $Excluded "Component '$name' source_path"
     if ($SeenPaths.ContainsKey($sourcePath)) {
         throw "Component source_path is duplicated: $sourcePath"
     }
@@ -217,21 +217,21 @@ foreach ($path in @($resolvedArtifact, $resolvedManifest, $resolvedChecksum, $re
 $manifest = Get-Content -LiteralPath $resolvedManifest -Raw | ConvertFrom-Json
 $policy = Get-Content -LiteralPath $resolvedPolicy -Raw | ConvertFrom-Json
 
-if ([int](Require-Property $manifest 'schema_version') -ne 1 -or
-    [string](Require-Property $manifest 'command') -ne 'build' -or
-    [string](Require-Property $manifest 'backend') -ne 'excel') {
+if ([int](Assert-Property $manifest 'schema_version') -ne 1 -or
+    [string](Assert-Property $manifest 'command') -ne 'build' -or
+    [string](Assert-Property $manifest 'backend') -ne 'excel') {
     throw 'Release manifest schema or build identity is invalid.'
 }
-$manifestBase = Normalize-RepoPath ([string](Require-Property $manifest 'base'))
+$manifestBase = ConvertTo-RepoPath ([string](Assert-Property $manifest 'base'))
 if ($manifestBase -ne 'build/VBA-HTTP.xlsm') {
     throw 'Release manifest base is not the tracked development workbook.'
 }
-$manifestOutput = Normalize-RepoPath ([string](Require-Property $manifest 'output'))
+$manifestOutput = ConvertTo-RepoPath ([string](Assert-Property $manifest 'output'))
 if ($manifestOutput -ne $artifactRelative) {
     throw 'Release manifest output does not match the canonical release artifact.'
 }
 
-$validation = Require-Property $manifest 'validation'
+$validation = Assert-Property $manifest 'validation'
 if ($validation.source_applied -ne $true -or
     [string]$validation.vbe_compile -ne 'passed' -or
     $validation.workbook_saved -ne $true -or
@@ -239,7 +239,7 @@ if ($validation.source_applied -ne $true -or
     [string]$validation.excel_cleanup -ne 'clean') {
     throw 'Release manifest does not prove source application, VBE compile, save, close, and Excel cleanup.'
 }
-if (@('atomic_create', 'atomic_replace') -notcontains [string](Require-Property (Require-Property $manifest 'publication') 'method')) {
+if (@('atomic_create', 'atomic_replace') -notcontains [string](Assert-Property (Assert-Property $manifest 'publication') 'method')) {
     throw 'Release publication was not atomic_create or atomic_replace.'
 }
 
@@ -247,9 +247,9 @@ $included = @($manifest.included_components)
 $excluded = @($manifest.excluded_components)
 $expectedIncluded = Get-StringList $policy.included
 $expectedExcluded = Get-StringList $policy.excluded
-Assert-ExactSet $expectedIncluded @($included | ForEach-Object { [string](Require-Property $_ 'name') }) 'Included component names'
-Assert-ExactSet $expectedExcluded @($excluded | ForEach-Object { [string](Require-Property $_ 'name') }) 'Excluded component names'
-if ([int](Require-Property $validation 'components_applied') -ne $included.Count) {
+Assert-ExactSet $expectedIncluded @($included | ForEach-Object { [string](Assert-Property $_ 'name') }) 'Included component names'
+Assert-ExactSet $expectedExcluded @($excluded | ForEach-Object { [string](Assert-Property $_ 'name') }) 'Excluded component names'
+if ([int](Assert-Property $validation 'components_applied') -ne $included.Count) {
     throw 'Manifest components_applied does not match included component count.'
 }
 

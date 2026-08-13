@@ -16,6 +16,11 @@ tasks:
     cmds:
       - xlflow analyze --json
 
+  powershell:lint:
+    desc: Analyze tracked PowerShell tools with PSScriptAnalyzer
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Invoke-PSScriptAnalyzer.ps1
+
   format:
     desc: Check VBA source formatting with xlflow
     cmds:
@@ -46,6 +51,7 @@ tasks:
     cmds:
       - task: lint
       - task: analyze
+      - task: powershell:lint
       - task: format
       - task: class-source:check
       - task: test:native-declarations

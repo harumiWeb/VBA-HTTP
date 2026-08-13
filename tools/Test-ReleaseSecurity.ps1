@@ -17,7 +17,7 @@ function Get-RepoRelativeSourcePath([IO.FileInfo]$File) {
     return $File.FullName.Substring($rootWithSeparator.Length).Replace('\', '/')
 }
 
-function New-ComponentRecord([string]$Name, [hashtable]$ByName) {
+function Get-ComponentRecord([string]$Name, [hashtable]$ByName) {
     if (-not $ByName.ContainsKey($Name)) {
         throw "Fixture source map is missing component '$Name'."
     }
@@ -39,7 +39,7 @@ function New-ComponentRecord([string]$Name, [hashtable]$ByName) {
     }
 }
 
-function New-FixtureRoot {
+function Initialize-FixtureRoot {
     $artifactDirectory = Join-Path $fixtureRoot 'build\Release'
     $toolsDirectory = Join-Path $fixtureRoot 'tools'
     [void](New-Item -ItemType Directory -Path $artifactDirectory -Force)
@@ -52,8 +52,8 @@ function New-FixtureRoot {
     foreach ($file in @(Get-ChildItem -LiteralPath (Join-Path $projectRoot 'src') -Recurse -File | Where-Object { $_.Extension -in @('.bas', '.cls') })) {
         $sourceMap[$file.BaseName] = $file
     }
-    $included = @($policy.included | ForEach-Object { New-ComponentRecord ([string]$_) $sourceMap })
-    $excluded = @($policy.excluded | ForEach-Object { New-ComponentRecord ([string]$_) $sourceMap })
+    $included = @($policy.included | ForEach-Object { Get-ComponentRecord ([string]$_) $sourceMap })
+    $excluded = @($policy.excluded | ForEach-Object { Get-ComponentRecord ([string]$_) $sourceMap })
     $manifest = [ordered]@{
         schema_version = 1
         backend = 'excel'
@@ -118,13 +118,13 @@ function Invoke-Validator([string]$Root, [bool]$ShouldPass) {
     }
 }
 
-function New-Case([string]$Name, [scriptblock]$Mutator, [bool]$ShouldPass) {
+function Invoke-Case([string]$Name, [scriptblock]$Mutator, [bool]$ShouldPass) {
     $caseRoot = Join-Path $fixtureRoot $Name
     [void](New-Item -ItemType Directory -Path $caseRoot -Force)
     $oldRoot = $fixtureRoot
     try {
         $script:fixtureRoot = $caseRoot
-        $manifestPath = New-FixtureRoot
+        $manifestPath = Initialize-FixtureRoot
         if ($null -ne $Mutator) {
             $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
             & $Mutator $manifest (Join-Path $caseRoot 'build\Release\VBA-HTTP.xlsm')
@@ -139,33 +139,34 @@ function New-Case([string]$Name, [scriptblock]$Mutator, [bool]$ShouldPass) {
 
 try {
     [void](New-Item -ItemType Directory -Path $fixtureRoot -Force)
-    New-Case 'valid' $null $true
-    New-Case 'bad-base' {
-        param($Manifest, $Artifact)
+    Invoke-Case 'valid' $null $true
+    Invoke-Case 'bad-base' {
+        param($Manifest)
         $Manifest.base = 'build/Other.xlsm'
     } $false
-    New-Case 'included-test-path' {
-        param($Manifest, $Artifact)
+    Invoke-Case 'included-test-path' {
+        param($Manifest)
         $Manifest.included_components[0].source_path = 'src/modules/Tests/Injected.bas'
     } $false
-    New-Case 'missing-excluded' {
-        param($Manifest, $Artifact)
+    Invoke-Case 'missing-excluded' {
+        param($Manifest)
         $Manifest.excluded_components = @($Manifest.excluded_components | Select-Object -Skip 1)
     } $false
-    New-Case 'compile-not-proven' {
-        param($Manifest, $Artifact)
+    Invoke-Case 'compile-not-proven' {
+        param($Manifest)
         $Manifest.validation.vbe_compile = 'failed'
     } $false
-    New-Case 'non-atomic-publication' {
-        param($Manifest, $Artifact)
+    Invoke-Case 'non-atomic-publication' {
+        param($Manifest)
         $Manifest.publication.method = 'copy'
     } $false
-    New-Case 'related-path-escape' {
-        param($Manifest, $Artifact)
+    Invoke-Case 'related-path-escape' {
+        param($Manifest)
         $Manifest.included_components[0].related_paths = @('docs/secret.txt')
     } $false
-    New-Case 'artifact-tamper' {
+    Invoke-Case 'artifact-tamper' {
         param($Manifest, $Artifact)
+        [void]$Manifest
         [IO.File]::WriteAllBytes($Artifact, [byte[]](255..0))
     } $false
     Write-Output 'Release security validator tests passed: valid manifest plus seven fail-closed tamper cases.'

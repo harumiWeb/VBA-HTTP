@@ -520,6 +520,7 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 - [x] source distributionとworkbook distributionの責務を分離する（`docs/specs/distribution.md`）。
 - [x] source vendoring、install、upgrade手順を文書化する。
 - [x] MIT license、third-party notice、release package retentionを確定する（`LICENSE`、`THIRD_PARTY_NOTICES.md`、ADR-0036、`docs/specs/licensing.md`、`task test:license`）。
+- [x] PowerShell toolchainへPSScriptAnalyzerを導入し、`tools/*.ps1`のwarning／errorをLefthookの`task check`で停止する（`PSScriptAnalyzerSettings.psd1`、`task powershell:lint`、`docs/specs/powershell-quality.md`）。
 - [x] `.xlam` 用base workbookと独立build targetを追加する（追跡`build/VBA-HTTP.xlam`、`task test:xlam`、`task release:xlam:build`、ADR-0021、manifest/checksum/add-in identity/smoke gate）。
 - [x] CHANGELOGとcompatibility documentationを完成させる（x64 HTTP/2実測、ADR-0030の32-bit Office support外方針、ADR-0035のHTTP/3／QUIC support外方針を明記）。
 

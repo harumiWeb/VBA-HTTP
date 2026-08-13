@@ -16,7 +16,7 @@ if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
 $result = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json
 $protocols = @("HTTP/2")
 
-function Require-Property($Object, [string]$Name) {
+function Assert-Property($Object, [string]$Name) {
     if ($null -eq $Object -or $null -eq $Object.PSObject.Properties[$Name]) {
         throw "Protocol host evidence is missing '$Name'."
     }
@@ -29,7 +29,7 @@ function Assert-Sha256([string]$Value, [string]$Label) {
     }
 }
 
-function Assert-OnlyProperties($Object, [string[]]$Allowed, [string]$Location) {
+function Assert-OnlyProperty($Object, [string[]]$Allowed, [string]$Location) {
     if ($null -eq $Object) { throw "$Location is missing." }
     foreach ($property in $Object.PSObject.Properties) {
         if ($Allowed -notcontains $property.Name) {
@@ -67,19 +67,19 @@ function Assert-NoSensitiveField($Object, [string]$Location = "root") {
     }
 }
 
-if ([int](Require-Property $result "schema_version") -ne 1 -or
-    [string](Require-Property $result "benchmark") -ne "protocol-host-validation") {
+if ([int](Assert-Property $result "schema_version") -ne 1 -or
+    [string](Assert-Property $result "benchmark") -ne "protocol-host-validation") {
     throw "Protocol host evidence schema identity is invalid."
 }
-Assert-OnlyProperties $result @("schema_version", "benchmark", "status", "run_utc", "source_revision", "requested_protocol", "observed_protocol", "mode", "external_network", "target", "bridge", "office", "environment", "artifact", "build") "root"
-if ([string](Require-Property $result "status") -ne "passed" -or
-    [string](Require-Property $result "mode") -ne "required" -or
-    [bool](Require-Property $result "external_network") -ne $true) {
+Assert-OnlyProperty $result @("schema_version", "benchmark", "status", "run_utc", "source_revision", "requested_protocol", "observed_protocol", "mode", "external_network", "target", "bridge", "office", "environment", "artifact", "build") "root"
+if ([string](Assert-Property $result "status") -ne "passed" -or
+    [string](Assert-Property $result "mode") -ne "required" -or
+    [bool](Assert-Property $result "external_network") -ne $true) {
     throw "Protocol host evidence must be a required-mode external-network pass."
 }
 
-$requested = [string](Require-Property $result "requested_protocol")
-$observed = [string](Require-Property $result "observed_protocol")
+$requested = [string](Assert-Property $result "requested_protocol")
+$observed = [string](Assert-Property $result "observed_protocol")
 if ($requested -notin $protocols -or $observed -notin $protocols -or $requested -ne $observed) {
     throw "Requested and observed protocol must be an exact HTTP/2 match."
 }
@@ -88,78 +88,78 @@ if (-not [string]::IsNullOrWhiteSpace($ExpectedProtocol) -and $requested -ne $Ex
 }
 
 $runUtc = [DateTime]::MinValue
-if (-not [DateTime]::TryParse([string](Require-Property $result "run_utc"), [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::RoundtripKind, [ref]$runUtc) -or $runUtc.Kind -ne [DateTimeKind]::Utc) {
+if (-not [DateTime]::TryParse([string](Assert-Property $result "run_utc"), [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::RoundtripKind, [ref]$runUtc) -or $runUtc.Kind -ne [DateTimeKind]::Utc) {
     throw "run_utc must be a valid UTC ISO-8601 timestamp."
 }
-if ([string](Require-Property $result "source_revision") -notmatch '^[0-9a-fA-F]{40,64}$') {
+if ([string](Assert-Property $result "source_revision") -notmatch '^[0-9a-fA-F]{40,64}$') {
     throw "source_revision must be a full hexadecimal Git revision."
 }
 
-$target = Require-Property $result "target"
-Assert-OnlyProperties $target @("scheme", "host", "port") "target"
-if ([string](Require-Property $target "scheme") -ne "https" -or
-    [string]::IsNullOrWhiteSpace([string](Require-Property $target "host"))) {
+$target = Assert-Property $result "target"
+Assert-OnlyProperty $target @("scheme", "host", "port") "target"
+if ([string](Assert-Property $target "scheme") -ne "https" -or
+    [string]::IsNullOrWhiteSpace([string](Assert-Property $target "host"))) {
     throw "Protocol host target must contain an HTTPS scheme and host."
 }
-$port = [int](Require-Property $target "port")
+$port = [int](Assert-Property $target "port")
 if ($port -lt 1 -or $port -gt 65535) { throw "Protocol host target port is invalid." }
 
-$bridge = Require-Property $result "bridge"
-Assert-OnlyProperties $bridge @("name", "version", "runtime", "architecture") "bridge"
-if ([string](Require-Property $bridge "architecture") -ne "X64" -or
-    [string]::IsNullOrWhiteSpace([string](Require-Property $bridge "name")) -or
-    [string]::IsNullOrWhiteSpace([string](Require-Property $bridge "version")) -or
-    [string]::IsNullOrWhiteSpace([string](Require-Property $bridge "runtime"))) {
+$bridge = Assert-Property $result "bridge"
+Assert-OnlyProperty $bridge @("name", "version", "runtime", "architecture") "bridge"
+if ([string](Assert-Property $bridge "architecture") -ne "X64" -or
+    [string]::IsNullOrWhiteSpace([string](Assert-Property $bridge "name")) -or
+    [string]::IsNullOrWhiteSpace([string](Assert-Property $bridge "version")) -or
+    [string]::IsNullOrWhiteSpace([string](Assert-Property $bridge "runtime"))) {
     throw "Protocol host bridge metadata is incomplete."
 }
 
-$artifact = Require-Property $result "artifact"
-Assert-OnlyProperties $artifact @("name", "sha256", "manifest_sha256") "artifact"
-if ([string]::IsNullOrWhiteSpace([string](Require-Property $artifact "name"))) {
+$artifact = Assert-Property $result "artifact"
+Assert-OnlyProperty $artifact @("name", "sha256", "manifest_sha256") "artifact"
+if ([string]::IsNullOrWhiteSpace([string](Assert-Property $artifact "name"))) {
     throw "Protocol host artifact name is missing."
 }
-Assert-Sha256 ([string](Require-Property $artifact "sha256")) "artifact.sha256"
-Assert-Sha256 ([string](Require-Property $artifact "manifest_sha256")) "artifact.manifest_sha256"
+Assert-Sha256 ([string](Assert-Property $artifact "sha256")) "artifact.sha256"
+Assert-Sha256 ([string](Assert-Property $artifact "manifest_sha256")) "artifact.manifest_sha256"
 
-$build = Require-Property $result "build"
-Assert-OnlyProperties $build @("vbe_compile", "source_applied", "workbook_saved", "workbook_closed", "excel_cleanup") "build"
-if ([string](Require-Property $build "vbe_compile") -ne "passed" -or
-    [bool](Require-Property $build "source_applied") -ne $true -or
-    [bool](Require-Property $build "workbook_saved") -ne $true -or
-    [bool](Require-Property $build "workbook_closed") -ne $true -or
-    [string](Require-Property $build "excel_cleanup") -ne "clean") {
+$build = Assert-Property $result "build"
+Assert-OnlyProperty $build @("vbe_compile", "source_applied", "workbook_saved", "workbook_closed", "excel_cleanup") "build"
+if ([string](Assert-Property $build "vbe_compile") -ne "passed" -or
+    [bool](Assert-Property $build "source_applied") -ne $true -or
+    [bool](Assert-Property $build "workbook_saved") -ne $true -or
+    [bool](Assert-Property $build "workbook_closed") -ne $true -or
+    [string](Assert-Property $build "excel_cleanup") -ne "clean") {
     throw "Protocol host evidence does not prove a clean release build."
 }
 
-$office = Require-Property $result "office"
-Assert-OnlyProperties $office @("version", "build", "operating_system") "office"
-if ([string]::IsNullOrWhiteSpace([string](Require-Property $office "version")) -or
-    [string]::IsNullOrWhiteSpace([string](Require-Property $office "build")) -or
-    [string]::IsNullOrWhiteSpace([string](Require-Property $office "operating_system"))) {
+$office = Assert-Property $result "office"
+Assert-OnlyProperty $office @("version", "build", "operating_system") "office"
+if ([string]::IsNullOrWhiteSpace([string](Assert-Property $office "version")) -or
+    [string]::IsNullOrWhiteSpace([string](Assert-Property $office "build")) -or
+    [string]::IsNullOrWhiteSpace([string](Assert-Property $office "operating_system"))) {
     throw "Office metadata is incomplete."
 }
 
-$environment = Require-Property $result "environment"
-Assert-OnlyProperties $environment @("windows", "winhttp") "environment"
-if ([string]::IsNullOrWhiteSpace([string](Require-Property $environment "windows"))) {
+$environment = Assert-Property $result "environment"
+Assert-OnlyProperty $environment @("windows", "winhttp") "environment"
+if ([string]::IsNullOrWhiteSpace([string](Assert-Property $environment "windows"))) {
     throw "Windows metadata is missing."
 }
-$winhttp = Require-Property $environment "winhttp"
-$preflight = Require-Property $winhttp "preflight"
-Assert-OnlyProperties $winhttp @("enabled_protocol_option", "used_protocol_option", "required_protocol_option", "observed_protocol", "preflight") "environment.winhttp"
-if ([int](Require-Property $winhttp "enabled_protocol_option") -ne 133 -or
-    [int](Require-Property $winhttp "used_protocol_option") -ne 134 -or
-    [int](Require-Property $winhttp "required_protocol_option") -ne 145 -or
-    [string](Require-Property $winhttp "observed_protocol") -ne $observed) {
+$winhttp = Assert-Property $environment "winhttp"
+$preflight = Assert-Property $winhttp "preflight"
+Assert-OnlyProperty $winhttp @("enabled_protocol_option", "used_protocol_option", "required_protocol_option", "observed_protocol", "preflight") "environment.winhttp"
+if ([int](Assert-Property $winhttp "enabled_protocol_option") -ne 133 -or
+    [int](Assert-Property $winhttp "used_protocol_option") -ne 134 -or
+    [int](Assert-Property $winhttp "required_protocol_option") -ne 145 -or
+    [string](Assert-Property $winhttp "observed_protocol") -ne $observed) {
     throw "WinHTTP protocol option metadata is inconsistent."
 }
-Assert-OnlyProperties $preflight @("status", "requested_mask", "protocol_used_flag", "required", "stage") "environment.winhttp.preflight"
+Assert-OnlyProperty $preflight @("status", "requested_mask", "protocol_used_flag", "required", "stage") "environment.winhttp.preflight"
 $expectedMask = 1
-if ([string](Require-Property $preflight "status") -ne "passed" -or
-    [int](Require-Property $preflight "requested_mask") -ne $expectedMask -or
-    [int](Require-Property $preflight "protocol_used_flag") -ne $expectedMask -or
-    [bool](Require-Property $preflight "required") -ne $true -or
-    [string]::IsNullOrWhiteSpace([string](Require-Property $preflight "stage"))) {
+if ([string](Assert-Property $preflight "status") -ne "passed" -or
+    [int](Assert-Property $preflight "requested_mask") -ne $expectedMask -or
+    [int](Assert-Property $preflight "protocol_used_flag") -ne $expectedMask -or
+    [bool](Assert-Property $preflight "required") -ne $true -or
+    [string]::IsNullOrWhiteSpace([string](Assert-Property $preflight "stage"))) {
     throw "WinHTTP capability preflight metadata is incomplete or inconsistent."
 }
 

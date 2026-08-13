@@ -69,7 +69,14 @@ function Get-Sha256Hex([string]$Path) {
     }
 }
 
-function New-PatternFile([string]$Path, [long]$Length) {
+function New-PatternFile {
+    [CmdletBinding(SupportsShouldProcess)]
+    param(
+        [string]$Path,
+        [long]$Length
+    )
+
+    if (-not $PSCmdlet.ShouldProcess($Path, "Create deterministic $Length-byte upload source")) { return }
     $buffer = New-Object byte[] 65536
     for ($index = 0; $index -lt $buffer.Length; $index++) { $buffer[$index] = [byte]($index % 251) }
     $stream = [IO.File]::Create($Path)

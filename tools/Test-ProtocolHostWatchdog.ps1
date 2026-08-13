@@ -5,14 +5,14 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 $watchdog = Join-Path $PSScriptRoot "Watch-ProtocolHostExcel.ps1"
 
-function Get-ExcelIds {
+function Get-ExcelId {
     return @(
         Get-Process -Name EXCEL -ErrorAction SilentlyContinue |
             ForEach-Object { [int]$_.Id }
     )
 }
 
-function Assert-EqualIds([int[]]$Expected, [int[]]$Actual, [string]$Message) {
+function Assert-EqualId([int[]]$Expected, [int[]]$Actual, [string]$Message) {
     $expectedText = (($Expected | Sort-Object) -join ",")
     $actualText = (($Actual | Sort-Object) -join ",")
     if ($expectedText -ne $actualText) {
@@ -20,7 +20,7 @@ function Assert-EqualIds([int[]]$Expected, [int[]]$Actual, [string]$Message) {
     }
 }
 
-$beforeExcel = Get-ExcelIds
+$beforeExcel = Get-ExcelId
 $sleeper = $null
 try {
     $sleeper = Start-Process -FilePath "powershell.exe" -WindowStyle Hidden -PassThru -ArgumentList @(
@@ -60,6 +60,6 @@ finally {
     }
 }
 
-$afterExcel = Get-ExcelIds
-Assert-EqualIds $beforeExcel $afterExcel "Watchdog changed the existing Excel PID set."
+$afterExcel = Get-ExcelId
+Assert-EqualId $beforeExcel $afterExcel "Watchdog changed the existing Excel PID set."
 Write-Output "Protocol host watchdog safety tests passed."

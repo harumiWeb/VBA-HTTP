@@ -12,7 +12,7 @@ $checksumPath = "$artifactPath.checksum.json"
 $writerPath = Join-Path $PSScriptRoot "Write-ReleaseChecksums.ps1"
 $verifierPath = Join-Path $PSScriptRoot "Verify-ReleaseChecksums.ps1"
 
-function Assert-Throws([scriptblock]$Action, [string]$Message) {
+function Assert-ThrowsError([scriptblock]$Action, [string]$Message) {
     $threw = $false
     try {
         & $Action | Out-Null
@@ -42,13 +42,13 @@ try {
     }
 
     [IO.File]::WriteAllBytes($artifactPath, [byte[]](255..0))
-    Assert-Throws { & $verifierPath -ArtifactPath $artifactPath -ManifestPath $manifestPath -ChecksumPath $checksumPath } "Verifier accepted a modified release artifact."
+    Assert-ThrowsError { & $verifierPath -ArtifactPath $artifactPath -ManifestPath $manifestPath -ChecksumPath $checksumPath } "Verifier accepted a modified release artifact."
     [IO.File]::WriteAllBytes($artifactPath, [byte[]](0..255))
     & $writerPath -ArtifactPath $artifactPath -ManifestPath $manifestPath -OutputPath $checksumPath | Out-Null
 
     $sidecarBeforeMissingInput = Get-Content -LiteralPath $checksumPath -Raw
     Remove-Item -LiteralPath $manifestPath -Force
-    Assert-Throws { & $writerPath -ArtifactPath $artifactPath -ManifestPath $manifestPath -OutputPath $checksumPath } "Checksum writer accepted a missing build manifest."
+    Assert-ThrowsError { & $writerPath -ArtifactPath $artifactPath -ManifestPath $manifestPath -OutputPath $checksumPath } "Checksum writer accepted a missing build manifest."
     if ($sidecarBeforeMissingInput -ne (Get-Content -LiteralPath $checksumPath -Raw)) {
         throw "A failed checksum generation replaced the previous sidecar."
     }

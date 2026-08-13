@@ -54,7 +54,11 @@ if ($null -ne (Compare-Object $expectedExcluded $manifestExcluded)) {
     throw "Release manifest excluded components differ from policy."
 }
 
-function New-UploadSmokeFile([string]$Path) {
+function New-UploadSmokeFile {
+    [CmdletBinding(SupportsShouldProcess)]
+    param([string]$Path)
+
+    if (-not $PSCmdlet.ShouldProcess($Path, "Create release upload smoke file")) { return }
     $buffer = New-Object byte[] 65536
     for ($index = 0; $index -lt $buffer.Length; $index++) { $buffer[$index] = [byte]($index % 251) }
     $stream = [IO.File]::Create($Path)
@@ -70,7 +74,7 @@ $workbook = $null
 $components = $null
 $component = $null
 try {
-    $excelBaselineIds = @(Get-ExcelProcessIds)
+    $excelBaselineIds = @(Get-ExcelProcessId)
     $excel = New-Object -ComObject Excel.Application
     $ownedExcelIds = @(Get-OwnedExcelProcessId $excel $excelBaselineIds "release component inspection")
     $excel.Visible = $false
@@ -112,7 +116,7 @@ finally {
         [void][System.Runtime.InteropServices.Marshal]::FinalReleaseComObject($excel)
     }
     Start-Sleep -Milliseconds 250
-    Stop-OwnedExcelProcesses $ownedExcelIds "release component inspection"
+    Stop-OwnedExcelProcess $ownedExcelIds "release component inspection"
 }
 
 # The production transport contains an intentional, controlled DoEvents checkpoint.
@@ -190,7 +194,7 @@ try {
     Write-Output "Release smoke server ready."
     Write-ReleaseProgress "server-ready"
 
-    $consumerExcelBaselineIds = @(Get-ExcelProcessIds)
+    $consumerExcelBaselineIds = @(Get-ExcelProcessId)
     $consumerExcel = New-Object -ComObject Excel.Application
     $ownedConsumerExcelIds = @(Get-OwnedExcelProcessId $consumerExcel $consumerExcelBaselineIds "release consumer smoke")
     $consumerExcel.Visible = $false
@@ -313,7 +317,7 @@ finally {
         [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($consumerExcel)
     }
     Start-Sleep -Milliseconds 250
-    Stop-OwnedExcelProcesses $ownedConsumerExcelIds "release consumer smoke"
+    Stop-OwnedExcelProcess $ownedConsumerExcelIds "release consumer smoke"
     if ($null -ne $ready -and $ready.url) {
         try { Invoke-WebRequest -Method Post -Uri "$($ready.url)/__admin/shutdown" -UseBasicParsing | Out-Null } catch { Write-Warning "Could not request smoke server shutdown: $_" }
     }

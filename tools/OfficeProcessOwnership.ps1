@@ -11,7 +11,7 @@ public static class VBAHttpOfficeWindow {
 "@
 }
 
-function Get-ExcelProcessIds {
+function Get-ExcelProcessId {
     return @(
         Get-Process -Name EXCEL -ErrorAction SilentlyContinue |
             ForEach-Object { [int]$_.Id }
@@ -35,7 +35,14 @@ function Get-OwnedExcelProcessId($Excel, [int[]]$BaselineIds, [string]$Purpose) 
     return @([int]$processId)
 }
 
-function Stop-OwnedExcelProcesses([int[]]$OwnedIds, [string]$Purpose, [int]$GraceSeconds = 5) {
+function Stop-OwnedExcelProcess {
+    [CmdletBinding(SupportsShouldProcess)]
+    param(
+        [int[]]$OwnedIds,
+        [string]$Purpose,
+        [int]$GraceSeconds = 5
+    )
+
     $deadline = [DateTime]::UtcNow.AddSeconds($GraceSeconds)
     do {
         $liveOwned = @($OwnedIds | ForEach-Object {
@@ -49,12 +56,14 @@ function Stop-OwnedExcelProcesses([int[]]$OwnedIds, [string]$Purpose, [int]$Grac
     foreach ($processId in @($OwnedIds)) {
         $process = Get-Process -Id $processId -ErrorAction SilentlyContinue
         if ($null -ne $process -and $process.ProcessName -eq "EXCEL") {
-            try {
-                Stop-Process -Id $processId -Force -ErrorAction Stop
-                Write-Warning "Stopped owned Excel PID $processId after $Purpose cleanup did not complete."
-            }
-            catch {
-                Write-Warning "Could not stop owned Excel PID $processId after $Purpose cleanup: $_"
+            if ($PSCmdlet.ShouldProcess("Excel PID $processId", "Force stop after $Purpose cleanup did not complete")) {
+                try {
+                    Stop-Process -Id $processId -Force -ErrorAction Stop
+                    Write-Warning "Stopped owned Excel PID $processId after $Purpose cleanup did not complete."
+                }
+                catch {
+                    Write-Warning "Could not stop owned Excel PID $processId after $Purpose cleanup: $_"
+                }
             }
         }
     }

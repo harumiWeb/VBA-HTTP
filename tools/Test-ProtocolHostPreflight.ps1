@@ -3,7 +3,6 @@ param()
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
-$projectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
 $runnerPath = Join-Path $PSScriptRoot "Run-ProtocolHostValidation.ps1"
 $validatorPath = Join-Path $PSScriptRoot "Validate-ProtocolHostEvidence.ps1"
 
