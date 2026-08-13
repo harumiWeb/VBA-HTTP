@@ -1,23 +1,26 @@
 {
     "schema_version":  1,
     "benchmark":  "phase9-cancellation-stress",
-    "source_commit":  "ab164c6385abe462d9f442a8ef913e5de030ba56",
+    "source_commit":  "e74fc53d3e22cf9ff3e22afdbd6d5b3e784b3e4f",
     "environment":  {
                         "platform":  "Windows",
                         "powershell":  "5.1.22621.6133",
                         "processor_architecture":  "AMD64"
                     },
     "server":  {
-                   "base_url":  "http://127.0.0.1:60817",
+                   "base_url":  "http://127.0.0.1:49391",
                    "external_network":  false
                },
     "parameters":  {
                        "iterations":  25,
                        "com_cancellation_requests":  4,
                        "com_deadline_requests":  4,
+                       "com_timeout_receive_milliseconds":  1000,
+                       "com_timeout_delay_milliseconds":  10000,
                        "native_download_bytes":  65536,
                        "native_download_cancel_after_bytes":  65536,
                        "idle_wait_ms":  1000,
+                       "idle_settle_max_ms":  30000,
                        "handle_delta_limits":  {
                                                    "native":  8,
                                                    "com":  32
@@ -29,38 +32,38 @@
                         "transport":  "WinHttpComTransport",
                         "iterations":  25,
                         "status":  "passed",
-                        "elapsed_ms":  29117.003,
-                        "handle_delta":  50,
-                        "idle_handle_delta":  32,
+                        "elapsed_ms":  53004.675,
+                        "handle_delta":  -35,
+                        "idle_handle_delta":  -35,
                         "handle_delta_limit":  32,
                         "invariant":  "four delayed COM requests become cancelled on every iteration, followed by a 204 recovery request",
                         "process_before":  {
                                                "observed":  true,
                                                "process_count":  1,
-                                               "handles":  1493,
-                                               "working_set_bytes":  157306880,
-                                               "private_bytes":  181030912
+                                               "handles":  1532,
+                                               "working_set_bytes":  164376576,
+                                               "private_bytes":  191610880
                                            },
                         "process_peak":  {
                                              "observed":  true,
                                              "process_count":  1,
-                                             "handles":  1568,
-                                             "working_set_bytes":  163192832,
-                                             "private_bytes":  183001088
+                                             "handles":  1549,
+                                             "working_set_bytes":  164827136,
+                                             "private_bytes":  192159744
                                          },
                         "process_after":  {
                                               "observed":  true,
                                               "process_count":  1,
-                                              "handles":  1543,
-                                              "working_set_bytes":  163172352,
-                                              "private_bytes":  182870016
+                                              "handles":  1497,
+                                              "working_set_bytes":  164691968,
+                                              "private_bytes":  191856640
                                           },
                         "process_idle_after":  {
                                                    "observed":  true,
                                                    "process_count":  1,
-                                                   "handles":  1525,
-                                                   "working_set_bytes":  162975744,
-                                                   "private_bytes":  182595584
+                                                   "handles":  1497,
+                                                   "working_set_bytes":  164691968,
+                                                   "private_bytes":  191856640
                                                }
                     },
                     {
@@ -68,38 +71,77 @@
                         "transport":  "WinHttpComTransport",
                         "iterations":  25,
                         "status":  "passed",
-                        "elapsed_ms":  3258.252,
-                        "handle_delta":  -2,
-                        "idle_handle_delta":  -2,
+                        "elapsed_ms":  3847.378,
+                        "handle_delta":  14,
+                        "idle_handle_delta":  14,
                         "handle_delta_limit":  32,
                         "invariant":  "four delayed COM requests become timeout failures on every iteration, followed by a 204 recovery request",
                         "process_before":  {
                                                "observed":  true,
                                                "process_count":  1,
-                                               "handles":  1476,
-                                               "working_set_bytes":  155869184,
-                                               "private_bytes":  182018048
+                                               "handles":  1463,
+                                               "working_set_bytes":  158392320,
+                                               "private_bytes":  188694528
                                            },
                         "process_peak":  {
                                              "observed":  true,
                                              "process_count":  1,
-                                             "handles":  1489,
-                                             "working_set_bytes":  157188096,
-                                             "private_bytes":  182288384
+                                             "handles":  1492,
+                                             "working_set_bytes":  158691328,
+                                             "private_bytes":  188841984
                                          },
                         "process_after":  {
                                               "observed":  true,
                                               "process_count":  1,
-                                              "handles":  1474,
-                                              "working_set_bytes":  156094464,
-                                              "private_bytes":  182038528
+                                              "handles":  1477,
+                                              "working_set_bytes":  158691328,
+                                              "private_bytes":  188841984
                                           },
                         "process_idle_after":  {
                                                    "observed":  true,
                                                    "process_count":  1,
-                                                   "handles":  1474,
-                                                   "working_set_bytes":  156094464,
-                                                   "private_bytes":  182038528
+                                                   "handles":  1477,
+                                                   "working_set_bytes":  158691328,
+                                                   "private_bytes":  188841984
+                                               }
+                    },
+                    {
+                        "scenario":  "com_receive_timeout",
+                        "transport":  "WinHttpComTransport",
+                        "iterations":  25,
+                        "status":  "passed",
+                        "elapsed_ms":  302004.294,
+                        "handle_delta":  -20,
+                        "idle_handle_delta":  -20,
+                        "handle_delta_limit":  32,
+                        "invariant":  "repeated COM receive timeouts preserve a usable client and stay within the idle handle budget",
+                        "process_before":  {
+                                               "observed":  true,
+                                               "process_count":  1,
+                                               "handles":  1514,
+                                               "working_set_bytes":  163397632,
+                                               "private_bytes":  189079552
+                                           },
+                        "process_peak":  {
+                                             "observed":  true,
+                                             "process_count":  1,
+                                             "handles":  1530,
+                                             "working_set_bytes":  164610048,
+                                             "private_bytes":  189427712
+                                         },
+                        "process_after":  {
+                                              "observed":  true,
+                                              "process_count":  1,
+                                              "handles":  1494,
+                                              "working_set_bytes":  164610048,
+                                              "private_bytes":  189292544
+                                          },
+                        "process_idle_after":  {
+                                                   "observed":  true,
+                                                   "process_count":  1,
+                                                   "handles":  1494,
+                                                   "working_set_bytes":  164610048,
+                                                   "private_bytes":  189292544
                                                }
                     },
                     {
@@ -107,38 +149,38 @@
                         "transport":  "WinHttpNativeTransport",
                         "iterations":  25,
                         "status":  "passed",
-                        "elapsed_ms":  332223.493,
-                        "handle_delta":  -41,
-                        "idle_handle_delta":  -41,
+                        "elapsed_ms":  368238.551,
+                        "handle_delta":  -40,
+                        "idle_handle_delta":  -40,
                         "handle_delta_limit":  8,
                         "invariant":  "64 KiB streaming download cancellation preserves the sentinel destination and temporary-file count",
                         "process_before":  {
                                                "observed":  true,
                                                "process_count":  1,
-                                               "handles":  1508,
-                                               "working_set_bytes":  160854016,
-                                               "private_bytes":  181256192
+                                               "handles":  1497,
+                                               "working_set_bytes":  162635776,
+                                               "private_bytes":  189165568
                                            },
                         "process_peak":  {
                                              "observed":  true,
                                              "process_count":  1,
-                                             "handles":  1509,
-                                             "working_set_bytes":  163471360,
-                                             "private_bytes":  181800960
+                                             "handles":  1506,
+                                             "working_set_bytes":  162910208,
+                                             "private_bytes":  189210624
                                          },
                         "process_after":  {
                                               "observed":  true,
                                               "process_count":  1,
-                                              "handles":  1467,
-                                              "working_set_bytes":  161263616,
-                                              "private_bytes":  181149696
+                                              "handles":  1457,
+                                              "working_set_bytes":  162906112,
+                                              "private_bytes":  188723200
                                           },
                         "process_idle_after":  {
                                                    "observed":  true,
                                                    "process_count":  1,
-                                                   "handles":  1467,
-                                                   "working_set_bytes":  161263616,
-                                                   "private_bytes":  181149696
+                                                   "handles":  1457,
+                                                   "working_set_bytes":  162906112,
+                                                   "private_bytes":  188723200
                                                }
                     }
                 ]
