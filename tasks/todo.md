@@ -446,6 +446,7 @@ OSが提供するmodern WinHTTP capabilityとcorporate environment対応を安�
 - [x] native HTTP/2 opt-inと`HttpResponse.ProtocolUsed`によるnegotiated protocol取得を実装する。
 - [x] HTTP/3 opt-inのWinHTTP flagとvalidationを実装する（requested-mask、unsupported fallback、required errorをnative transportで検証済み）。
 - [x] HTTP/2／HTTP/3 negotiated-host evidenceのfail-closed収集runner、redacted schema、validatorを追加する（ADR-0025／`tools/Run-ProtocolHostValidation.ps1`）。
+- [x] protocol-host runnerにExcel-free WinHTTP capability preflightを追加し、未対応hostではExcelを起動せず停止する（ADR-0032、preflight metadata validator／ownership safety test）。
 - [x] HTTP/2のTLS negotiated-host evidenceをx64実機で取得する（`benchmarks/results/protocol-host-http2.json`、trusted `nghttp2.org:443`、required mode、`ProtocolUsed=HTTP/2`）。
 - [~] HTTP/3のTLS/QUIC negotiated-host evidenceを実機で取得する（対応Windows/WinHTTP hostとfixture待ち）。
 - [x] unsupported option、plain HTTP、required mismatchのfallback／`HttpErrorProtocol`を実装する。

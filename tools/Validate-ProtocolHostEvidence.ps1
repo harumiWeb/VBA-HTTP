@@ -145,12 +145,22 @@ if ([string]::IsNullOrWhiteSpace([string](Require-Property $environment "windows
     throw "Windows metadata is missing."
 }
 $winhttp = Require-Property $environment "winhttp"
-Assert-OnlyProperties $winhttp @("enabled_protocol_option", "used_protocol_option", "required_protocol_option", "observed_protocol") "environment.winhttp"
+$preflight = Require-Property $winhttp "preflight"
+Assert-OnlyProperties $winhttp @("enabled_protocol_option", "used_protocol_option", "required_protocol_option", "observed_protocol", "preflight") "environment.winhttp"
 if ([int](Require-Property $winhttp "enabled_protocol_option") -ne 133 -or
     [int](Require-Property $winhttp "used_protocol_option") -ne 134 -or
     [int](Require-Property $winhttp "required_protocol_option") -ne 145 -or
     [string](Require-Property $winhttp "observed_protocol") -ne $observed) {
     throw "WinHTTP protocol option metadata is inconsistent."
+}
+Assert-OnlyProperties $preflight @("status", "requested_mask", "protocol_used_flag", "required", "stage") "environment.winhttp.preflight"
+$expectedMask = if ($requested -eq "HTTP/2") { 1 } else { 2 }
+if ([string](Require-Property $preflight "status") -ne "passed" -or
+    [int](Require-Property $preflight "requested_mask") -ne $expectedMask -or
+    [int](Require-Property $preflight "protocol_used_flag") -ne $expectedMask -or
+    [bool](Require-Property $preflight "required") -ne $true -or
+    [string]::IsNullOrWhiteSpace([string](Require-Property $preflight "stage"))) {
+    throw "WinHTTP capability preflight metadata is incomplete or inconsistent."
 }
 
 Assert-NoSensitiveField $result

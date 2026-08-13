@@ -1,5 +1,10 @@
 ## Unreleased
 
+- Added an Excel-free WinHTTP capability preflight to the opt-in protocol-host
+  runner. It checks the exact required HTTP/2 or HTTP/3 mask before creating
+  Excel, records only redacted preflight metadata, and fails closed without
+  publishing evidence when the host lacks the capability (ADR-0032).
+
 - Treated Win32 `ERROR_NOT_SUPPORTED` (50) as a native protocol/decompression
   capability miss, so HTTP/3 requests on WinHTTP runtimes without HTTP/3 now
   fail or fall back through the documented `HttpErrorProtocol` contract rather

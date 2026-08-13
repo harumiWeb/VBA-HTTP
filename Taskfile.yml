@@ -147,6 +147,11 @@ tasks:
     cmds:
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-ProtocolHostWatchdog.ps1
 
+  test:protocol-host-preflight:
+    desc: Verify WinHTTP capability preflight runs before Excel and is validated
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-ProtocolHostPreflight.ps1
+
   protocol:host:
     desc: Run opt-in required HTTP/2 or HTTP/3 host evidence from environment variables
     cmds:
@@ -260,6 +265,7 @@ tasks:
       - task: test:office-bitness
       - task: test:protocol-host-schema
       - task: test:protocol-host-watchdog
+      - task: test:protocol-host-preflight
       - task: build:plan
 
   hooks:install:

@@ -45,6 +45,17 @@ useful for separating a WinHTTP capability miss (for example
 `ERROR_NOT_SUPPORTED` 50 for an HTTP/3-enabled mask) from an Excel automation
 failure; a successful probe still does not replace the public-consumer proof.
 
+The host runner invokes that probe as an Excel-free capability preflight after
+the x64 bridge and release-artifact gates but before creating an Excel COM
+instance. It requests the exact required protocol mask and requires the probe
+to report the same `protocol_used_flag`. An unsupported option, timeout, JSON
+failure, or protocol mismatch stops the host run before Excel starts and
+publishes no evidence. This prevents a known WinHTTP capability miss from
+crashing or hanging an automation process and leaves unrelated user Excel
+processes outside the runner's scope. A passing preflight is recorded only as
+the redacted `environment.winhttp.preflight` metadata; the public Excel
+consumer remains mandatory for a promotion record.
+
 ## Evidence schema
 
 The runner starts a hidden ownership watchdog (90 seconds by default; the
@@ -74,7 +85,9 @@ Required fields:
 - `bridge`: xlflow bridge name/version/runtime and `X64` architecture;
 - `office`: Excel version, build, and operating-system strings;
 - `environment`: Windows version plus WinHTTP option IDs 133 (enable), 134
-  (used), and 145 (required), with the observed protocol;
+  (used), and 145 (required), with the observed protocol and a passing
+  `winhttp.preflight` object containing only `status`, `requested_mask`,
+  `protocol_used_flag`, `required`, and `stage`;
 - `artifact`: basename plus 64-character SHA-256 values for artifact and
   manifest;
 - `build`: VBE compile, source application, save, close, and cleanup evidence.

@@ -26,6 +26,50 @@ function Invoke-JsonCommand([string]$FilePath, [string[]]$Arguments) {
     return (($jsonLines | Out-String) | ConvertFrom-Json)
 }
 
+function Invoke-ProtocolCapabilityPreflight([Uri]$Target, [string]$Protocol, [int]$TimeoutMilliseconds) {
+    $probePath = Join-Path $PSScriptRoot "Probe-WinHttpProtocol.ps1"
+    if (-not (Test-Path -LiteralPath $probePath -PathType Leaf)) {
+        throw "WinHTTP capability probe is missing: $probePath"
+    }
+
+    $requestedMask = if ($Protocol -eq "HTTP/2") { 1 } else { 2 }
+    $probeOutput = @(
+        & powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass `
+            -File $probePath `
+            -Url $Target.AbsoluteUri `
+            -ProtocolMask $requestedMask `
+            -Required `
+            -TimeoutMilliseconds $TimeoutMilliseconds 2>$null
+    )
+    $probeExitCode = $LASTEXITCODE
+    $probeText = ($probeOutput | Out-String).Trim()
+    $probe = $null
+    try {
+        $probe = $probeText | ConvertFrom-Json
+    }
+    catch {
+        throw "WinHTTP capability preflight returned invalid JSON before Excel was started."
+    }
+
+    if ($probeExitCode -ne 0 -or [string]$probe.status -ne "passed") {
+        $stage = [string]$probe.stage
+        $errorCode = [string]$probe.error
+        throw "WinHTTP capability preflight failed before Excel was started (protocol=$Protocol, stage=$stage, error=$errorCode)."
+    }
+    if ([int]$probe.requested_mask -ne $requestedMask -or
+        [int]$probe.protocol_used_flag -ne $requestedMask) {
+        throw "WinHTTP capability preflight did not prove the requested $Protocol protocol before Excel was started."
+    }
+
+    return [ordered]@{
+        status = "passed"
+        requested_mask = $requestedMask
+        protocol_used_flag = [int]$probe.protocol_used_flag
+        required = $true
+        stage = [string]$probe.stage
+    }
+}
+
 function Get-Sha256Hex([string]$Path) {
     $sha256 = [Security.Cryptography.SHA256]::Create()
     $stream = $null
@@ -127,6 +171,8 @@ if ($architecture -notin @("X86", "X64")) { throw "xlflow did not report an X86 
 if ($architecture -ne "X64") {
     throw "32-bit Office is unsupported by policy; protocol-host promotion requires an X64 bridge."
 }
+$preflightTimeoutMilliseconds = [Math]::Min(120000, [Math]::Max(1000, $MaxRuntimeSeconds * 1000))
+$capabilityPreflight = Invoke-ProtocolCapabilityPreflight $targetUri $ExpectedProtocol $preflightTimeoutMilliseconds
 $sourceRevision = ((& git rev-parse HEAD 2>$null) | Out-String).Trim()
 if ($sourceRevision -notmatch '^[0-9a-fA-F]{40,64}$') { throw "Could not determine the source revision." }
 
@@ -238,6 +284,7 @@ $record = [ordered]@{
             used_protocol_option = 134
             required_protocol_option = 145
             observed_protocol = $observedProtocol
+            preflight = $capabilityPreflight
         }
     }
     artifact = [ordered]@{
