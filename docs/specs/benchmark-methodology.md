@@ -47,6 +47,9 @@ Time is measured with Windows `QueryPerformanceCounter`. Process working set, pe
 - Phase 3 evidence: `benchmarks/results/vba-http-concurrency.json`, validated by `benchmarks/schema/concurrency-result.schema.json`
 - Phase 7 evidence: `benchmarks/results/phase7-upload-stress.json`, described by `benchmarks/schema/streaming-upload-result.schema.json`
 - Human summary: `docs/BENCHMARKS_BASELINE.md`
+- Office bitness evidence: `benchmarks/schema/office-bitness-result.schema.json`
+  and `benchmarks/results/office-bitness-x64.json`; the runner requires both
+  isolated and loopback integration tests to pass.
 
 ## Phase 3 bounded-concurrency scenario
 

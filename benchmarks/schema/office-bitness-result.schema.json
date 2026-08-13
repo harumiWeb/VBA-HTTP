@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["schema_version", "benchmark", "architecture", "bridge", "office", "tests", "integration", "build", "consumer_smoke", "external_network", "status"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "benchmark": { "const": "office-bitness-validation" },
+    "architecture": { "enum": ["X86", "X64"] },
+    "bridge": { "type": "object", "required": ["name", "version", "runtime"] },
+    "office": { "type": "object", "required": ["version", "build", "operating_system"] },
+    "tests": { "type": "object", "required": ["total", "passed", "inconclusive", "failed"] },
+    "integration": { "type": "object", "required": ["total", "passed", "failed"] },
+    "build": { "type": "object", "required": ["vbe_compile", "source_applied", "workbook_saved", "workbook_closed", "excel_cleanup"] },
+    "consumer_smoke": { "const": "passed" },
+    "external_network": { "const": false },
+    "status": { "const": "passed" }
+  }
+}

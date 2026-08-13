@@ -15,7 +15,7 @@ the focused compile, integration, and release-consumer smoke checks.
 | Native WinHTTP gzip/deflate decompression | `verified` | x64 loopback buffered/download tests and release consumer smoke; option 118 requires Windows 8.1+ |
 | WinHTTP default/direct/manual HTTP proxy routing | `integration-tested` | x64 COM/native loopback proxy tests; WinHTTP access-type mapping and release smoke; HTTPS CONNECT/auth remains pending |
 | Preemptive Basic/Bearer auth providers | `integration-tested` | x64 COM/native loopback success, HTTPS-by-default validation, redirect suppression, and release consumer smoke; Windows integrated/Digest auth remains pending |
-| Windows 32-bit Office, native declarations | `pending` | Real 32-bit compile, loopback integration, and release build evidence |
+| Windows 32-bit Office, native declarations | `pending` | Run `tools/Run-OfficeBitnessValidation.ps1 -ExpectedArchitecture X86` on a real 32-bit host; record compile, loopback integration, isolated tests, and release build evidence |
 | COM transport with advanced protocol options | `rejected-by-contract` | Public contract test must reject non-empty options without network I/O |
 
 `HttpProtocolOptions.EnabledProtocols = 0` means no native override. Modern

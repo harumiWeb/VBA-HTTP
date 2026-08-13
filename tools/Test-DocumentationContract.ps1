@@ -17,6 +17,10 @@ $required = @(
     'tools/Validate-XlamArtifact.ps1',
     'tools/Test-XlamDistribution.ps1',
     'tools/Test-CleanCheckout.ps1',
+    'tools/Run-OfficeBitnessValidation.ps1',
+    'tools/Validate-OfficeBitnessResult.ps1',
+    'benchmarks/schema/office-bitness-result.schema.json',
+    'docs/specs/office-bitness-validation.md',
     'build/VBA-HTTP.xlam',
     'examples/ConsumerBasic.bas',
     'examples/ConsumerDiagnostics.bas'

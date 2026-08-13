@@ -19,6 +19,11 @@
   reruns the source, documentation, base-identity, and both release-plan gates;
   an opt-in full mode builds both XLSM and XLAM artifacts from that archive.
 
+- Added a host-specific Office bitness validation runner and result schema. It
+  records bridge architecture, isolated tests, loopback integration, VBE compile, and consumer smoke;
+  the current evidence remains X64 until the same runner is executed on a real
+  32-bit Office host.
+
 - Added opt-in structured `HttpDiagnostics` operation events with bounded
   retention, query/user-info target sanitization, stable error categories, and
   automatic sensitive-header redaction. Release consumer smoke verifies that

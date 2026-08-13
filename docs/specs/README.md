@@ -31,4 +31,5 @@
 - `security-risk-register.md`: machine-readable residual risks and zero-current-blocker release gate
 - `compatibility-matrix.md`: observed Windows/Office/protocol evidence and promotion requirements
 - `distribution.md`: development/release workbook separation, build, checksum, install, and upgrade contract
+- `office-bitness-validation.md`: host-specific X86/X64 compile, isolated test, and consumer-smoke evidence contract
 - `distribution.md` also defines the independent same-extension XLAM base, build target, add-in identity, and smoke gate (ADR-0021)

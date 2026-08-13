@@ -369,7 +369,7 @@ streamingとadvanced protocolの土台となる安全なNative WinHTTP transport
 
 ### Exit Criteria
 
-- [~] 32-bit／64-bit compile evidenceがある（現環境のx64実測済み、32-bit Office実機証跡は別ホスト待ち）。
+- [~] 32-bit／64-bit compile evidenceがある（`benchmarks/results/office-bitness-x64.json`でx64の135 unit／71 integration、VBE compile、consumer smokeを実証。32-bit Office実機は同じrunnerの別ホスト実行待ち）。
 - [x] repeated request後にpersistent handle growthがない。
 - [x] COM transportと同じpublic response／error contractを満たす。
 - [x] production-only release buildが成功する（`xlflow build` のVBE compileと外部consumer smokeを確認済み）。
@@ -531,7 +531,7 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 - [x] 100MB／1GB download benchmarkを公開する。
 - [x] multipart upload benchmarkを公開する。
 - [x] memory／handle stability結果を公開する。
-- [~] 32-bit／64-bit Office validationを完了する（x64 evidenceは完了、実32-bit host実測待ち）。
+- [~] 32-bit／64-bit Office validationを完了する（x64 evidenceは完了、実32-bit hostでは`Run-OfficeBitnessValidation.ps1 -ExpectedArchitecture X86`実測待ち）。
 - [x] release checklistとartifact checksumsを作成する（`docs/RELEASE_CHECKLIST.md`、checksum sidecar gate）。
 - [x] READMEには実測値だけを掲載する（loopback条件と未達15% targetを明記）。
 - [x] 最終 `xlflow build` とexternal consumer smoke testを実行する（現行x64 release evidence）。

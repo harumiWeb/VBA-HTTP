@@ -1,0 +1,36 @@
+{
+    "schema_version":  1,
+    "benchmark":  "office-bitness-validation",
+    "architecture":  "X64",
+    "bridge":  {
+                   "name":  "xlflow-excel-bridge",
+                   "version":  "1.0.0",
+                   "runtime":  ".NET 8.0.30"
+               },
+    "office":  {
+                   "version":  "16.0",
+                   "build":  "17932",
+                   "operating_system":  "Windows (64-bit) NT 10.00"
+               },
+    "tests":  {
+                  "total":  212,
+                  "passed":  135,
+                  "inconclusive":  77,
+                  "failed":  0
+              },
+    "integration":  {
+                        "total":  71,
+                        "passed":  71,
+                        "failed":  0
+                    },
+    "build":  {
+                  "vbe_compile":  "passed",
+                  "source_applied":  true,
+                  "workbook_saved":  true,
+                  "workbook_closed":  true,
+                  "excel_cleanup":  "clean"
+              },
+    "consumer_smoke":  "passed",
+    "external_network":  false,
+    "status":  "passed"
+}

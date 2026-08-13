@@ -120,6 +120,11 @@ tasks:
     cmds:
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-CleanCheckout.ps1
 
+  test:office-bitness:
+    desc: Run the host-specific Office bitness compile, test, and consumer smoke evidence
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Run-OfficeBitnessValidation.ps1
+
   testserver:run:
     desc: Start the local HTTP server on an OS-selected port
     dir: tools/testserver
@@ -225,6 +230,7 @@ tasks:
       - task: test:docs
       - task: test:xlam
       - task: test:clean-checkout
+      - task: test:office-bitness
       - task: build:plan
 
   hooks:install:
