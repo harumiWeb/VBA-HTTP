@@ -151,7 +151,7 @@ try {
 
     $serverProcess = Start-Process `
         -FilePath $serverExecutable `
-        -ArgumentList "-listen", "127.0.0.1:0", "-proxy-listen", "127.0.0.1:0" `
+        -ArgumentList "-listen", "127.0.0.1:0", "-proxy-listen", "127.0.0.1:0", "-proxy-auth-listen", "127.0.0.1:0" `
         -RedirectStandardOutput $serverStdout `
         -RedirectStandardError $serverStderr `
         -WindowStyle Hidden `
@@ -171,8 +171,8 @@ try {
         }
         Start-Sleep -Milliseconds 50
     }
-    if ($null -eq $ready -or $ready.event -ne "ready" -or -not $ready.url -or -not $ready.proxy_url -or -not $ready.proxy_target_url) {
-        throw "Release smoke test server did not publish HTTP and proxy readiness."
+    if ($null -eq $ready -or $ready.event -ne "ready" -or -not $ready.url -or -not $ready.proxy_url -or -not $ready.proxy_target_url -or -not $ready.proxy_auth_url) {
+        throw "Release smoke test server did not publish HTTP, proxy, and authenticated-proxy readiness."
     }
 
     $consumerExcel = New-Object -ComObject Excel.Application
@@ -223,7 +223,7 @@ try {
     $decompressionMacro = "'$($harnessWorkbook.Name)'!ReleaseBatchSmoke.RunDecompressionSmoke"
     [void]$consumerExcel.Run($decompressionMacro, $consumerWorkbook.Name, [string]$ready.url)
     $proxyMacro = "'$($harnessWorkbook.Name)'!ReleaseBatchSmoke.RunProxySmoke"
-    [void]$consumerExcel.Run($proxyMacro, $consumerWorkbook.Name, [string]$ready.proxy_target_url, [string]$ready.proxy_url)
+    [void]$consumerExcel.Run($proxyMacro, $consumerWorkbook.Name, [string]$ready.proxy_target_url, [string]$ready.proxy_url, [string]$ready.proxy_auth_url)
     $authMacro = "'$($harnessWorkbook.Name)'!ReleaseBatchSmoke.RunAuthSmoke"
     [void]$consumerExcel.Run($authMacro, $consumerWorkbook.Name, [string]$ready.url)
     $diagnosticsMacro = "'$($harnessWorkbook.Name)'!ReleaseBatchSmoke.RunDiagnosticsSmoke"

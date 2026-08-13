@@ -19,6 +19,7 @@ func main() {
 	listenAddress := flag.String("listen", "127.0.0.1:0", "TCP address to listen on")
 	tlsListenAddress := flag.String("tls-listen", "", "Optional TCP address for an HTTPS listener with an untrusted self-signed certificate")
 	proxyListenAddress := flag.String("proxy-listen", "", "Optional loopback address for a deterministic HTTP forward proxy")
+	proxyAuthListenAddress := flag.String("proxy-auth-listen", "", "Optional loopback address for a deterministic Basic-authenticated HTTP forward proxy")
 	flag.Parse()
 
 	listener, err := net.Listen("tcp", *listenAddress)
@@ -65,8 +66,20 @@ func main() {
 	var proxyListener net.Listener
 	var proxyServer *http.Server
 	var proxyURL string
+	var proxyAuthListener net.Listener
+	var proxyAuthServer *http.Server
+	var proxyAuthURL string
 	readyURL := "http://" + listener.Addr().String()
 	proxyTargetURL := ""
+	var proxyTarget *url.URL
+	if *proxyListenAddress != "" || *proxyAuthListenAddress != "" {
+		proxyTarget, err = url.Parse(fmt.Sprintf("http://vba-http.localhost:%d", tcpAddress.Port))
+		if err != nil {
+			_ = listener.Close()
+			fatal(err)
+		}
+		proxyTargetURL = proxyTarget.String()
+	}
 	if *proxyListenAddress != "" {
 		proxyListener, err = net.Listen("tcp", *proxyListenAddress)
 		if err != nil {
@@ -82,15 +95,29 @@ func main() {
 		// WinHTTP deliberately bypasses proxies for literal loopback hosts.  A
 		// loopback-only DNS alias keeps the fixture local while exercising the
 		// named-proxy path instead of silently connecting directly.
-		targetURL, parseErr := url.Parse(fmt.Sprintf("http://vba-http.localhost:%d", tcpAddress.Port))
-		if parseErr != nil {
-			_ = listener.Close()
-			_ = proxyListener.Close()
-			fatal(parseErr)
-		}
-		proxyServer = &http.Server{Handler: newLoopbackProxy(targetURL), ReadHeaderTimeout: 10 * time.Second}
+		proxyServer = &http.Server{Handler: newLoopbackProxy(proxyTarget, false), ReadHeaderTimeout: 10 * time.Second}
 		proxyURL = "http://" + proxyListener.Addr().String()
-		proxyTargetURL = targetURL.String()
+	}
+	if *proxyAuthListenAddress != "" {
+		proxyAuthListener, err = net.Listen("tcp", *proxyAuthListenAddress)
+		if err != nil {
+			_ = listener.Close()
+			if proxyListener != nil {
+				_ = proxyListener.Close()
+			}
+			fatal(err)
+		}
+		proxyAuthTCPAddress, proxyAuthOK := proxyAuthListener.Addr().(*net.TCPAddr)
+		if !proxyAuthOK || !proxyAuthTCPAddress.IP.IsLoopback() {
+			_ = listener.Close()
+			_ = proxyAuthListener.Close()
+			if proxyListener != nil {
+				_ = proxyListener.Close()
+			}
+			fatal(fmt.Errorf("test authenticated proxy must listen on a loopback address"))
+		}
+		proxyAuthServer = &http.Server{Handler: newLoopbackProxy(proxyTarget, true), ReadHeaderTimeout: 10 * time.Second}
+		proxyAuthURL = "http://" + proxyAuthListener.Addr().String()
 	}
 
 	ready := map[string]any{
@@ -101,6 +128,9 @@ func main() {
 		ready["proxy_url"] = proxyURL
 		ready["proxy_target_url"] = proxyTargetURL
 	}
+	if proxyAuthURL != "" {
+		ready["proxy_auth_url"] = proxyAuthURL
+	}
 	if httpsURL != "" {
 		ready["https_url"] = httpsURL
 	}
@@ -108,13 +138,18 @@ func main() {
 		fatal(err)
 	}
 
-	serveErrors := make(chan error, 3)
+	serveErrors := make(chan error, 4)
 	go func() {
 		serveErrors <- server.Serve(listener)
 	}()
 	if proxyServer != nil {
 		go func() {
 			serveErrors <- proxyServer.Serve(proxyListener)
+		}()
+	}
+	if proxyAuthServer != nil {
+		go func() {
+			serveErrors <- proxyAuthServer.Serve(proxyAuthListener)
 		}()
 	}
 	if tlsServer != nil {
@@ -143,6 +178,11 @@ func main() {
 	}
 	if proxyServer != nil {
 		if err := proxyServer.Shutdown(ctx); err != nil {
+			fatal(err)
+		}
+	}
+	if proxyAuthServer != nil {
+		if err := proxyAuthServer.Shutdown(ctx); err != nil {
 			fatal(err)
 		}
 	}

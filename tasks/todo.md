@@ -460,7 +460,7 @@ OSが提供するmodern WinHTTP capabilityとcorporate environment対応を安�
 - [x] HTTP/1.1 fallbackとrequested-mask contractを識別できる（plain HTTP、unsupported、required mismatchを検証済み）。
 - [~] TLS上のHTTP/2と対応環境のHTTP/3 negotiated protocolを識別する（TLS/QUIC fixtureとhost evidence待ち）。
 - [x] unsupported環境のfallback／errorがspec通りである。
-- [x] HTTP forwarding proxyのlocal integration testsがCOM/nativeで成功する（proxy authentication/HTTPS CONNECTは後続auth sliceの対象）。
+- [x] HTTP forwarding proxyとfixed Basic proxy-challengeのlocal integration testsがCOM/nativeで成功する（HTTPS CONNECTと実Windows domain authはcompatibility gateとして継続）。
 - [x] secretがdiagnosticsやbenchmark outputへ出ない（diagnostics serializerはquery／user-info／body／descriptionを除外し、sensitive headerを常時redactする。benchmark serializerは既存契約を維持する）。
 - [x] release artifactでprotocol／auth consumer smoke testが成功する（protocol fallbackとBasic／Bearer auth smoke）。
 

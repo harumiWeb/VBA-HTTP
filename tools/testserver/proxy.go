@@ -6,26 +6,35 @@ import (
 	"net/url"
 )
 
+const proxyBasicAuthorization = "Basic cHJveHktdXNlcjpwcm94eS1wYXNz"
+
 // loopbackProxy is a deliberately small HTTP forward proxy used by integration
 // tests. It only forwards to the test server's own loopback listener, so a
 // malformed test cannot accidentally reach the external network.
 type loopbackProxy struct {
-	target    *url.URL
-	transport *http.Transport
+	target           *url.URL
+	transport        *http.Transport
+	requireBasicAuth bool
 }
 
-func newLoopbackProxy(target *url.URL) *loopbackProxy {
+func newLoopbackProxy(target *url.URL, requireBasicAuth bool) *loopbackProxy {
 	return &loopbackProxy{
 		target: target,
 		transport: &http.Transport{
 			Proxy: nil,
 		},
+		requireBasicAuth: requireBasicAuth,
 	}
 }
 
 func (p *loopbackProxy) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	if request.Method == http.MethodConnect {
 		http.Error(writer, "CONNECT is not supported by the deterministic test proxy", http.StatusNotImplemented)
+		return
+	}
+	if p.requireBasicAuth && request.Header.Get("Proxy-Authorization") != proxyBasicAuthorization {
+		writer.Header().Set("Proxy-Authenticate", `Basic realm="vba-http-proxy-challenge"`)
+		writer.WriteHeader(http.StatusProxyAuthRequired)
 		return
 	}
 
@@ -45,6 +54,7 @@ func (p *loopbackProxy) ServeHTTP(writer http.ResponseWriter, request *http.Requ
 	forward.URL = &forwardURL
 	forward.RequestURI = ""
 	forward.Header.Del("Proxy-Connection")
+	forward.Header.Del("Proxy-Authorization")
 	forward.Header.Set("X-Test-Proxy-Forwarded", "1")
 	forward.Host = p.target.Host
 

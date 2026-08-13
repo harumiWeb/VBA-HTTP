@@ -12,14 +12,18 @@
   `proxy_target_url`. The target URL uses `vba-http.localhost` so WinHTTP does
   not silently bypass the explicitly configured proxy for a literal loopback
   address.
+- Passing `-proxy-auth-listen 127.0.0.1:0` starts a separate deterministic
+  Basic-authenticated HTTP forward proxy; readiness then includes
+  `proxy_auth_url`. Its fixed test-only credential is `proxy-user` /
+  `proxy-pass` and the listener remains loopback-only.
 - Passing `-tls-listen 127.0.0.1:0` starts a second HTTPS listener with a
   process-local, self-signed certificate whose trust chain is intentionally not
   installed in the OS. Readiness then includes `https_url`; the listener is
   used only for certificate-rejection tests and never as a trust bypass.
 - Port `0` asks the OS for a free port. The first stdout line is JSON:
   `{"event":"ready","url":"http://127.0.0.1:<port>"}` or, when enabled,
-  includes `https_url`, `proxy_url`, and `proxy_target_url` for the requested
-  listeners.
+  includes `https_url`, `proxy_url`, `proxy_target_url`, and `proxy_auth_url`
+  for the requested listeners.
 - The process accepts Ctrl+C or termination and allows five seconds for graceful shutdown.
 - `GET /healthz` returns 200 when ready.
 - `POST /__admin/reset` clears all flaky and rate-limit counters and returns 204.
@@ -54,6 +58,10 @@
 The optional loopback proxy forwards only to the server's own target address,
 adds `X-Test-Proxy-Forwarded: 1`, rejects CONNECT, and returns 502 for any
 non-target host. It is used by the COM/native manual-proxy integration tests.
+The authenticated proxy has the same target restriction and returns 407 with a
+fixed `Proxy-Authenticate: Basic` challenge until the test credential is sent.
+It is HTTP forwarding only; CONNECT authentication remains a separate
+host-dependent compatibility gate.
 
 The optional HTTPS listener uses the same route set as the HTTP listener. Its
 certificate is deliberately untrusted, so clients must fail through normal OS

@@ -35,9 +35,10 @@ native backend maps the same mode to the WinHTTP session access type when it
 calls `WinHttpOpen`. A proxy option never changes the public response/error
 contract, and proxy URLs or credentials are not included in diagnostics.
 
-This slice supports HTTP forwarding for deterministic loopback tests. HTTPS
-CONNECT, PAC/WPAD authoring, SOCKS, and proxy authentication are deferred to
-the authentication/security roadmap items.
+This slice supports HTTP forwarding for deterministic loopback tests. A
+separate authenticated loopback proxy verifies the `HttpAuthTargetProxy`
+challenge path without changing the unauthenticated forwarding fixture. HTTPS
+CONNECT, PAC/WPAD authoring, and SOCKS remain host-dependent compatibility work.
 
 ## Evidence
 
@@ -46,5 +47,5 @@ the authentication/security roadmap items.
 - Integration: `WinHttpComTransportTests.Test_ComTransport_UsesManualProxy`
   and `WinHttpNativeTransportTests.Test_NativeTransport_UsesManualProxy`.
 - Fixture: `tools/testserver/proxy.go`; `task testserver:test` covers its
-  forwarding and target-isolation behavior.
+  forwarding, target-isolation, and fixed Basic challenge behavior.
 - Release/compatibility: `docs/specs/compatibility-matrix.md` and ADR-0012.

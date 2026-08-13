@@ -29,6 +29,12 @@ control characters and are never returned by the public API.
   and exhausted challenge attempts are not converted into a secret-bearing
   error description.
 
+The deterministic proxy fixture starts on a separate `proxy-auth-listen`
+listener. It requires the fixed loopback-only `proxy-user` / `proxy-pass`
+credential, verifies `HttpAuthTargetProxy` for both transports, and leaves the
+existing unauthenticated forwarding proxy unchanged. It does not claim HTTPS
+CONNECT, PAC, or Windows-domain authentication support.
+
 ## Security and compatibility
 
 Credentials are sent only to the configured server/proxy target. Redirects,
@@ -43,5 +49,7 @@ domain fixtures are host-dependent and remain separate compatibility evidence.
 - Unit provider validation/snapshot tests: `HttpAuthTests.bas`.
 - Deterministic loopback Basic challenge: `/auth/challenge/basic` in
   `tools/testserver/server.go` and COM/native integration tests.
+- Deterministic proxy Basic challenge: `proxy_auth_url` from
+  `tools/testserver/main.go`, COM/native proxy-target tests, and release smoke.
 - Release consumer smoke invokes the factory without importing test code into
   the release workbook.

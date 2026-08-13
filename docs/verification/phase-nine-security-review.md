@@ -24,7 +24,7 @@ The current blocker assertion is separately recorded in
 | TLS trust and certificate rejection | Self-signed loopback fixture is rejected by both COM/native transports and maps to `HttpErrorTls`; no ignore-certificate option exists | covered |
 | Repeated COM receive-timeout cleanup | ADR-0022 `Abort`/bounded drain plus canonical 25-iteration loopback stress with idle handle budget | mitigated on current x64 host |
 | HTTP/2/HTTP/3 TLS and Office bitness | Compatibility evidence is still environment-dependent (current proof is x64) | deferred |
-| Buffered challenge auth | Bounded server Basic challenge is covered by COM/native tests, release smoke, redaction, and streaming pre-network rejection | covered for loopback; host-specific domain/CONNECT evidence deferred |
+| Buffered challenge auth | Bounded server Basic and proxy Basic challenges are covered by COM/native tests, release smoke, redaction, and streaming pre-network rejection | covered for loopback; host-specific domain/CONNECT evidence deferred |
 | Current release blockers | Versioned risk register and fail-closed validator | covered (0) |
 
 ## Verification commands

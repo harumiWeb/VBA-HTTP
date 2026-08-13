@@ -271,7 +271,7 @@ func TestLoopbackProxyForwardsOnlyToTarget(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	proxy := httptest.NewServer(newLoopbackProxy(targetURL))
+	proxy := httptest.NewServer(newLoopbackProxy(targetURL, false))
 	defer proxy.Close()
 	proxyURL, err := url.Parse(proxy.URL)
 	if err != nil {
@@ -294,6 +294,46 @@ func TestLoopbackProxyForwardsOnlyToTarget(t *testing.T) {
 	defer badResponse.Body.Close()
 	if badResponse.StatusCode != http.StatusBadGateway {
 		t.Fatalf("non-target status = %d, want %d", badResponse.StatusCode, http.StatusBadGateway)
+	}
+}
+
+func TestLoopbackProxyBasicChallenge(t *testing.T) {
+	target := httptest.NewServer(newTestServer().routes())
+	defer target.Close()
+	targetURL, err := url.Parse(target.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	proxy := httptest.NewServer(newLoopbackProxy(targetURL, true))
+	defer proxy.Close()
+	proxyURL, err := url.Parse(proxy.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	client := &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(proxyURL)}}
+
+	response, err := client.Get(target.URL + "/headers")
+	if err != nil {
+		t.Fatal(err)
+	}
+	response.Body.Close()
+	if response.StatusCode != http.StatusProxyAuthRequired || response.Header.Get("Proxy-Authenticate") != `Basic realm="vba-http-proxy-challenge"` {
+		t.Fatalf("missing proxy challenge: status=%d challenge=%q", response.StatusCode, response.Header.Get("Proxy-Authenticate"))
+	}
+
+	request, err := http.NewRequest(http.MethodGet, target.URL+"/headers", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	request.Header.Set("Proxy-Authorization", proxyBasicAuthorization)
+	response, err = client.Do(request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK || response.Header.Get("X-Test-Proxy-Forwarded") != "1" {
+		t.Fatalf("authenticated proxy response = %d, forwarded = %q", response.StatusCode, response.Header.Get("X-Test-Proxy-Forwarded"))
 	}
 }
 

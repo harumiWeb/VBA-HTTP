@@ -85,8 +85,9 @@
 
 - Added shared default, direct, and manual HTTP proxy routing via
   `HttpProxyOptions` for COM and native transports, with deterministic loopback
-  forwarding tests. Proxy credentials and CONNECT authentication remain
-  deferred to the authentication policy.
+  forwarding tests. Added a separate fixed Basic proxy-challenge listener and
+  COM/native/release smoke for `HttpAuthTargetProxy`; HTTPS CONNECT and real
+  Windows-domain authentication remain deferred.
 
 ### Added
 

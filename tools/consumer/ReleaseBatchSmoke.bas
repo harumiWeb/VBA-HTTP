@@ -87,10 +87,11 @@ Public Sub RunDecompressionSmoke(ByVal releaseWorkbookName As String, ByVal base
     End If
 End Sub
 
-Public Sub RunProxySmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As String, ByVal proxyUrl As String)
+Public Sub RunProxySmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As String, ByVal proxyUrl As String, ByVal proxyAuthUrl As String)
     Dim client As Object
     Dim nativeClient As Object
     Dim options As Object
+    Dim provider As Object
     Dim response As Object
 
     Set client = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateClient")
@@ -113,6 +114,32 @@ Public Sub RunProxySmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As S
     Set response = nativeClient.GetResponse("/headers")
     If response.StatusCode <> 200 Or response.Headers.GetValue("X-Test-Proxy-Forwarded") <> "1" Then
         Err.Raise vbObjectError + 750, "ReleaseBatchSmoke.RunProxySmoke", "Release native proxy smoke returned an unexpected response."
+    End If
+
+    Set client = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateClient")
+    Set options = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateProxyOptions")
+    options.Mode = 2
+    options.ProxyUrl = proxyAuthUrl
+    Set client.ProxyOptions = options
+    Set provider = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateWindowsAuthProvider", "proxy-user", "proxy-pass", 1, 1, True, 3)
+    Set client.AuthProvider = provider
+    client.BaseUrl = baseUrl
+    Set response = client.GetResponse("/headers")
+    If response.StatusCode <> 200 Or response.Headers.GetValue("X-Test-Proxy-Forwarded") <> "1" Then
+        Err.Raise vbObjectError + 753, "ReleaseBatchSmoke.RunProxySmoke", "Release COM proxy challenge smoke returned an unexpected response."
+    End If
+
+    Set nativeClient = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateNativeClient")
+    Set options = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateProxyOptions")
+    options.Mode = 2
+    options.ProxyUrl = proxyAuthUrl
+    Set nativeClient.ProxyOptions = options
+    Set provider = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateWindowsAuthProvider", "proxy-user", "proxy-pass", 1, 1, True, 3)
+    Set nativeClient.AuthProvider = provider
+    nativeClient.BaseUrl = baseUrl
+    Set response = nativeClient.GetResponse("/headers")
+    If response.StatusCode <> 200 Or response.Headers.GetValue("X-Test-Proxy-Forwarded") <> "1" Then
+        Err.Raise vbObjectError + 754, "ReleaseBatchSmoke.RunProxySmoke", "Release native proxy challenge smoke returned an unexpected response."
     End If
 End Sub
 

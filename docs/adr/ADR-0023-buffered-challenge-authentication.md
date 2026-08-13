@@ -47,9 +47,9 @@ native callbacks into VBA application logic are also prohibited by ADR-0006.
 - Credentials may remain in a process-owned provider until its snapshot is
   released; VBA offers no reliable memory zeroization. Callers must still use
   TLS in production and pass `AllowInsecureHttp:=True` only for loopback tests.
-- Proxy challenge integration requires an explicit manual-proxy fixture; the
-  provider target is implemented now, while host-specific proxy/CONNECT and
-  integrated credential evidence remain compatibility follow-up work.
+- Proxy challenge integration uses the separate deterministic listener defined
+  by ADR-0024; host-specific proxy/CONNECT and integrated credential evidence
+  remain compatibility follow-up work.
 
 ## Evidence
 
@@ -58,7 +58,8 @@ native callbacks into VBA application logic are also prohibited by ADR-0006.
   and `src/modules/WinHttpNativeApi.bas`.
 - Unit: `src/modules/Tests/Unit/HttpAuthTests.bas`.
 - Loopback integration: `WinHttpComTransportTests` and
-  `WinHttpNativeTransportTests` against `/auth/challenge/basic`.
+  `WinHttpNativeTransportTests` against `/auth/challenge/basic` and the
+  authenticated proxy listener.
 - Contract: `docs/specs/challenge-authentication.md` and the existing
   `docs/specs/auth-policy.md`.
 

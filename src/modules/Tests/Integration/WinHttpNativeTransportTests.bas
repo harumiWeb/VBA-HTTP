@@ -61,6 +61,48 @@ Public Sub Test_NativeTransport_UsesManualProxy()
 End Sub
 
 '@Tag("integration")
+Public Sub Test_NativeTransport_ProxyChallengeAuth()
+    Dim client As New HttpClient
+    Dim options As New HttpProxyOptions
+    Dim provider As IHttpAuthProvider
+    Dim response As HttpResponse
+
+    client.BaseUrl = RequireProxyTargetUrl()
+    Set client.Transport = New WinHttpNativeTransport
+    options.Mode = HttpProxyManual
+    options.ProxyUrl = RequireProxyAuthUrl()
+    Set client.ProxyOptions = options
+    Set provider = VBAHttp.CreateWindowsAuthProvider("proxy-user", "proxy-pass", HttpAuthSchemeBasic, HttpAuthTargetProxy, True, 1)
+    Set client.AuthProvider = provider
+
+    Set response = client.GetResponse("/headers")
+
+    XlflowAssert.AssertEquals 200, response.StatusCode
+    XlflowAssert.AssertEquals "1", response.Headers.GetValue("X-Test-Proxy-Forwarded")
+End Sub
+
+'@Tag("integration")
+Public Sub Test_NativeTransport_ProxyChallengeWrongCredentialsRemain407()
+    Dim client As New HttpClient
+    Dim options As New HttpProxyOptions
+    Dim provider As IHttpAuthProvider
+    Dim response As HttpResponse
+
+    client.BaseUrl = RequireProxyTargetUrl()
+    Set client.Transport = New WinHttpNativeTransport
+    options.Mode = HttpProxyManual
+    options.ProxyUrl = RequireProxyAuthUrl()
+    Set client.ProxyOptions = options
+    Set provider = VBAHttp.CreateWindowsAuthProvider("proxy-user", "wrong-pass", HttpAuthSchemeBasic, HttpAuthTargetProxy, True, 1)
+    Set client.AuthProvider = provider
+
+    Set response = client.GetResponse("/headers")
+
+    XlflowAssert.AssertEquals 407, response.StatusCode
+    XlflowAssert.AssertEquals "Basic realm=" & Chr$(34) & "vba-http-proxy-challenge" & Chr$(34), response.Headers.GetValue("Proxy-Authenticate")
+End Sub
+
+'@Tag("integration")
 Public Sub Test_NativeTransport_RequiredProtocolRejectsPlainHttp()
     Dim client As New HttpClient
     Dim options As New HttpProtocolOptions
@@ -915,6 +957,13 @@ Private Function RequireProxyTargetUrl() As String
     RequireProxyTargetUrl = Trim$(Environ$("VBA_HTTP_TEST_PROXY_TARGET_URL"))
     If Len(RequireProxyTargetUrl) = 0 Then
         XlflowAssert.AssertInconclusive "VBA_HTTP_TEST_PROXY_TARGET_URL is not set; run task test:integration."
+    End If
+End Function
+
+Private Function RequireProxyAuthUrl() As String
+    RequireProxyAuthUrl = Trim$(Environ$("VBA_HTTP_TEST_PROXY_AUTH_URL"))
+    If Len(RequireProxyAuthUrl) = 0 Then
+        XlflowAssert.AssertInconclusive "VBA_HTTP_TEST_PROXY_AUTH_URL is not set; run task test:integration."
     End If
 End Function
 
