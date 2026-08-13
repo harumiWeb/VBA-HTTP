@@ -444,6 +444,7 @@ OSが提供するmodern WinHTTP capabilityとcorporate environment対応を安�
 - [x] native HTTP/2 opt-inと`HttpResponse.ProtocolUsed`によるnegotiated protocol取得を実装する。
 - [x] HTTP/3 opt-inのWinHTTP flagとvalidationを実装する（requested-mask、unsupported fallback、required errorをnative transportで検証済み）。
 - [x] HTTP/2／HTTP/3 negotiated-host evidenceのfail-closed収集runner、redacted schema、validatorを追加する（ADR-0025／`tools/Run-ProtocolHostValidation.ps1`）。
+- [~] HTTP/2のTLS negotiated-host evidenceを実機で取得する（trusted endpoint／対応Windows・WinHTTP host待ち）。
 - [~] HTTP/3のTLS/QUIC negotiated-host evidenceを実機で取得する（対応Windows/WinHTTP hostとfixture待ち）。
 - [x] unsupported option、plain HTTP、required mismatchのfallback／`HttpErrorProtocol`を実装する。
 - [x] gzip／deflate decompressionをADR-0010と`docs/specs/decompression-policy.md`で確定し、native WinHTTP option 118、COM拒否、loopback／release smokeを実装する。
@@ -512,7 +513,7 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 - [x] source distributionとworkbook distributionの責務を分離する（`docs/specs/distribution.md`）。
 - [x] source vendoring、install、upgrade手順を文書化する。
 - [x] `.xlam` 用base workbookと独立build targetを追加する（追跡`build/VBA-HTTP.xlam`、`task test:xlam`、`task release:xlam:build`、ADR-0021、manifest/checksum/add-in identity/smoke gate）。
-- [x] CHANGELOGとcompatibility documentationを完成させる（x64実測と未完了の32-bit／HTTP/3 gateを明記）。
+- [x] CHANGELOGとcompatibility documentationを完成させる（x64実測と未完了の32-bit／HTTP/2／HTTP/3 gateを明記）。
 
 ### Exit Criteria
 
@@ -547,10 +548,10 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 
 - [x] concurrency、streaming、resource stabilityの実測証跡がある。
 - [x] 現行x64のquality gateが成功する（unit、integration、lint、analyze、format、VBE、release smokeを検証済み）。
-- [~] v1.0 promotion quality gateを完了する（32-bit／HTTP/3 negotiated／host-specific challenge-auth evidenceは未完了）。
+- [~] v1.0 promotion quality gateを完了する（32-bit／HTTP/2・HTTP/3 negotiated／host-specific challenge-auth evidenceは未完了）。
 - [x] API、security、compatibility documentationが完成している（現行contract、matrix、security gate、deferred riskを文書化済み）。
 - [x] test、benchmark、xlflow支援コードを含まないproduction-only artifactを生成できる（XLSM/XLAM build・manifest・checksum・smoke済み）。
-- [~] v1.0 promotion evidenceを完了する（32-bit／HTTP/3 negotiated／host-specific challenge-auth riskは未解消）。
+- [~] v1.0 promotion evidenceを完了する（32-bit／HTTP/2・HTTP/3 negotiated／host-specific challenge-auth riskは未解消）。
 - [x] build manifestからrelease構成を再現・監査できる。
 
 ---
