@@ -23,6 +23,8 @@ native callbacks into VBA application logic are also prohibited by ADR-0006.
   diagnostics, errors, or benchmark output.
 - The COM transport configures credentials on each fresh buffered request
   before `Send`; WinHTTP owns the challenge exchange and keep-alive details.
+  COM uses `HttpAuthSchemeAuto`; explicit scheme selection is a native-only
+  capability boundary defined by ADR-0033.
   COM async batch operations use the same configuration path.
 - The native buffered transport performs at most the provider's bounded number
   of challenge resends on the same request handle. It queries the server's
