@@ -14,8 +14,8 @@ may use separate jars to isolate sessions.
 
 ## Parsing and matching
 
-- Cookie name is a non-empty RFC token; values cannot contain semicolon, control,
-  CR, or LF. Invalid `Set-Cookie` lines are ignored.
+- Cookie name is a non-empty ASCII RFC token; values cannot contain semicolon,
+  control, CR, or LF. Invalid `Set-Cookie` lines are ignored.
 - `Domain` is normalized case-insensitively. A host-only cookie matches only the
   exact request host. A Domain cookie matches the domain itself or a dot-bound
   subdomain, never an IP's unrelated suffix; a Domain that does not match the

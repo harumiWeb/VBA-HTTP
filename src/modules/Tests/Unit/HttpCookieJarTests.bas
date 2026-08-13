@@ -112,3 +112,14 @@ Public Sub Test_CookieJar_ExpiresAgainstInjectedClock()
     clock.NowUtc = DateSerial(2026, 1, 1) + TimeSerial(0, 0, 11)
     XlflowAssert.AssertEquals "", jar.GetCookieHeader("http://example.test/")
 End Sub
+
+Public Sub Test_CookieJar_IgnoresNonAsciiCookieName()
+    Dim jar As New HttpCookieJar
+    Dim headers As New HttpHeaders
+
+    headers.Add "Set-Cookie", "ok" & ChrW$(-223) & "=value; Path=/"
+    jar.StoreResponseCookies "http://example.test/set", headers
+
+    XlflowAssert.AssertEquals 0, jar.Count
+    XlflowAssert.AssertEquals "", jar.GetCookieHeader("http://example.test/")
+End Sub

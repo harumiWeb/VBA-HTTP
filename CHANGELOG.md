@@ -7,6 +7,8 @@
   ASCII token validation boundary.
 - Corrected signed `AscW` handling in Bearer token validation so non-ASCII
   code points cannot bypass its ASCII-only contract.
+- Hardened cookie-name parsing against signed `AscW` values so non-ASCII names
+  are ignored instead of entering the jar.
 
 - Added an Excel-free native declaration ABI gate that verifies the VBA7
   `PtrSafe`/`LongPtr` and legacy `Long` WinHTTP branches, including the

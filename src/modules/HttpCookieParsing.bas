@@ -179,6 +179,7 @@ Private Function IsCookieName(ByVal value As String) As Boolean
     For index = 1 To Len(value)
         character = Mid$(value, index, 1)
         code = AscW(character)
+        If code < 0 Then code = code + 65536
         If code <= 32 Or code >= 127 Or InStr(1, "()<>@,;:\" & Chr$(34) & "/[]?={} ", character, vbBinaryCompare) > 0 Then Exit Function
     Next index
     IsCookieName = True
