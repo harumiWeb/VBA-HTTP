@@ -7,6 +7,7 @@
 .xlflow/
 build/*
 !build/VBA-HTTP.xlsm
+!build/VBA-HTTP.xlam
 build/Release/
 build/Staging/
 

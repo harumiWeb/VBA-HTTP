@@ -110,6 +110,11 @@ tasks:
     cmds:
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-DocumentationContract.ps1
 
+  test:xlam:
+    desc: Verify the tracked XLAM base identity and independent dry-run build plan
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-XlamDistribution.ps1
+
   testserver:run:
     desc: Start the local HTTP server on an OS-selected port
     dir: tools/testserver
@@ -164,6 +169,11 @@ tasks:
     cmds:
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Validate-BuildPlan.ps1
 
+  build:plan:xlam:
+    desc: Validate the independent production-only XLAM build plan
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Validate-XlamBuildPlan.ps1
+
   release:checksum:
     desc: Generate an atomic checksum sidecar for the release artifact and manifest
     cmds:
@@ -177,6 +187,15 @@ tasks:
       - xlflow build --json --out build/Release/VBA-HTTP.xlsm
       - task: release:checksum
       - task: release:smoke
+
+  release:xlam:build:
+    desc: Build and validate the independent XLAM release artifact
+    cmds:
+      - task: bootstrap:dirs
+      - task: build:plan:xlam
+      - xlflow build --json --base build/VBA-HTTP.xlam --out build/Release/VBA-HTTP.xlam
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Write-ReleaseChecksums.ps1 -ArtifactPath build/Release/VBA-HTTP.xlam
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Validate-XlamArtifact.ps1 -ArtifactPath build/Release/VBA-HTTP.xlam
 
   release:smoke:
     desc: Inspect and execute the release workbook from an external harness
@@ -199,6 +218,7 @@ tasks:
       - task: test:release-security
       - task: test:security-risks
       - task: test:docs
+      - task: test:xlam
       - task: build:plan
 
   hooks:install:

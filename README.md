@@ -237,6 +237,11 @@ task release:build
 
 Tests and benchmarks use only the deterministic loopback server. Release workbooks are generated with `xlflow build` and exclude tests, benchmarks, xlflow helpers, development modules, and test-only classes. The release gate verifies the manifest base/output, VBE/atomic-publication evidence, component source boundaries, and checksum before opening Excel; see [`docs/specs/release-security.md`](docs/specs/release-security.md).
 
+The primary XLSM release is built with `task release:build`. An Excel add-in is
+built independently from the tracked same-extension base with `task
+release:xlam:build`; it never renames or mutates the XLSM artifact. See
+[`docs/specs/distribution.md`](docs/specs/distribution.md) and ADR-0021.
+
 Public API quick reference: [`docs/API.md`](docs/API.md). Contributor workflow:
 [`CONTRIBUTING.md`](CONTRIBUTING.md). Distribution, install, and rollback rules:
 [`docs/specs/distribution.md`](docs/specs/distribution.md). The handoff gate is

@@ -12,6 +12,11 @@ $required = @(
     'docs/RELEASE_CHECKLIST.md',
     'docs/specs/distribution.md',
     'docs/specs/development-and-release-workflow.md',
+    'docs/adr/ADR-0021-xlam-distribution-target.md',
+    'tools/Validate-XlamBuildPlan.ps1',
+    'tools/Validate-XlamArtifact.ps1',
+    'tools/Test-XlamDistribution.ps1',
+    'build/VBA-HTTP.xlam',
     'examples/ConsumerBasic.bas',
     'examples/ConsumerDiagnostics.bas'
 )
@@ -27,8 +32,8 @@ $tokens = @{
     'README.md' = @('docs/API.md', 'CONTRIBUTING.md', 'docs/specs/distribution.md', 'task verify')
     'CONTRIBUTING.md' = @('task check', 'xlflow push', 'task release:build')
     'docs/API.md' = @('CreateClient', 'HttpResponse', 'HttpError')
-    'docs/specs/distribution.md' = @('xlflow build', 'checksum', 'rollback', 'xlam')
-    'docs/RELEASE_CHECKLIST.md' = @('task release:build', 'task release:security', 'risk-register')
+    'docs/specs/distribution.md' = @('xlflow build', 'checksum', 'rollback', 'xlam', 'release:xlam:build', 'Workbook.IsAddin')
+    'docs/RELEASE_CHECKLIST.md' = @('task release:build', 'task release:security', 'task release:xlam:build', 'risk-register')
 }
 
 foreach ($relativePath in $tokens.Keys) {

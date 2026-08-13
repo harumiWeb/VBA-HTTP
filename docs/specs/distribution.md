@@ -11,6 +11,10 @@ The repository maintains two distinct deliverables:
    from the development workbook with `xlflow build` and contains only the
    production allowlist. Tests, benchmarks, Xlflow helpers, and Dev modules are
    excluded by `xlflow.toml`.
+3. `build/VBA-HTTP.xlam` is the tracked same-extension add-in base. Its
+   independent `build/Release/VBA-HTTP.xlam` target uses the same production
+   allowlist but has a separate manifest, checksum, add-in identity check, and
+   smoke command.
 
 Source under `src/` is authoritative. The workbook is never edited manually as
 the source of truth, and release modules are never removed by hand.
@@ -43,6 +47,22 @@ fails, an existing published release remains untouched. Generated release
 files are ignored by Git and must be archived together with their manifest,
 checksum, and security report when a release is handed off.
 
+## XLAM build target
+
+The add-in target is intentionally explicit:
+
+```powershell
+task test:xlam
+task release:xlam:build
+```
+
+The target runs `xlflow build --base build/VBA-HTTP.xlam --out
+build/Release/VBA-HTTP.xlam`, requires the filtered component policy and atomic
+VBE build evidence, verifies the SHA-256 sidecar, checks `Workbook.IsAddin`,
+and runs `Main.Run` through the external xlflow consumer path. It does not
+overwrite either the XLSM base or the XLSM release artifact. The decision and
+validation boundary are recorded in ADR-0021.
+
 ## Consumer installation and upgrade
 
 For a consumer, copy the verified release workbook to a controlled add-in or
@@ -62,14 +82,6 @@ retain the same excluded-component and source-boundary rules. The vendored
 `references/VBA-Web` tree is a benchmark comparator, not a product dependency;
 its upstream specs are not run against external network services.
 
-## Future XLAM target
-
-No tracked `.xlam` base artifact exists yet. Adding an XLAM distribution is a
-separate build target: first add and verify a same-extension base workbook,
-then add an explicit `xlflow build` output and its own manifest/checksum/smoke
-contract. The XLSM release flow must not silently change extension or reuse an
-unverified base.
-
 ## Evidence retention
 
 Release evidence consists of the exact workbook, `.build.json` manifest,
@@ -77,4 +89,6 @@ Release evidence consists of the exact workbook, `.build.json` manifest,
 Evidence is path-stable and secret-free. Record the source revision and host
 compatibility (Office bitness, Windows version, protocol fixture) beside the
 bundle; x64 is the currently verified path, while 32-bit and HTTP/2/HTTP/3
-negotiation remain explicit compatibility gates.
+negotiation remain explicit compatibility gates. Keep the XLSM and XLAM
+manifest/checksum pairs separate so an artifact cannot be validated against
+the wrong base or extension.

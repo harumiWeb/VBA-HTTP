@@ -51,10 +51,20 @@ publication. The included component list must match
 - [ ] The previous verified artifact remains available for rollback until the
       new workbook is accepted.
 
+For an add-in release, run the independent target after the XLSM checklist:
+
+```powershell
+task test:xlam
+task release:xlam:build
+```
+
+Archive `build/Release/VBA-HTTP.xlam`, its `.build.json` manifest, its checksum
+sidecar, and the XLAM validation output separately from the XLSM evidence. The
+validator must prove `Workbook.IsAddin=True` and must not reuse the XLSM base.
+
 ## Deferred promotion gates
 
-The current XLSM release is not evidence that every v1.0 compatibility target
+The current XLSM/XLAM release is not evidence that every v1.0 compatibility target
 is complete. Promotion of the v1.0 line additionally requires the risk-register
 items for HTTP/2/HTTP/3 and 32-bit Office, plus integrated/proxy challenge
 authentication, to be resolved with dedicated fixtures and evidence. The
-`.xlam` target is blocked until a tracked `.xlam` base workbook exists.

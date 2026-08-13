@@ -10,6 +10,11 @@
   examples, distribution/install/rollback specification, and repeatable XLSM
   release checklist. Documentation contracts now run as part of `task verify`.
 
+- Added a real same-extension XLAM base and an independent `task
+  release:xlam:build` target. Its dry-run, production component policy,
+  checksum, add-in identity, VBE publication, and external consumer smoke are
+  validated separately from the XLSM release.
+
 - Added opt-in structured `HttpDiagnostics` operation events with bounded
   retention, query/user-info target sanitization, stable error categories, and
   automatic sensitive-header redaction. Release consumer smoke verifies that

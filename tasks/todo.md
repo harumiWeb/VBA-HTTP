@@ -505,7 +505,7 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 - [x] external consumer smoke harnessをrelease pipelineへ統合する。
 - [x] source distributionとworkbook distributionの責務を分離する（`docs/specs/distribution.md`）。
 - [x] source vendoring、install、upgrade手順を文書化する。
-- [!] `.xlam` 用base workbookと独立build targetを追加する（同拡張子の追跡base artifactが未提供。base追加後に独立targetを実装する）。
+- [x] `.xlam` 用base workbookと独立build targetを追加する（追跡`build/VBA-HTTP.xlam`、`task test:xlam`、`task release:xlam:build`、ADR-0021、manifest/checksum/add-in identity/smoke gate）。
 - [x] CHANGELOGとcompatibility documentationを完成させる（x64実測と未完了の32-bit／HTTP/3 gateを明記）。
 
 ### Exit Criteria
@@ -541,7 +541,7 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 - [x] concurrency、streaming、resource stabilityの実測証跡がある。
 - [~] 全quality gateが成功する（現行x64 release gateは成功。32-bit／HTTP/3／challenge-auth promotion gateは未完了）。
 - [~] API、security、compatibility documentationが完成している（現行contractとsecurity gateは完了、未実測compatibility項目はrisk registerで追跡）。
-- [~] test、benchmark、xlflow支援コードを含まないv1.0 artifactを生成できる（production-only artifactは生成済み、v1.0 promotion risksは未解消）。
+- [~] test、benchmark、xlflow支援コードを含まないv1.0 artifactを生成できる（XLSM/XLAM production-only artifactは生成済み、v1.0 promotion risksは未解消）。
 - [x] build manifestからrelease構成を再現・監査できる。
 
 ---
