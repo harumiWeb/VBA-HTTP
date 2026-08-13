@@ -125,6 +125,16 @@ tasks:
     cmds:
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Run-OfficeBitnessValidation.ps1
 
+  test:protocol-host-schema:
+    desc: Verify fail-closed negotiated protocol host evidence schema and tamper cases
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-ProtocolHostEvidence.ps1
+
+  protocol:host:
+    desc: Run opt-in required HTTP/2 or HTTP/3 host evidence from environment variables
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Run-ProtocolHostValidation.ps1
+
   testserver:run:
     desc: Start the local HTTP server on an OS-selected port
     dir: tools/testserver
@@ -231,6 +241,7 @@ tasks:
       - task: test:xlam
       - task: test:clean-checkout
       - task: test:office-bitness
+      - task: test:protocol-host-schema
       - task: build:plan
 
   hooks:install:

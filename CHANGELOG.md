@@ -33,6 +33,11 @@
   the current evidence remains X64 until the same runner is executed on a real
   32-bit Office host.
 
+- Added an opt-in fail-closed protocol-host evidence runner for required
+  HTTPS HTTP/2/HTTP/3 negotiation. It records only path-free target metadata,
+  artifact hashes, bridge/bitness, and exact `ProtocolUsed`; the normal
+  loopback suite remains offline and the real HTTP/3 host gate remains pending.
+
 - Added opt-in structured `HttpDiagnostics` operation events with bounded
   retention, query/user-info target sanitization, stable error categories, and
   automatic sensitive-header redaction. Release consumer smoke verifies that

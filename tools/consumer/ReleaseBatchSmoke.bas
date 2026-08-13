@@ -70,6 +70,34 @@ Public Sub RunProtocolSmoke(ByVal releaseWorkbookName As String, ByVal baseUrl A
     End If
 End Sub
 
+Public Function RunProtocolHostSmoke(ByVal releaseWorkbookName As String, ByVal Url As String, ByVal ExpectedProtocol As String) As String
+    Dim client As Object
+    Dim protocols As Object
+    Dim response As Object
+    Dim expected As String
+
+    expected = UCase$(Trim$(ExpectedProtocol))
+    If expected <> "HTTP/2" And expected <> "HTTP/3" Then
+        Err.Raise vbObjectError + 755, "ReleaseBatchSmoke.RunProtocolHostSmoke", "Expected protocol must be HTTP/2 or HTTP/3."
+    End If
+
+    Set client = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateNativeClient")
+    Set protocols = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateProtocolOptions")
+    If expected = "HTTP/2" Then
+        protocols.AllowHttp2 = True
+    Else
+        protocols.AllowHttp3 = True
+    End If
+    protocols.Mode = 1
+    Set client.ProtocolOptions = protocols
+    Set response = client.GetResponse Url
+
+    If response.StatusCode < 200 Or response.StatusCode >= 300 Or response.ProtocolUsed <> expected Then
+        Err.Raise vbObjectError + 756, "ReleaseBatchSmoke.RunProtocolHostSmoke", "Required protocol was not negotiated."
+    End If
+    RunProtocolHostSmoke = response.ProtocolUsed
+End Function
+
 Public Sub RunDecompressionSmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As String)
     Dim client As Object
     Dim options As Object

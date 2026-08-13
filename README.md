@@ -79,6 +79,12 @@ protocol flags because its late-bound option surface has no HTTP/2/HTTP/3
 control. See [`docs/specs/protocol-policy.md`](docs/specs/protocol-policy.md)
 for the compatibility and evidence rules.
 
+The offline loopback server intentionally speaks HTTP/1.1, so negotiated
+HTTP/2/HTTP/3 promotion requires the separate fail-closed host runner. After a
+release build, set `VBA_HTTP_PROTOCOL_HOST_URL` and
+`VBA_HTTP_PROTOCOL_EXPECTED`, then run `task protocol:host`; it records only
+path-free target metadata and the exact `ProtocolUsed` result.
+
 Response decompression is also native-only. Select gzip/deflate explicitly; the
 default leaves response bytes and `Accept-Encoding` unchanged:
 

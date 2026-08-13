@@ -45,6 +45,11 @@ excluded directories.
    `benchmarks/results/`.
 6. Confirm `xlflow status --json` reports a synchronized source/workbook pair.
 
+Do not add external endpoints to deterministic tests. Host-specific required
+HTTP/2/HTTP/3 evidence is collected separately with `task protocol:host` only
+after a release artifact is built and the operator has selected a trusted TLS
+endpoint; the runner records no URL path, query, credentials, or body.
+
 Never save a workbook after a failed proof. Follow xlflow recovery guidance if
 the session reports a recovery-required state.
 

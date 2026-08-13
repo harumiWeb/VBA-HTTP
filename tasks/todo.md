@@ -443,7 +443,8 @@ OSが提供するmodern WinHTTP capabilityとcorporate environment対応を安�
 - [x] protocol enable／fallback／required modeをADR-0009と`docs/specs/protocol-policy.md`で確定する。
 - [x] native HTTP/2 opt-inと`HttpResponse.ProtocolUsed`によるnegotiated protocol取得を実装する。
 - [x] HTTP/3 opt-inのWinHTTP flagとvalidationを実装する（requested-mask、unsupported fallback、required errorをnative transportで検証済み）。
-- [~] HTTP/3のTLS/QUIC negotiated-host evidenceを取得する（対応Windows/WinHTTP hostとfixture待ち）。
+- [x] HTTP/2／HTTP/3 negotiated-host evidenceのfail-closed収集runner、redacted schema、validatorを追加する（ADR-0025／`tools/Run-ProtocolHostValidation.ps1`）。
+- [~] HTTP/3のTLS/QUIC negotiated-host evidenceを実機で取得する（対応Windows/WinHTTP hostとfixture待ち）。
 - [x] unsupported option、plain HTTP、required mismatchのfallback／`HttpErrorProtocol`を実装する。
 - [x] gzip／deflate decompressionをADR-0010と`docs/specs/decompression-policy.md`で確定し、native WinHTTP option 118、COM拒否、loopback／release smokeを実装する。
 - [x] OS default、no-proxy、manual HTTP proxyをADR-0012と`docs/specs/proxy-policy.md`で確定し、COM/native transportとloopback fixtureで検証する。
@@ -453,7 +454,7 @@ OSが提供するmodern WinHTTP capabilityとcorporate environment対応を安�
 - [x] credential／secret redaction helperを実装し、sensitive headerがdiagnosticsへ出ないunit gateを追加する。
 - [x] `HttpDiagnostics` のbounded structured event schemaをADR-0019／`docs/specs/diagnostics-policy.md`で確定し、HttpClientとrelease consumer smokeへ統合する。
 - [x] OS version／Office bitness compatibility matrixを作成する（`docs/specs/compatibility-matrix.md`）。
-- [~] matrixのprotocol host evidenceと32-bit実測を完了する（対応host／fixture待ち）。
+- [~] matrixのprotocol host evidenceと32-bit実測を完了する（host runnerは実装済み、対応host／fixtureでの実測待ち）。
 
 ### Exit Criteria
 

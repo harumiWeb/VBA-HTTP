@@ -15,6 +15,8 @@ document records the repeatable handoff gate.
       CHANGELOG updates.
 - [ ] The compatibility record names the Windows version, Office bitness, and
       protocol evidence. The current supported proof path is x64 Office.
+      For a negotiated HTTP/2/HTTP/3 promotion, archive the validated output
+      from `task protocol:host` with the exact artifact and checksum.
 - [ ] `task test:clean-checkout` passes; for a clean-environment release
       evidence bundle, `tools/Test-CleanCheckout.ps1 -FullRelease` also passes.
 

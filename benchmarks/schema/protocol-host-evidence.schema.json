@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vba-http.local/schemas/protocol-host-evidence.schema.json",
+  "title": "VBA-HTTP negotiated protocol host evidence",
+  "type": "object",
+  "required": [
+    "schema_version", "benchmark", "status", "run_utc", "source_revision",
+    "requested_protocol", "observed_protocol", "mode", "external_network",
+    "target", "bridge", "artifact", "build"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "benchmark": { "const": "protocol-host-validation" },
+    "status": { "const": "passed" },
+    "run_utc": { "type": "string", "format": "date-time" },
+    "source_revision": { "type": "string", "pattern": "^[0-9a-fA-F]{40,64}$" },
+    "requested_protocol": { "enum": ["HTTP/2", "HTTP/3"] },
+    "observed_protocol": { "enum": ["HTTP/2", "HTTP/3"] },
+    "mode": { "const": "required" },
+    "external_network": { "const": true },
+    "target": {
+      "type": "object",
+      "required": ["scheme", "host", "port"],
+      "properties": {
+        "scheme": { "const": "https" },
+        "host": { "type": "string", "minLength": 1, "pattern": "^[^/?#@]+$" },
+        "port": { "type": "integer", "minimum": 1, "maximum": 65535 }
+      },
+      "additionalProperties": false
+    },
+    "bridge": {
+      "type": "object",
+      "required": ["name", "version", "runtime", "architecture"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "runtime": { "type": "string", "minLength": 1 },
+        "architecture": { "enum": ["X86", "X64"] }
+      },
+      "additionalProperties": false
+    },
+    "artifact": {
+      "type": "object",
+      "required": ["name", "sha256", "manifest_sha256"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "pattern": "^[^\\\\/:]+$" },
+        "sha256": { "type": "string", "pattern": "^[0-9a-fA-F]{64}$" },
+        "manifest_sha256": { "type": "string", "pattern": "^[0-9a-fA-F]{64}$" }
+      },
+      "additionalProperties": false
+    },
+    "build": {
+      "type": "object",
+      "required": ["vbe_compile", "source_applied", "workbook_saved", "workbook_closed", "excel_cleanup"],
+      "properties": {
+        "vbe_compile": { "const": "passed" },
+        "source_applied": { "const": true },
+        "workbook_saved": { "const": true },
+        "workbook_closed": { "const": true },
+        "excel_cleanup": { "const": "clean" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

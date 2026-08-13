@@ -22,6 +22,12 @@ $required = @(
     'tools/Validate-OfficeBitnessResult.ps1',
     'benchmarks/schema/office-bitness-result.schema.json',
     'docs/specs/office-bitness-validation.md',
+    'tools/Run-ProtocolHostValidation.ps1',
+    'tools/Validate-ProtocolHostEvidence.ps1',
+    'tools/Test-ProtocolHostEvidence.ps1',
+    'benchmarks/schema/protocol-host-evidence.schema.json',
+    'docs/specs/protocol-host-validation.md',
+    'docs/adr/ADR-0025-protocol-host-evidence-boundary.md',
     'build/VBA-HTTP.xlam',
     'examples/ConsumerBasic.bas',
     'examples/ConsumerDiagnostics.bas'
