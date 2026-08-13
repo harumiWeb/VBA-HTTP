@@ -18,6 +18,10 @@ the original transport error.
 
 - On every COM backend-construction or synchronous execution failure, attempt
   `Abort` before releasing the backend reference.
+- After a successful synchronous-failure `Abort`, wait 250 ms for WinHTTP's
+  asynchronous COM-handle teardown to drain. The asynchronous cancellation
+  path uses the same 250 ms bounded drain for the same reason; neither delay is
+  added to successful requests.
 - If `Abort` itself fails, release the reference anyway and append only the
   stable cleanup note to the already-captured error description. The original
   WinHTTP code and public error category remain authoritative.
@@ -32,6 +36,9 @@ the original transport error.
 
 - Timeout, connection, and malformed-response failures release the COM request
   through an explicit cancellation boundary before the reference is dropped.
+- The bounded drain adds up to 250 ms to either failed or cancelled requests,
+  trading abort-path latency for lower persistent-handle risk on the supported
+  x64 host.
 - Cleanup failure is observable only as a sanitized suffix; credentials, URLs,
   headers, response bodies, and raw COM descriptions remain excluded.
 - This reduces avoidable failure-path lifetime but does not claim that WinHTTP

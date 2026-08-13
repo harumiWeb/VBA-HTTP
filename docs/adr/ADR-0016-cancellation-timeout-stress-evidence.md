@@ -16,11 +16,12 @@ promise and must not claim stronger interruption semantics.
 
 ## Decision
 
-- Add an excluded `WinHttpCancellationStressTests` module with three independent
+- Add an excluded `WinHttpCancellationStressTests` module with four independent
   scenarios, each executed in its own temporary xlflow/Excel process:
   `com_active_cancellation` cancels four delayed asynchronous COM requests,
   `com_request_deadline` expires four COM request deadlines,
-  and `native_download_cancellation` cancels a 64 KiB streaming download while
+  `com_receive_timeout` repeats synchronous receive timeouts, and
+  `native_download_cancellation` cancels a 64 KiB streaming download while
   preserving its sentinel destination and temporary-file count.
 - Use 25 iterations by default, with a bounded 1..1000 override for diagnosis.
   Every iteration performs a loopback recovery `GET /status/204`; COM retry
@@ -42,10 +43,10 @@ promise and must not claim stronger interruption semantics.
   instead of an informal claim based on one integration test.
 - The gate is slower and requires an Excel host, so it is a separate Taskfile
   target and is not part of the normal pre-commit suite.
-- The three scenarios deliberately reflect transport capability differences;
-  native buffered operations do not promise mid-call cooperative cancellation
-  and are not presented as a receive-timeout stress claim here. The existing
-  single receive-timeout integration test remains the regression boundary.
+- The four scenarios deliberately reflect transport capability differences;
+  native buffered operations do not promise mid-call cooperative cancellation.
+  The receive-timeout scenario is the dedicated regression boundary for the
+  synchronous COM failure cleanup described by ADR-0022.
 - Cookie persistence and TLS certificate rejection are covered by their own
   policies and tests. Integrated authentication and process-wide memory
   thresholds remain separate hardening decisions.

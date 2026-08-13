@@ -1,9 +1,12 @@
 ## Unreleased
 
-- Added best-effort `Abort` cleanup for buffered COM request failures before
-  releasing `WinHttpRequest` objects. Original timeout/error mapping is
-  preserved; repeated receive-timeout handle stability remains a tracked
-  future-v1 gate.
+- Added best-effort `Abort` cleanup plus a bounded 250 ms teardown drain for
+  synchronous failures and asynchronous cancellation before releasing
+  `WinHttpRequest` objects. Original timeout/error mapping is preserved;
+  repeated receive-timeout handle stability remains a tracked future-v1 gate.
+
+- Extended the cancellation stress gate with repeated synchronous COM
+  receive-timeout cycles and a dedicated idle-handle budget.
 
 - Added a machine-validated Phase 9 security-risk register with an explicit
   zero-current-blocker gate, fail-closed tamper tests, and release-security

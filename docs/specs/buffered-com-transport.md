@@ -71,8 +71,11 @@ unchanged.
 
 Before releasing a backend after `Open`, `Send`, timeout, or response failure,
 the transport makes a best-effort `Abort` call. The original mapped error is
-preserved if that cleanup call fails; repeated receive-timeout handle stability
-remains a separate stress/risk gate and is not claimed by this contract.
+preserved if that cleanup call fails. A 250 ms bounded drain follows a
+synchronous failure and asynchronous cancellation so WinHTTP can finish
+COM-handle teardown. The drain applies only to abort paths; repeated
+receive-timeout handle stability remains a separate stress/risk gate and is not
+claimed by this contract.
 
 ## Scope
 

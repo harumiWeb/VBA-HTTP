@@ -2,7 +2,7 @@
 
 ## Scope
 
-`task test:cancellation-stress` runs three loopback-only scenarios against the
+`task test:cancellation-stress` runs four loopback-only scenarios against the
 deterministic Go test server. The stress module lives under
 `src/modules/Tests/Stress/` and is excluded from release workbooks.
 
@@ -10,6 +10,7 @@ deterministic Go test server. The stress module lives under
 | --- | --- | --- | --- | ---: |
 | `com_active_cancellation` | `WinHttpComTransport` | four `GET /delay/2000` requests, cancelled after one second | every item is cancelled; a recovery `GET /status/204` succeeds | <=32 |
 | `com_request_deadline` | `WinHttpComTransport` | four `GET /delay/250` requests, 25 ms per-request deadline | every item is `HttpErrorTimeout`; recovery succeeds | <=32 |
+| `com_receive_timeout` | `WinHttpComTransport` | repeated synchronous `GET /delay/10000` requests with a 1,000 ms receive timeout | every attempt maps to `HttpErrorTimeout`; recovery succeeds | <=32 |
 | `native_download_cancellation` | `WinHttpNativeTransport` | 64 KiB `GET /stream/65536`, progress cancellation at 64 KiB | `HttpErrCancelled`, 8-byte sentinel and temp-file count unchanged; recovery succeeds | <=8 |
 
 Each selected scenario runs exactly the configured number of iterations
@@ -17,6 +18,11 @@ Each selected scenario runs exactly the configured number of iterations
 each cycle, and sets `MaxAttempts=1` where retries could obscure the result.
 The COM active-cancel scenario uses the existing cooperative `DoEvents` polling
 boundary and does not introduce a native callback.
+
+The receive-timeout scenario exercises the synchronous COM failure path. Its
+bounded 250 ms abort drain is part of ADR-0022; the scenario is the evidence
+gate for repeated timeout cleanup rather than a claim that WinHTTP has no
+host-specific allocator variation.
 
 ## Process evidence
 

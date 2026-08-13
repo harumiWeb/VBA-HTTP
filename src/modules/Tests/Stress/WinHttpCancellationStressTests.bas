@@ -6,6 +6,8 @@ Private Const ComCancellationDelayMilliseconds As Long = 2000
 Private Const ComDeadlineRequests As Long = 4
 Private Const ComDeadlineMilliseconds As Long = 25
 Private Const ComDeadlineDelayMilliseconds As Long = 250
+Private Const ComReceiveTimeoutMilliseconds As Long = 1000
+Private Const ComReceiveTimeoutDelayMilliseconds As Long = 10000
 Private Const NativeDownloadBytes As Long = 65536
 Private Const DownloadCancelAfterBytes As Currency = 65536
 
@@ -131,6 +133,44 @@ Public Sub Test_CancellationStress_NativeDownloadCancellation()
     If errorNumber <> 0 Then Err.Raise errorNumber, errorSource, errorDescription
 End Sub
 
+'@Tag("stress")
+Public Sub Test_CancellationStress_ComReceiveTimeout()
+    Dim client As New HttpClient
+    Dim baseUrl As String
+    Dim startMarker As String
+    Dim doneMarker As String
+    Dim releaseMarker As String
+    Dim iterations As Long
+    Dim index As Long
+    Dim errorNumber As Long
+    Dim errorSource As String
+    Dim errorDescription As String
+
+    If Not ReadScenarioEnvironment(baseUrl, startMarker, doneMarker, releaseMarker, iterations) Then Exit Sub
+    On Error GoTo Cleanup
+    client.BaseUrl = baseUrl
+    WriteRecoveryRequest client
+    RunComReceiveTimeout client, baseUrl
+    WriteRecoveryRequest client
+    WriteMarker startMarker
+
+    For index = 1 To iterations
+        RunComReceiveTimeout client, baseUrl
+        WriteRecoveryRequest client
+    Next index
+
+    WriteMarker doneMarker
+    WaitForRelease releaseMarker, "WinHttpCancellationStressTests.ComReceiveTimeout"
+    Exit Sub
+
+    Cleanup: ' xlflow:disable-line VBA237
+    errorNumber = Err.Number
+    errorSource = Err.Source
+    errorDescription = Err.Description
+    Err.Clear
+    If errorNumber <> 0 Then Err.Raise errorNumber, errorSource, errorDescription
+End Sub
+
 Public Sub CancelScheduledRequest()
     If Not mScheduledCancellation Is Nothing Then mScheduledCancellation.Cancel
 End Sub
@@ -218,6 +258,20 @@ Private Sub RunComDeadline(ByVal client As HttpClient, ByVal baseUrl As String)
     Next itemIndex
 End Sub
 
+Private Sub RunComReceiveTimeout(ByVal client As HttpClient, ByVal baseUrl As String)
+    Dim Request As New HttpRequest
+    Dim observedNumber As Long
+
+    Request.Method = "GET"
+    Request.Url = baseUrl & "/delay/" & CStr(ComReceiveTimeoutDelayMilliseconds)
+    Request.Timeouts.ResolveMilliseconds = ComReceiveTimeoutMilliseconds
+    Request.Timeouts.ConnectMilliseconds = ComReceiveTimeoutMilliseconds
+    Request.Timeouts.SendMilliseconds = ComReceiveTimeoutMilliseconds
+    Request.Timeouts.ReceiveMilliseconds = ComReceiveTimeoutMilliseconds
+    observedNumber = CaptureRequestFailure(client, Request)
+    XlflowAssert.AssertEquals HttpErrorTimeout, HttpErrors.CategoryFromNumber(observedNumber)
+End Sub
+
 Private Sub RunNativeDownloadCancellation(ByVal client As HttpClient, ByVal suffix As String)
     Dim destination As String
     Dim Options As New HttpExecutionOptions
@@ -271,6 +325,17 @@ Private Function CaptureDownloadFailure(ByVal client As HttpClient, ByVal Url As
 
 Failed:
     CaptureDownloadFailure = Err.Number
+    Err.Clear
+End Function
+
+Private Function CaptureRequestFailure(ByVal client As HttpClient, ByVal Request As HttpRequest) As Long
+    On Error GoTo Failed
+    Call client.Execute(Request)
+    CaptureRequestFailure = 0
+    Exit Function
+
+Failed:
+    CaptureRequestFailure = Err.Number
     Err.Clear
 End Function
 

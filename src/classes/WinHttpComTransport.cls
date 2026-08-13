@@ -20,6 +20,8 @@ Private Const WinHttpOptionMaxAutomaticRedirects As Long = 14
 Private Const WinHttpRequestProxySettingDefault As Long = 0
 Private Const WinHttpRequestProxySettingDirect As Long = 1
 Private Const WinHttpRequestProxySettingProxy As Long = 2
+Private Const ComAbortDrainMilliseconds As Long = 250
+Private Const ComAbortCancellationDrainMilliseconds As Long = 250
 
 Public Function Execute(ByVal Request As HttpRequest) As HttpResponse
     Set Execute = ExecuteCore(Request)
@@ -410,6 +412,7 @@ End Function
 Private Function TryAbortOperation(ByVal operation As WinHttpComOperation, ByRef errorNumber As Long, ByRef errorSource As String, ByRef errorDescription As String) As Boolean
     On Error GoTo AbortFailed
     operation.Backend.Abort
+    HttpTiming.Pause ComAbortCancellationDrainMilliseconds
     operation.ReleaseBackend
     TryAbortOperation = True
     Exit Function
@@ -461,7 +464,11 @@ End Function
 
 Private Function TryReleaseFailedBackend(ByRef backend As Object) As Boolean
     On Error GoTo AbortFailed
-    If Not backend Is Nothing Then backend.Abort
+    If Not backend Is Nothing Then
+        backend.Abort
+        ' WinHTTP completes some COM-handle teardown asynchronously after Abort.
+        HttpTiming.Pause ComAbortDrainMilliseconds
+    End If
     Set backend = Nothing
     TryReleaseFailedBackend = True
     Exit Function

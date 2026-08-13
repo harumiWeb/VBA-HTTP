@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet("all", "com-cancel", "com-deadline", "native-download-cancel")]
+    [ValidateSet("all", "com-cancel", "com-deadline", "com-timeout", "native-download-cancel")]
     [string]$Scenario = "all",
     [ValidateRange(1, 1000)]
     [int]$Iterations = 25,
@@ -227,6 +227,7 @@ try {
     $definitions = @(
         [pscustomobject]@{ Name = "com_active_cancellation"; Filter = "WinHttpCancellationStressTests.Test_CancellationStress_ComActiveCancellation"; Transport = "WinHttpComTransport"; HandleDeltaLimit = 32; Invariant = "four delayed COM requests become cancelled on every iteration, followed by a 204 recovery request" },
         [pscustomobject]@{ Name = "com_request_deadline"; Filter = "WinHttpCancellationStressTests.Test_CancellationStress_ComDeadline"; Transport = "WinHttpComTransport"; HandleDeltaLimit = 32; Invariant = "four delayed COM requests become timeout failures on every iteration, followed by a 204 recovery request" },
+        [pscustomobject]@{ Name = "com_receive_timeout"; Filter = "WinHttpCancellationStressTests.Test_CancellationStress_ComReceiveTimeout"; Transport = "WinHttpComTransport"; HandleDeltaLimit = 32; Invariant = "repeated COM receive timeouts preserve a usable client and stay within the idle handle budget" },
         [pscustomobject]@{ Name = "native_download_cancellation"; Filter = "WinHttpCancellationStressTests.Test_CancellationStress_NativeDownloadCancellation"; Transport = "WinHttpNativeTransport"; HandleDeltaLimit = 8; Invariant = "64 KiB streaming download cancellation preserves the sentinel destination and temporary-file count" }
     )
     if ($Scenario -eq "all") {
@@ -236,13 +237,14 @@ try {
         $scenarioName = switch ($Scenario) {
             "com-cancel" { "com_active_cancellation" }
             "com-deadline" { "com_request_deadline" }
+            "com-timeout" { "com_receive_timeout" }
             "native-download-cancel" { "native_download_cancellation" }
             default { "" }
         }
         $selectedDefinitions = @($definitions | Where-Object { $_.Name -eq $scenarioName })
     }
     if ($selectedDefinitions.Count -eq 0) { throw "No cancellation stress scenario was selected." }
-    if ($Scenario -eq "all" -and $selectedDefinitions.Count -ne 3) { throw "The complete cancellation stress gate requires all three scenarios." }
+    if ($Scenario -eq "all" -and $selectedDefinitions.Count -ne 4) { throw "The complete cancellation stress gate requires all four scenarios." }
 
     $scenarioResults = [System.Collections.Generic.List[object]]::new()
     foreach ($definition in $selectedDefinitions) {
@@ -264,6 +266,8 @@ try {
             iterations = $Iterations
             com_cancellation_requests = 4
             com_deadline_requests = 4
+            com_timeout_receive_milliseconds = 1000
+            com_timeout_delay_milliseconds = 10000
             native_download_bytes = 65536
             native_download_cancel_after_bytes = 65536
             idle_wait_ms = 1000
