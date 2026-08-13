@@ -239,8 +239,8 @@ if ($validation.source_applied -ne $true -or
     [string]$validation.excel_cleanup -ne 'clean') {
     throw 'Release manifest does not prove source application, VBE compile, save, close, and Excel cleanup.'
 }
-if ([string](Require-Property (Require-Property $manifest 'publication') 'method') -ne 'atomic_replace') {
-    throw 'Release publication was not atomic_replace.'
+if (@('atomic_create', 'atomic_replace') -notcontains [string](Require-Property (Require-Property $manifest 'publication') 'method')) {
+    throw 'Release publication was not atomic_create or atomic_replace.'
 }
 
 $included = @($manifest.included_components)

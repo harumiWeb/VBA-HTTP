@@ -115,6 +115,11 @@ tasks:
     cmds:
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-XlamDistribution.ps1
 
+  test:clean-checkout:
+    desc: Verify source gates and both build plans from a fresh git archive
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-CleanCheckout.ps1
+
   testserver:run:
     desc: Start the local HTTP server on an OS-selected port
     dir: tools/testserver
@@ -219,6 +224,7 @@ tasks:
       - task: test:security-risks
       - task: test:docs
       - task: test:xlam
+      - task: test:clean-checkout
       - task: build:plan
 
   hooks:install:

@@ -18,7 +18,8 @@ manifest describes a production-only workbook.
 - Add `tools/Validate-ReleaseSecurity.ps1` as a fail-closed, Excel-free gate
   before release component inspection and consumer smoke.
 - Accept only the canonical `build/Release/VBA-HTTP.xlsm` output whose manifest
-  names `build/VBA-HTTP.xlsm` as its base and reports `atomic_replace`, source
+names `build/VBA-HTTP.xlsm` as its base and reports an atomic publication
+(`atomic_create` for first publication or `atomic_replace` for replacement), source
   application, VBE compile, save, close, and clean Excel cleanup.
 - Compare included and excluded component names with
   `tools/build-component-policy.json`. Included source paths must stay under

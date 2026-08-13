@@ -15,6 +15,10 @@
   checksum, add-in identity, VBE publication, and external consumer smoke are
   validated separately from the XLSM release.
 
+- Added a clean-checkout contract that builds a temporary `git archive` and
+  reruns the source, documentation, base-identity, and both release-plan gates;
+  an opt-in full mode builds both XLSM and XLAM artifacts from that archive.
+
 - Added opt-in structured `HttpDiagnostics` operation events with bounded
   retention, query/user-info target sanitization, stable error categories, and
   automatic sensitive-header redaction. Release consumer smoke verifies that

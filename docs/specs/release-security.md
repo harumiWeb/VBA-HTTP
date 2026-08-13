@@ -16,7 +16,8 @@ which inspects the actual `VBProject` and runs the external consumer smoke.
 - `validation.source_applied=true`, `vbe_compile=passed`,
   `workbook_saved=true`, `workbook_closed=true`, and `excel_cleanup=clean`;
 - `validation.components_applied` equals the included component count; and
-- `publication.method=atomic_replace`.
+- `publication.method` is either `atomic_create` (first publication) or
+  `atomic_replace` (replacement of an existing artifact); both are atomic.
 
 Any missing or contradictory field fails closed.
 
@@ -58,8 +59,8 @@ remain release-review items and are listed in the report and
 ## Verification
 
 - `task test:release-security` builds a source-derived fixture and checks one
-  valid manifest plus six tampering cases (base path, included test path,
-  missing exclusion, failed compile evidence, related-path escape, and artifact
-  checksum tamper).
+  valid manifest plus seven tampering cases (base path, included test path,
+  missing exclusion, failed compile evidence, non-atomic publication,
+  related-path escape, and artifact checksum tamper).
 - `task release:security` validates the current release artifact and writes the
   deterministic report before `task release:smoke` opens Excel.

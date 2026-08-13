@@ -62,7 +62,7 @@ function New-FixtureRoot {
         output = 'build/Release/VBA-HTTP.xlsm'
         included_components = $included
         excluded_components = $excluded
-        publication = [ordered]@{ method = 'atomic_replace'; replaced_existing = $true }
+        publication = [ordered]@{ method = 'atomic_create'; replaced_existing = $false }
         validation = [ordered]@{
             components_applied = $included.Count
             source_applied = $true
@@ -156,6 +156,10 @@ try {
         param($Manifest, $Artifact)
         $Manifest.validation.vbe_compile = 'failed'
     } $false
+    New-Case 'non-atomic-publication' {
+        param($Manifest, $Artifact)
+        $Manifest.publication.method = 'copy'
+    } $false
     New-Case 'related-path-escape' {
         param($Manifest, $Artifact)
         $Manifest.included_components[0].related_paths = @('docs/secret.txt')
@@ -164,7 +168,7 @@ try {
         param($Manifest, $Artifact)
         [IO.File]::WriteAllBytes($Artifact, [byte[]](255..0))
     } $false
-    Write-Output 'Release security validator tests passed: valid manifest plus six fail-closed tamper cases.'
+    Write-Output 'Release security validator tests passed: valid manifest plus seven fail-closed tamper cases.'
 }
 finally {
     if (Test-Path -LiteralPath $fixtureRoot) {

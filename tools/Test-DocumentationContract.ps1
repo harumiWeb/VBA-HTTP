@@ -16,6 +16,7 @@ $required = @(
     'tools/Validate-XlamBuildPlan.ps1',
     'tools/Validate-XlamArtifact.ps1',
     'tools/Test-XlamDistribution.ps1',
+    'tools/Test-CleanCheckout.ps1',
     'build/VBA-HTTP.xlam',
     'examples/ConsumerBasic.bas',
     'examples/ConsumerDiagnostics.bas'
