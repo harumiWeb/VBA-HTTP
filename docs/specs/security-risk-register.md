@@ -29,6 +29,10 @@ loopback challenge contract is covered by ADR-0023; domain/CONNECT fixtures
 remain deferred. The protocol-host runner has produced a passing x64 HTTP/2
 record at benchmarks/results/protocol-host-http2.json; that record is
 host-specific and does not satisfy the remaining HTTP/3 or x86 requirements.
+The 2026-08-13 HTTP/3 endpoint attempts are recorded separately as
+non-evidence in
+`docs/verification/protocol-host-http3-attempt-2026-08-13.md`; they do not
+change the deferred risk status.
 Repeated COM receive-timeout handle growth is
 mitigated on the current x64 host by the canonical cancellation stress result;
 the same evidence must be rerun on each supported Office host.

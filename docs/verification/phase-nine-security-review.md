@@ -61,3 +61,6 @@ both transport integration tests. The explicit cookie jar policy is covered by
 ADR-0018 and its unit/integration/release smoke tests.
 
 Detailed fixture and command evidence: `docs/verification/phase-nine-certificate-validation.md`.
+The latest HTTP/3 host attempts and their fail-closed cleanup evidence are
+recorded in
+`docs/verification/protocol-host-http3-attempt-2026-08-13.md`.

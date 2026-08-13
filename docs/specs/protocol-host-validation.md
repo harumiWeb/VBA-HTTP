@@ -86,6 +86,11 @@ field whose name could contain a secret or request payload.
   `benchmarks/results/protocol-host-http2.json` (trusted `nghttp2.org:443`,
   required mode, exact `ProtocolUsed=HTTP/2`). It does not promote HTTP/3 or
   any x86 Office row.
+- A 2026-08-13 attempt against `nghttp2.org:4433` and `quic.rocks:4433`
+  ended in bounded RPC failures without an observed protocol; the attempt is
+  recorded in
+  `docs/verification/protocol-host-http3-attempt-2026-08-13.md` and does not
+  create a passing HTTP/3 record.
 - No host result changes the offline integration contract or permits a
   certificate-ignore option.
 
