@@ -130,6 +130,11 @@ tasks:
     cmds:
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-ProtocolHostEvidence.ps1
 
+  test:protocol-host-watchdog:
+    desc: Verify protocol host watchdog ownership and non-Excel safety
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-ProtocolHostWatchdog.ps1
+
   protocol:host:
     desc: Run opt-in required HTTP/2 or HTTP/3 host evidence from environment variables
     cmds:
@@ -242,6 +247,7 @@ tasks:
       - task: test:clean-checkout
       - task: test:office-bitness
       - task: test:protocol-host-schema
+      - task: test:protocol-host-watchdog
       - task: build:plan
 
   hooks:install:

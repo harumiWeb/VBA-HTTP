@@ -91,6 +91,9 @@ field whose name could contain a secret or request payload.
 
 ## Verification
 
+- The ownership/non-Excel safety test is
+  tools/Test-ProtocolHostWatchdog.ps1.
+
 - Offline schema and fail-closed tamper cases:
   `powershell -File tools/Test-ProtocolHostEvidence.ps1`.
 - Normal deterministic proof remains `task test:integration`; it does not call
