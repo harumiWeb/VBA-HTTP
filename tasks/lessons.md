@@ -11,6 +11,12 @@
   `xlflow save --session --json`, and confirm the warning is gone before
   committing the development workbook.
 
+- If a command wrapper times out while xlflow still reports workbook
+  coordination as busy, do not retry or save. Inspect the recorded operation
+  and PID, discard only a managed poisoned session through the recovery
+  workflow, and reorient from a clean `xlflow status --json` before starting a
+  new proof loop.
+
 ## Excel process ownership
 
 - External protocol-host validation uses a hidden watchdog with the exact
