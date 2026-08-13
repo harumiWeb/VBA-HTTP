@@ -4,16 +4,6 @@
   "current_release_blockers": [],
   "issues": [
     {
-      "id": "compat-http3-negotiation",
-      "title": "HTTP/3 negotiation evidence",
-      "status": "deferred",
-      "severity": "high",
-      "blocks_current_release": false,
-      "blocks_v1": true,
-      "required_evidence": "HTTP/3 on a trusted QUIC endpoint with exact ProtocolUsed evidence on the supported x64 Office host; x64 HTTP/2 is already recorded separately",
-      "evidence": "benchmarks/results/protocol-host-http2.json; docs/specs/protocol-host-validation.md; docs/specs/compatibility-matrix.md; docs/adr/ADR-0025-protocol-host-evidence-boundary.md"
-    },
-    {
       "id": "integrated-proxy-challenge-auth",
       "title": "Host-specific integrated and proxy challenge authentication evidence",
       "status": "deferred",

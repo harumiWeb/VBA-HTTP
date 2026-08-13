@@ -51,12 +51,13 @@ artifact, manifest, and checksum together.
 
 ## Deferred security topics
 
-The gate does not mark the following as implemented: HTTP/3/QUIC negotiation
-or host-specific integrated/proxy challenge authentication. 32-bit Office is
-explicitly outside the supported distribution boundary under ADR-0030, rather
-than a pending release claim. The x64 HTTP/2 host record is retained as
-`benchmarks/results/protocol-host-http2.json` but does not satisfy those
-remaining gates. The bounded loopback challenge contract is implemented by
+The gate does not mark host-specific integrated/proxy challenge authentication
+as implemented. HTTP/3/QUIC is explicitly unsupported by policy under
+ADR-0035, rather than a pending release claim. 32-bit Office is explicitly
+outside the supported distribution boundary under ADR-0030, rather than a
+pending release claim. The x64 HTTP/2 host record is retained as
+`benchmarks/results/protocol-host-http2.json` and is not affected by those
+boundaries. The bounded loopback challenge contract is implemented by
 ADR-0023, but real Windows-domain and proxy/CONNECT evidence remain
 release-review items and are listed in the report and
 `docs/verification/phase-nine-security-review.md`.

@@ -23,6 +23,7 @@ normal OS trust decision without introducing a certificate-ignore switch.
   bypass flag, or logs certificate/private-key material.
 
 The x64 HTTP/2 negotiated-protocol record is archived at
-benchmarks/results/protocol-host-http2.json. HTTP/3/QUIC negotiated evidence
+benchmarks/results/protocol-host-http2.json. HTTP/3/QUIC is unsupported by
+policy under ADR-0035; no negotiated HTTP/3 evidence
 remains a separate x64 capability gate; 32-bit Office is unsupported by policy
 under ADR-0030.

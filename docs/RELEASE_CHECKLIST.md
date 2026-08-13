@@ -15,8 +15,9 @@ document records the repeatable handoff gate.
       CHANGELOG updates.
 - [ ] The compatibility record names the Windows version, Office bitness, and
       protocol evidence. The current supported proof path is x64 Office.
-      For a negotiated HTTP/2/HTTP/3 promotion, archive the validated output
-      from `task protocol:host` with the exact artifact and checksum.
+      For the supported negotiated HTTP/2 host row, archive the validated output
+      from `task protocol:host` with the exact artifact and checksum. HTTP/3 is
+      unsupported by policy under ADR-0035 and has no release evidence gate.
 - [ ] `task test:clean-checkout` passes; for a clean-environment release
       evidence bundle, `tools/Test-CleanCheckout.ps1 -FullRelease` also passes.
 
@@ -69,10 +70,11 @@ validator must prove `Workbook.IsAddin=True` and must not reuse the XLSM base.
 ## Deferred promotion gates
 
 The current XLSM/XLAM release is not evidence that every v1.0 compatibility target
-is complete. Promotion of the v1.0 line additionally requires the risk-register
-items for HTTP/3/QUIC and integrated/proxy challenge authentication, plus any
+is complete. Promotion of the v1.0 line additionally requires the remaining
+risk-register item for integrated/proxy challenge authentication, plus any
 other supported-target compatibility obligations, to be resolved with dedicated
-fixtures and evidence. 32-bit Office is outside the supported distribution
-boundary under ADR-0030 and is not a v1 promotion gate. The remaining deferred
-items are recorded in `docs/security/risk-register.json` and must be re-evaluated
-before a v1 promotion.
+fixtures and evidence. HTTP/3/QUIC and 32-bit Office are outside the supported
+distribution boundary under ADR-0035 and ADR-0030 and are not v1 promotion
+gates. The remaining deferred items are recorded in
+`docs/security/risk-register.json` and must be re-evaluated before a v1
+promotion.

@@ -43,8 +43,8 @@ matrix stronger than the tested product.
   boundary instead of carrying an indefinitely pending x86 gate.
 - Consumers running 32-bit Office should treat the workbook as unsupported;
   no compatibility or support expectation is implied by the legacy ABI branch.
-- HTTP/3/QUIC evidence remains a separate x64 host capability question and is
-  not resolved by this decision.
+- HTTP/3/QUIC is separately unsupported by policy under ADR-0035; this decision
+  does not reopen that boundary.
 - Future x86 investigation remains possible without weakening the release
   gate, but its evidence must be clearly diagnostic and non-promotional.
 

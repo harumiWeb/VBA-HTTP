@@ -22,11 +22,12 @@ Debug.Print response.Text
 `HttpClient.Execute(request)` is the primitive buffered operation. `GetResponse`, `PostResponse`, `PutResponse`, `PatchResponse`, and `DeleteResponse` are convenience methods that construct a request and delegate to `Execute`. The `Response` suffix is required because VBA reserves `Get`, `Put`, and related tokens; this keeps ordinary early-bound calls compilable. Batch execution is defined by `bounded-concurrency.md`; constant-memory downloads are defined by `streaming-download.md` and are available on transports that implement `IHttpDownloadTransport`. Constant-memory file and multipart uploads are defined by `streaming-upload.md` and are available on transports that implement `IHttpUploadTransport`.
 
 `HttpResponse.ProtocolUsed` reports the native backend's negotiated protocol as
-`HTTP/1.1`, `HTTP/2`, or `HTTP/3`. The COM backend leaves this property empty.
-`HttpProtocolOptions` can be assigned to `HttpClient` or `HttpRequest` for
-native-only HTTP/2/HTTP/3 opt-in; its default has no override. The complete
-fallback, required-mode, and compatibility contract is in
-`protocol-policy.md`.
+`HTTP/1.1`, `HTTP/2`, or (diagnostically) `HTTP/3`. The COM backend leaves this
+property empty. `HttpProtocolOptions` can be assigned to `HttpClient` or
+`HttpRequest` for native-only HTTP/2 opt-in; the retained HTTP/3 flag is
+unsupported by policy and has no release guarantee. Its default has no
+override. The complete fallback, required-mode, and compatibility contract is
+in `protocol-policy.md` and ADR-0035.
 
 `HttpDecompressionOptions` can be assigned to `HttpClient` or `HttpRequest` for
 native-only gzip/deflate response decoding. Its default has no override;

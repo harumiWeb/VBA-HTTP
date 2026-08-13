@@ -4,7 +4,8 @@
 
 `accepted`
 
-This historical record is superseded by ADR-0030. Its protocol evidence,
+This historical record is superseded by ADR-0030 for Office bitness and by
+ADR-0035 for the HTTP/3/QUIC support boundary. Its HTTP/2 evidence,
 trusted-endpoint, and ownership rules remain applicable to the supported x64
 Office target; ADR-0030 replaces the former x86 promotion requirement.
 
@@ -50,9 +51,9 @@ external network access into the normal test suite.
 - Keep this runner out of `task verify` and ordinary deterministic integration
   tests.  A host owner explicitly invokes it after selecting a trusted TLS
   endpoint and archives the result with the release artifact.
-- Validate the supported x64 evidence independently; an HTTP/2 result never
-  promotes HTTP/3. The former x86 evidence requirement is replaced by
-  ADR-0030.
+- Validate the supported x64 HTTP/2 evidence independently; an HTTP/2 result
+  never promotes HTTP/3. The former x86 evidence requirement is replaced by
+  ADR-0030, and HTTP/3 support is excluded by ADR-0035.
 
 ## Consequences
 
@@ -62,8 +63,8 @@ external network access into the normal test suite.
   network boundary; the current loopback suite remains fully offline.
 - Evidence generation opens a dedicated automation Excel instance only after
   proving ownership.  It never quits or force-stops a pre-existing Excel PID.
-- HTTP/3 remains pending until a WinHTTP/QUIC-capable host produces a passing
-  result; this ADR does not claim capability by itself.
+- HTTP/3 is unsupported by policy under ADR-0035; this ADR does not create a
+  capability claim or promotion obligation for it.
 
 ## Evidence
 

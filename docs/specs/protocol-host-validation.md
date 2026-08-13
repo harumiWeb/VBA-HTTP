@@ -5,7 +5,8 @@
 The normal test server is deliberately HTTP/1.1 and must not use external
 network access.  `tools/Run-ProtocolHostValidation.ps1` is a separate,
 operator-invoked evidence runner for a trusted TLS endpoint that is known to
-support HTTP/2 or HTTP/3 on the selected Windows/WinHTTP host.
+support HTTP/2 on the selected Windows/WinHTTP host. HTTP/3/QUIC is
+unsupported by policy under ADR-0035 and is not a promotion target.
 
 The runner requests one protocol with `HttpProtocolRequired`.  It succeeds
 only when `HttpResponse.ProtocolUsed` is exactly the requested value.  A
@@ -27,7 +28,7 @@ powershell -File tools/Run-ProtocolHostValidation.ps1 `
   -ExpectedProtocol $env:VBA_HTTP_PROTOCOL_EXPECTED
 ```
 
-`ExpectedProtocol` is exactly `HTTP/2` or `HTTP/3`.  The URL must use HTTPS,
+`ExpectedProtocol` is exactly `HTTP/2`.  The URL must use HTTPS,
 must not contain user-info, and is never written in full to the evidence
 file.  The runner requires a compiled release artifact, its manifest, and its
 checksum sidecar; it does not alter the development workbook.
@@ -43,7 +44,8 @@ the same WinHTTP option 133/145 and protocol 134 calls through a direct x64
 P/Invoke. Its output is diagnostic only and is never a promotion record. It is
 useful for separating a WinHTTP capability miss (for example
 `ERROR_NOT_SUPPORTED` 50 for an HTTP/3-enabled mask) from an Excel automation
-failure; a successful probe still does not replace the public-consumer proof.
+failure; an HTTP/3 probe is diagnostic-only and a successful probe still does
+not replace the public-consumer proof or change the support boundary.
 
 The host runner invokes that probe as an Excel-free capability preflight after
 the x64 bridge and release-artifact gates but before creating an Excel COM
@@ -52,9 +54,11 @@ to report the same `protocol_used_flag`. An unsupported option, timeout, JSON
 failure, or protocol mismatch stops the host run before Excel starts and
 publishes no evidence. This prevents a known WinHTTP capability miss from
 crashing or hanging an automation process and leaves unrelated user Excel
-processes outside the runner's scope. A passing preflight is recorded only as
-the redacted `environment.winhttp.preflight` metadata; the public Excel
-consumer remains mandatory for a promotion record.
+processes outside the runner's scope. The separate probe may still be invoked
+with the HTTP/3 mask for diagnosis, but the promotion runner rejects HTTP/3.
+A passing preflight is recorded only as the redacted
+`environment.winhttp.preflight` metadata; the public Excel consumer remains
+mandatory for an HTTP/2 promotion record.
 
 ## Evidence schema
 
@@ -67,9 +71,7 @@ absent from the pre-run snapshot. The watchdog can terminate only that exact
 proven PID; a timed-out run publishes no evidence. Normal teardown gives the
 same PID a five-second graceful-exit window before any force-stop is allowed.
 
-The default output is
-`benchmarks/results/protocol-host-http2.json` or
-`benchmarks/results/protocol-host-http3.json`.
+The default output is `benchmarks/results/protocol-host-http2.json`.
 
 Required fields:
 
@@ -78,7 +80,7 @@ Required fields:
 - `status`: `passed`;
 - `run_utc`: an ISO-8601 UTC timestamp;
 - `source_revision`: a full hexadecimal Git revision;
-- `requested_protocol` and `observed_protocol`: equal `HTTP/2` or `HTTP/3`;
+- `requested_protocol` and `observed_protocol`: both equal `HTTP/2`;
 - `mode`: `required`;
 - `external_network`: `true`;
 - `target`: `scheme=https`, non-empty `host`, and numeric `port`;
@@ -104,16 +106,15 @@ field whose name could contain a secret or request payload.
   before opening a new Excel instance. The Office version/build and
   WinHTTP/Windows capability are still recorded by the runner.
 - A passing HTTP/2 result promotes only the selected x64 host HTTP/2 row.
-- A passing HTTP/3 result requires a QUIC-capable host and promotes only the
-  selected x64 host HTTP/3 row.
+- HTTP/3/QUIC is `unsupported-by-policy` under ADR-0035; no passing HTTP/3
+  result is accepted by this schema or required for release promotion.
 - The current x64 HTTP/2 record is
   `benchmarks/results/protocol-host-http2.json` (trusted `nghttp2.org:443`,
   required mode, exact `ProtocolUsed=HTTP/2`). It does not promote HTTP/3.
-- A 2026-08-13 attempt against `nghttp2.org:4433` and `quic.rocks:4433`
-  ended in bounded RPC failures without an observed protocol; the attempt is
-  recorded in
-  `docs/verification/protocol-host-http3-attempt-2026-08-13.md` and does not
-  create a passing HTTP/3 record.
+- A 2026-08-13 attempt against public HTTP/3 candidates ended in bounded RPC
+  failures without an observed protocol; the attempt is recorded in
+  `docs/verification/protocol-host-http3-attempt-2026-08-13.md` as historical
+  diagnostic evidence and does not create a promotion record.
 - No host result changes the offline integration contract or permits a
   certificate-ignore option.
 
@@ -128,4 +129,4 @@ field whose name could contain a secret or request payload.
   `powershell -File tools/Probe-WinHttpProtocol.ps1 -Url https://host.example/ -ProtocolMask 2`.
 - Normal deterministic proof remains `task test:integration`; it does not call
   this runner or access external network.
-- ADR rationale and process-ownership boundary: ADR-0025.
+- ADR rationale and process-ownership boundary: ADR-0025 and ADR-0035.

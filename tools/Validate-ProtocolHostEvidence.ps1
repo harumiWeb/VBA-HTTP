@@ -2,7 +2,7 @@
 param(
     [Parameter(Mandatory = $true)]
     [string]$Path,
-    [ValidateSet("HTTP/2", "HTTP/3")]
+    [ValidateSet("HTTP/2")]
     [string]$ExpectedProtocol = ""
 )
 
@@ -14,7 +14,7 @@ if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
 }
 
 $result = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json
-$protocols = @("HTTP/2", "HTTP/3")
+$protocols = @("HTTP/2")
 
 function Require-Property($Object, [string]$Name) {
     if ($null -eq $Object -or $null -eq $Object.PSObject.Properties[$Name]) {
@@ -81,7 +81,7 @@ if ([string](Require-Property $result "status") -ne "passed" -or
 $requested = [string](Require-Property $result "requested_protocol")
 $observed = [string](Require-Property $result "observed_protocol")
 if ($requested -notin $protocols -or $observed -notin $protocols -or $requested -ne $observed) {
-    throw "Requested and observed protocols are not an exact HTTP/2 or HTTP/3 match."
+    throw "Requested and observed protocol must be an exact HTTP/2 match."
 }
 if (-not [string]::IsNullOrWhiteSpace($ExpectedProtocol) -and $requested -ne $ExpectedProtocol) {
     throw "Evidence protocol '$requested' does not match expected '$ExpectedProtocol'."
@@ -154,7 +154,7 @@ if ([int](Require-Property $winhttp "enabled_protocol_option") -ne 133 -or
     throw "WinHTTP protocol option metadata is inconsistent."
 }
 Assert-OnlyProperties $preflight @("status", "requested_mask", "protocol_used_flag", "required", "stage") "environment.winhttp.preflight"
-$expectedMask = if ($requested -eq "HTTP/2") { 1 } else { 2 }
+$expectedMask = 1
 if ([string](Require-Property $preflight "status") -ne "passed" -or
     [int](Require-Property $preflight "requested_mask") -ne $expectedMask -or
     [int](Require-Property $preflight "protocol_used_flag") -ne $expectedMask -or

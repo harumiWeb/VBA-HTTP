@@ -14,8 +14,8 @@
     "status": { "const": "passed" },
     "run_utc": { "type": "string", "format": "date-time" },
     "source_revision": { "type": "string", "pattern": "^[0-9a-fA-F]{40,64}$" },
-    "requested_protocol": { "enum": ["HTTP/2", "HTTP/3"] },
-    "observed_protocol": { "enum": ["HTTP/2", "HTTP/3"] },
+    "requested_protocol": { "const": "HTTP/2" },
+    "observed_protocol": { "const": "HTTP/2" },
     "mode": { "const": "required" },
     "external_network": { "const": true },
     "target": {
@@ -61,14 +61,14 @@
             "enabled_protocol_option": { "const": 133 },
             "used_protocol_option": { "const": 134 },
             "required_protocol_option": { "const": 145 },
-            "observed_protocol": { "enum": ["HTTP/2", "HTTP/3"] },
+            "observed_protocol": { "const": "HTTP/2" },
             "preflight": {
               "type": "object",
               "required": ["status", "requested_mask", "protocol_used_flag", "required", "stage"],
               "properties": {
                 "status": { "const": "passed" },
-                "requested_mask": { "enum": [1, 2] },
-                "protocol_used_flag": { "enum": [1, 2] },
+                "requested_mask": { "const": 1 },
+                "protocol_used_flag": { "const": 1 },
                 "required": { "const": true },
                 "stage": { "type": "string", "minLength": 1 }
               },

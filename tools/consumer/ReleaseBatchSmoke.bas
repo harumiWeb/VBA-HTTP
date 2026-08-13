@@ -65,7 +65,6 @@ Public Sub RunProtocolSmoke(ByVal releaseWorkbookName As String, ByVal baseUrl A
     Set client = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateNativeClient")
     Set protocols = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateProtocolOptions")
     protocols.AllowHttp2 = True
-    protocols.AllowHttp3 = True
     protocols.Mode = 0
     Set client.ProtocolOptions = protocols
     client.BaseUrl = baseUrl
@@ -85,8 +84,8 @@ Public Function RunProtocolHostSmoke(ByVal releaseWorkbookName As String, ByVal 
     Dim expected As String
 
     expected = UCase$(Trim$(ExpectedProtocol))
-    If expected <> "HTTP/2" And expected <> "HTTP/3" Then
-        Err.Raise vbObjectError + 755, "ReleaseBatchSmoke.RunProtocolHostSmoke", "Expected protocol must be HTTP/2 or HTTP/3."
+    If expected <> "HTTP/2" Then
+        Err.Raise vbObjectError + 755, "ReleaseBatchSmoke.RunProtocolHostSmoke", "HTTP/3 is unsupported by policy; only HTTP/2 host evidence is promotable."
     End If
 
     Set client = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateNativeClient")
@@ -99,11 +98,7 @@ Public Function RunProtocolHostSmoke(ByVal releaseWorkbookName As String, ByVal 
     timeouts.SendMilliseconds = 15000
     timeouts.ReceiveMilliseconds = 15000
     Set protocols = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateProtocolOptions")
-    If expected = "HTTP/2" Then
-        protocols.AllowHttp2 = True
-    Else
-        protocols.AllowHttp3 = True
-    End If
+    protocols.AllowHttp2 = True
     protocols.Mode = 1
     Set request.ProtocolOptions = protocols
     Set client.ProtocolOptions = protocols

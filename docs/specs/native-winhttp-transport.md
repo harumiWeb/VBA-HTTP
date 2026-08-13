@@ -75,6 +75,8 @@ be superseded with a real host evidence bundle.
   unsupported options and protocol mismatch to `HttpErrorProtocol`. `HTTP/2`
   and `HTTP/3` are reported only when WinHTTP returns the corresponding flag;
   otherwise the response reports the negotiated legacy protocol as `HTTP/1.1`.
+  HTTP/3 reporting and option application are diagnostic-only and unsupported
+  by policy under ADR-0035.
 - Advanced protocol flags are applied only to HTTPS URLs. The default has no
   override, and plain HTTP fallback remains HTTP/1.1.
 - `HttpDecompressionOptions` applies WinHTTP option 118 before headers/body are

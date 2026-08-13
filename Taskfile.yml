@@ -153,7 +153,7 @@ tasks:
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-ProtocolHostPreflight.ps1
 
   protocol:host:
-    desc: Run opt-in required HTTP/2 or HTTP/3 host evidence from environment variables
+    desc: Run opt-in required HTTP/2 host evidence; HTTP/3 is unsupported by policy
     cmds:
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Run-ProtocolHostValidation.ps1
 

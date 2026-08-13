@@ -1,5 +1,10 @@
 ## Unreleased
 
+- Established ADR-0035: HTTP/3/QUIC is unsupported by policy for the current
+  distribution. The native HTTP/3 option and Excel-free probe remain
+  diagnostic-only; protocol-host promotion now accepts HTTP/2 evidence only,
+  and HTTP/3 no longer blocks v1 release promotion.
+
 - Made the buffered challenge-authentication backend boundary explicit: COM
   now accepts only `HttpAuthSchemeAuto` because
   `IWinHttpRequest::SetCredentials` has no scheme argument; explicit
@@ -11,8 +16,8 @@
   before creating a backend because its API does not expose exchange-count
   callbacks (ADR-0034).
 
-- Added an Excel-free WinHTTP capability preflight to the opt-in protocol-host
-  runner. It checks the exact required HTTP/2 or HTTP/3 mask before creating
+- Added an Excel-free WinHTTP capability preflight to the opt-in HTTP/2
+  protocol-host runner. It checks the exact required mask before creating
   Excel, records only redacted preflight metadata, and fails closed without
   publishing evidence when the host lacks the capability (ADR-0032).
 
@@ -42,7 +47,7 @@
 - Added an offline HTTPS CONNECT proxy boundary fixture (including fixed Basic
   proxy challenge) with COM/native integration coverage. The fixture proves
   tunnel reachability before normal untrusted-certificate rejection; trusted
-  corporate CONNECT and HTTP/3/QUIC host evidence remain explicit gates.
+  corporate CONNECT remains an explicit host-dependent gate.
 
 - Hardened `HttpHeaders` value validation to reject NUL, DEL, and C0 control
   characters (while preserving HTAB and Unicode), preventing control-byte
@@ -89,9 +94,9 @@
 
 - Added a machine-validated Phase 9 security-risk register with an explicit
   zero-current-blocker gate, fail-closed tamper tests, and release-security
-  integration. Deferred HTTP/3/QUIC and host-specific integrated/proxy
-  challenge fixtures remain visible as future-v1 obligations; 32-bit Office is
-  explicitly outside the supported boundary;
+  integration. Host-specific integrated/proxy challenge fixtures remain a
+  future-v1 obligation; HTTP/3/QUIC and 32-bit Office are explicitly outside
+  the supported boundary;
   repeated
   COM receive-timeout growth is mitigated by the canonical x64 stress result.
 
@@ -115,11 +120,12 @@
   runs are labeled unsupported and cannot promote a release.
 
 - Added an opt-in fail-closed protocol-host evidence runner for required
-  HTTPS HTTP/2/HTTP/3 negotiation. It records only path-free target metadata,
-  artifact hashes, Office/Windows/WinHTTP metadata, bridge/bitness, and exact `ProtocolUsed`; the normal
-  loopback suite remains offline. The current x64 HTTP/2 host record is
-  archived in `benchmarks/results/protocol-host-http2.json`; HTTP/3/QUIC
-  evidence remains pending and the runner is x64-only.
+  HTTPS HTTP/2 negotiation. It records only path-free target metadata,
+  artifact hashes, Office/Windows/WinHTTP metadata, bridge/bitness, and exact
+  `ProtocolUsed`; the normal loopback suite remains offline. The current x64
+  HTTP/2 host record is archived in
+  `benchmarks/results/protocol-host-http2.json`; HTTP/3/QUIC is unsupported by
+  policy and the runner is x64-only.
 
 - Added opt-in structured `HttpDiagnostics` operation events with bounded
   retention, query/user-info target sanitization, stable error categories, and
@@ -129,10 +135,10 @@
 - Added a fail-closed release manifest security gate and deterministic report:
   canonical base/output paths, VBE/atomic-publication evidence, exact
   included/excluded component policy, development-only source boundaries, and
-  checksum verification are checked before release smoke. HTTP/3/QUIC
-  negotiation and host-specific integrated/proxy challenge fixtures remain
-  explicitly deferred; 32-bit Office is outside the supported boundary and
-  x64 HTTP/2 evidence is archived separately.
+  checksum verification are checked before release smoke. Host-specific
+  integrated/proxy challenge fixtures remain explicitly deferred; HTTP/3/QUIC
+  and 32-bit Office are outside the supported boundary, and x64 HTTP/2
+  evidence is archived separately.
 
 - Added a Phase 9 cancellation/timeout stress gate with repeated COM active
   cancellation and request-deadline scenarios, native streaming download
@@ -188,7 +194,10 @@
 - Added native `HttpDecompressionOptions` for bounded WinHTTP gzip/deflate
   response decoding, deterministic fallback/required behavior, COM validation,
   loopback integration coverage, and release-consumer decompression smoke.
-- Added native `HttpProtocolOptions` with HTTP/2/HTTP/3 opt-in, explicit fallback or required mode, negotiated-protocol reporting, COM-backend validation, and release-consumer protocol smoke coverage.
+- Added native `HttpProtocolOptions` with HTTP/2 opt-in, a retained
+  diagnostic-only HTTP/3 flag, explicit fallback or required mode,
+  negotiated-protocol reporting, COM-backend validation, and release-consumer
+  protocol smoke coverage.
 - Added native constant-memory `HttpClient.UploadFile` and `UploadMultipart` APIs with deterministic content lengths, bounded `WinHttpWriteData` chunks, UTF-8 multipart fields, progress/cancellation checkpoints, source-preserving failure semantics, and authentication-challenge reporting.
 - Added deterministic loopback upload endpoints, file/multipart integration coverage, a 1 GiB upload stress harness, and release-consumer upload smoke coverage.
 - Added native constant-memory `HttpClient.DownloadFile` with bounded WinHTTP reads, same-directory temporary files, atomic publication, progress callbacks, cooperative cancellation/deadlines, and external release-artifact download smoke coverage.

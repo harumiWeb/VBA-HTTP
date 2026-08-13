@@ -15,6 +15,7 @@ $required = @(
     'docs/adr/ADR-0021-xlam-distribution-target.md',
     'docs/adr/ADR-0022-com-timeout-failure-cleanup.md',
     'docs/adr/ADR-0030-32-bit-office-support-boundary.md',
+    'docs/adr/ADR-0035-http3-support-boundary.md',
     'tools/Validate-XlamBuildPlan.ps1',
     'tools/Validate-XlamArtifact.ps1',
     'tools/Test-XlamDistribution.ps1',

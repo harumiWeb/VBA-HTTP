@@ -6,7 +6,8 @@
 
 ## Background
 
-The protocol-host runner is intentionally an external, host-specific proof:
+The protocol-host runner is intentionally an external, host-specific HTTP/2
+proof:
 it must use the public release consumer and record the negotiated
 `ProtocolUsed` value. The current Windows host can reject an HTTP/3-enabled
 WinHTTP option before a request is sent. Repeated attempts also showed that a
@@ -25,10 +26,11 @@ from an automation failure.
 - After release-artifact, checksum, security, doctor, and x64-bridge checks,
   `tools/Run-ProtocolHostValidation.ps1` runs the direct probe before creating
   `Excel.Application`.
-- The preflight requests exactly the selected `HTTP/2` or `HTTP/3` mask in
-  required mode, uses a bounded timeout, and requires the probe's negotiated
-  flag to equal that mask. Any unsupported option, timeout, malformed output,
-  or mismatch fails closed before Excel starts and publishes no evidence.
+- The preflight requests exactly the required HTTP/2 mask, uses a bounded
+  timeout, and requires the probe's negotiated flag to equal that mask. Any
+  unsupported option, timeout, malformed output, or mismatch fails closed
+  before Excel starts and publishes no evidence. HTTP/3 probing remains
+  diagnostic-only under ADR-0035.
 - A passing preflight is retained only as redacted metadata in
   `environment.winhttp.preflight`. The release workbook's public consumer
   still runs afterward and must independently return the exact expected

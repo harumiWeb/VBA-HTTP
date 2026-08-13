@@ -445,10 +445,10 @@ OSが提供するmodern WinHTTP capabilityとcorporate environment対応を安�
 - [x] protocol enable／fallback／required modeをADR-0009と`docs/specs/protocol-policy.md`で確定する。
 - [x] native HTTP/2 opt-inと`HttpResponse.ProtocolUsed`によるnegotiated protocol取得を実装する。
 - [x] HTTP/3 opt-inのWinHTTP flagとvalidationを実装する（requested-mask、unsupported fallback、required errorをnative transportで検証済み）。
-- [x] HTTP/2／HTTP/3 negotiated-host evidenceのfail-closed収集runner、redacted schema、validatorを追加する（ADR-0025／`tools/Run-ProtocolHostValidation.ps1`）。
+- [x] HTTP/2 negotiated-host evidenceのfail-closed収集runner、redacted schema、validatorを追加する（ADR-0025／`tools/Run-ProtocolHostValidation.ps1`）。HTTP/3の診断probeは昇格証跡を生成しない。
 - [x] protocol-host runnerにExcel-free WinHTTP capability preflightを追加し、未対応hostではExcelを起動せず停止する（ADR-0032、preflight metadata validator／ownership safety test）。
 - [x] HTTP/2のTLS negotiated-host evidenceをx64実機で取得する（`benchmarks/results/protocol-host-http2.json`、trusted `nghttp2.org:443`、required mode、`ProtocolUsed=HTTP/2`）。
-- [!] HTTP/3のTLS/QUIC negotiated-host evidenceを実機で取得する（現x64 WinHTTP runtimeはoption 133で`ERROR_NOT_SUPPORTED (50)`を返すため、Excel-free preflightで停止。解除条件：HTTP/3対応Windows/WinHTTP hostとtrusted QUIC endpointでrequired `ProtocolUsed=HTTP/3`を取得する）。
+- [x] HTTP/3／QUICを現行distributionの`unsupported-by-policy`としてADR-0035で確定する（未確認のWinHTTP／TLS／UDP環境をrelease gateから除外し、既存のnative flag／probeはdiagnostic-onlyとして保持する）。
 - [x] unsupported option、plain HTTP、required mismatchのfallback／`HttpErrorProtocol`を実装する。
 - [x] gzip／deflate decompressionをADR-0010と`docs/specs/decompression-policy.md`で確定し、native WinHTTP option 118、COM拒否、loopback／release smokeを実装する。
 - [x] OS default、no-proxy、manual HTTP proxyをADR-0012と`docs/specs/proxy-policy.md`で確定し、COM/native transportとloopback HTTP/HTTPS CONNECT boundary fixtureで検証する（trusted corporate CONNECTはhost-dependent gate）。
@@ -459,12 +459,12 @@ OSが提供するmodern WinHTTP capabilityとcorporate environment対応を安�
 - [x] credential／secret redaction helperを実装し、sensitive headerがdiagnosticsへ出ないunit gateを追加する。
 - [x] `HttpDiagnostics` のbounded structured event schemaをADR-0019／`docs/specs/diagnostics-policy.md`で確定し、HttpClientとrelease consumer smokeへ統合する。
 - [x] OS version／Office bitness compatibility matrixを作成する（`docs/specs/compatibility-matrix.md`）。
-- [x] matrixのOffice bitness境界をADR-0030で確定する（x64 HTTP/2は実測済み、32-bit Officeはsupport対象外）。HTTP/3 host evidenceは別のpending gateとして残す。
+- [x] matrixのOffice bitness／protocol境界をADR-0030／ADR-0035で確定する（x64 HTTP/2は実測済み、32-bit OfficeとHTTP/3／QUICはsupport対象外）。
 
 ### Exit Criteria
 
 - [x] HTTP/1.1 fallbackとrequested-mask contractを識別できる（plain HTTP、unsupported、required mismatchを検証済み）。
-- [!] TLS上のHTTP/2と対応環境のHTTP/3 negotiated protocolを識別する（x64 HTTP/2は`benchmarks/results/protocol-host-http2.json`で実測済み、HTTP/3は現hostのoption 133未対応で停止。解除条件：HTTP/3 host evidenceを取得する。32-bit OfficeはADR-0030で対象外）。
+- [x] TLS上のHTTP/2 negotiated protocolを識別し、HTTP/3／QUICはADR-0035でsupport対象外とする（x64 HTTP/2は`benchmarks/results/protocol-host-http2.json`で実測済み、32-bit OfficeはADR-0030で対象外）。
 - [x] unsupported環境のfallback／errorがspec通りである。
 - [x] HTTP forwarding proxyとfixed Basic proxy-challengeのlocal integration testsがCOM/nativeで成功する（HTTPS CONNECTの通常／認証boundaryとrelease consumer smokeも検証済み。trusted corporate CONNECTと実Windows domain authはcompatibility gateとして継続）。
 - [x] secretがdiagnosticsやbenchmark outputへ出ない（diagnostics serializerはquery／user-info／body／descriptionを除外し、sensitive headerを常時redactする。benchmark serializerは既存契約を維持する）。
@@ -499,7 +499,7 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 
 - [x] known critical bugとcurrent release blocker bugが0件である（`docs/security/risk-register.json`を`task test:security-risks`とrelease security gateで検証。将来v1.0 gateは別途明示）。
 - [x] 10,000 request測定区間後にpersistent resource growthがない（x64実測、native delta <=8／COM delta <=32）。
-- [x] redirect、credential、certificate security testsが成功する（redirect／credential／untrusted TLS certificateのCOM/native loopback検証済み。HTTP/3 negotiated evidenceはcompatibility gateとして継続し、32-bit OfficeはADR-0030で対象外）。
+- [x] redirect、credential、certificate security testsが成功する（redirect／credential／untrusted TLS certificateのCOM/native loopback検証済み。HTTP/3／QUICはADR-0035でsupport対象外、32-bit OfficeはADR-0030で対象外）。
 - [x] release artifactのcomponent構成がreview済みである（`task release:security`と`task release:smoke`でproduction allowlist／development denylistのmanifest・実Workbook構成を検証）。
 
 ---
@@ -520,7 +520,7 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 - [x] source distributionとworkbook distributionの責務を分離する（`docs/specs/distribution.md`）。
 - [x] source vendoring、install、upgrade手順を文書化する。
 - [x] `.xlam` 用base workbookと独立build targetを追加する（追跡`build/VBA-HTTP.xlam`、`task test:xlam`、`task release:xlam:build`、ADR-0021、manifest/checksum/add-in identity/smoke gate）。
-- [x] CHANGELOGとcompatibility documentationを完成させる（x64 HTTP/2実測、ADR-0030の32-bit Office support外方針、未完了のHTTP/3 gateを明記）。
+- [x] CHANGELOGとcompatibility documentationを完成させる（x64 HTTP/2実測、ADR-0030の32-bit Office support外方針、ADR-0035のHTTP/3／QUIC support外方針を明記）。
 
 ### Exit Criteria
 
@@ -555,10 +555,10 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 
 - [x] concurrency、streaming、resource stabilityの実測証跡がある。
 - [x] 現行x64のquality gateが成功する（unit、integration、lint、analyze、format、VBE、release smokeを検証済み）。
-- [!] v1.0 promotion quality gateを完了する（HTTP/3 negotiated／host-specific challenge-auth evidenceが外部host条件待ち。解除条件：両方のtrusted host evidenceを取得し、release checklistを再実行する。32-bit OfficeはADR-0030で対象外）。
+- [!] v1.0 promotion quality gateを完了する（host-specific challenge-auth evidenceが外部host条件待ち。解除条件：trusted host evidenceを取得し、release checklistを再実行する。HTTP/3／QUICと32-bit OfficeはADR-0035／ADR-0030で対象外）。
 - [x] API、security、compatibility documentationが完成している（現行contract、matrix、security gate、deferred riskを文書化済み）。
 - [x] test、benchmark、xlflow支援コードを含まないproduction-only artifactを生成できる（XLSM/XLAM build・manifest・checksum・smoke済み）。
-- [!] v1.0 promotion evidenceを完了する（x64 HTTP/2は`benchmarks/results/protocol-host-http2.json`、HTTP/3 negotiated／host-specific challenge-auth riskは外部host未取得。解除条件：対応hostで証跡を取得する。32-bit OfficeはADR-0030で対象外）。
+- [!] v1.0 promotion evidenceを完了する（x64 HTTP/2は`benchmarks/results/protocol-host-http2.json`、host-specific challenge-auth riskは外部host未取得。解除条件：対応hostで証跡を取得する。HTTP/3／QUICと32-bit OfficeはADR-0035／ADR-0030で対象外）。
 - [x] build manifestからrelease構成を再現・監査できる。
 
 ---
@@ -577,7 +577,7 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 - [x] native handle lifecycleとnative callback禁止
 - [x] protocol fallback policy（ADR-0009、`docs/specs/protocol-policy.md`）
 - [x] response decompression ownership、fallback／required、streaming length contract（ADR-0010、`docs/specs/decompression-policy.md`）
-- [!] OS compatibility evidence（x64 HTTP/2 host evidenceは追加済み、HTTP/3は現hostのWinHTTP capability不足で未完了。解除条件：対応hostのHTTP/3実測。32-bit OfficeはADR-0030でsupport対象外）
+- [x] OS compatibility evidence（x64 HTTP/2 host evidenceは追加済み、HTTP/3／QUICはADR-0035でsupport対象外、32-bit OfficeはADR-0030でsupport対象外）
 - [x] diagnostics schemaとsecret redaction（ADR-0019／`docs/specs/diagnostics-policy.md`、unit、client、release smokeで検証済み）。
 - [x] development-only componentへのproduction依存禁止
 - [x] development workbook、release workbook、source distributionの責務

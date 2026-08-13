@@ -3,9 +3,11 @@
 ## Scope
 
 `HttpProtocolOptions` is a native WinHTTP capability. It controls optional
-HTTP/2 and HTTP/3 negotiation without changing the default operating-system
-policy. The COM transport rejects a non-empty advanced protocol mask because
-the COM option enum has no equivalent HTTP/2/HTTP/3 control.
+HTTP/2 negotiation without changing the default operating-system policy. The
+retained HTTP/3 flag is diagnostic/future-compatibility code and is
+`unsupported-by-policy`; it is not a supported product capability or release
+gate. The COM transport rejects a non-empty advanced protocol mask because the
+COM option enum has no equivalent HTTP/2/HTTP/3 control.
 
 ## API
 
@@ -13,7 +15,6 @@ the COM option enum has no equivalent HTTP/2/HTTP/3 control.
 Dim protocols As HttpProtocolOptions
 Set protocols = VBAHttp.CreateProtocolOptions()
 protocols.AllowHttp2 = True
-protocols.AllowHttp3 = True
 protocols.Mode = HttpProtocolAllowFallback
 
 Set client.ProtocolOptions = protocols
@@ -23,7 +24,9 @@ Debug.Print response.ProtocolUsed
 
 `EnabledProtocols = 0` means no native override. `HttpProtocolRequired` needs
 at least one advanced protocol flag. Options are cloned into request snapshots;
-later mutations by the caller cannot alter an in-flight request.
+later mutations by the caller cannot alter an in-flight request. Setting
+`AllowHttp3` remains available for diagnostics only and must not be used as a
+support or release claim.
 
 ## Fallback and required behavior
 
@@ -38,15 +41,17 @@ later mutations by the caller cannot alter an in-flight request.
   advanced protocol on a plain HTTP URL raise `HttpErrProtocol` before a
   successful response is returned.
 - HTTP/2/3 flags are never inferred from the request. A requested flag is not
-  evidence that the peer negotiated that protocol.
+  evidence that the peer negotiated that protocol. HTTP/3 is excluded from the
+  supported compatibility matrix under ADR-0035.
 
 ## Compatibility
 
 Modern protocol options are only attempted on HTTPS URLs. The loopback test
 server intentionally remains HTTP/1.1; integration tests prove deterministic
-fallback and required-mode rejection. A future TLS fixture must record Windows
-version, WinHTTP capability, Office bitness, requested flags, and
-`ProtocolUsed` before a matrix entry is marked supported.
+fallback and required-mode rejection. HTTP/2 promotion uses the host runner;
+HTTP/3 checks are diagnostic-only and cannot promote a matrix entry. Any future
+support decision must record Windows version, WinHTTP capability, Office
+bitness, requested flags, and `ProtocolUsed` under a superseding ADR.
 
 ## Evidence
 

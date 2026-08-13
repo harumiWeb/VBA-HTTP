@@ -7,8 +7,9 @@
 ## Background
 
 The Phase 9 security review has completed the controls that can be proven on
-the current x64 host, while HTTP/3 capability and host-specific
-integrated/proxy challenge fixtures require different Windows capabilities.
+the current x64 host, while host-specific integrated/proxy challenge fixtures
+require different Windows capabilities. HTTP/3/QUIC is explicitly excluded
+from the supported distribution by ADR-0035.
 The bounded loopback replay contract is now recorded separately by ADR-0023.
 A prose-only list of residual risks can silently drift and
 cannot prove that the current release has no known blocker.
@@ -30,8 +31,9 @@ cannot prove that the current release has no known blocker.
 ## Consequences
 
   - The current x64 release can prove zero known current blockers without falsely
-  claiming HTTP/2/3 or host-specific integrated-auth compatibility. 32-bit
-  Office is explicitly outside the supported boundary under ADR-0030.
+  claiming host-specific integrated-auth compatibility. HTTP/3/QUIC and 32-bit
+  Office are explicitly outside the supported boundary under ADR-0035 and
+  ADR-0030.
 - A future release cannot hide a newly discovered blocker in prose; the
   machine-readable register and release gate must be updated together.
 - Deferred issues remain visible and block the v1.0 checklist until their

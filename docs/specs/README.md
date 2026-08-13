@@ -21,7 +21,7 @@
 - `reliability-policy.md`: retry classification、backoff／jitter、Retry-After、total deadline、cancellation precedence
 - `streaming-download.md`: native constant-memory download、atomic publication、progress、cancellation、cleanup contract
 - `streaming-upload.md`: native constant-memory file／multipart upload、source ownership、progress、cancellation、challenge contract
-- `protocol-policy.md`: native HTTP/2／HTTP/3 opt-in、fallback／required behavior、transport boundary、compatibility evidence
+- `protocol-policy.md`: native HTTP/2 opt-in、diagnostic-only HTTP/3 flag、fallback／required behavior、transport boundary、compatibility evidence
 - `decompression-policy.md`: native gzip／deflate response decoding, header ownership, fallback, and streaming length contract
 - `proxy-policy.md`: OS/default, direct, and manual proxy routing, validation, and transport mapping
 - `https-connect-proxy.md`: deterministic loopback CONNECT tunnel, proxy challenge, TLS rejection boundary, and host-dependent limits
@@ -36,5 +36,5 @@
 - `compatibility-matrix.md`: observed Windows/Office/protocol evidence and promotion requirements
 - `distribution.md`: development/release workbook separation, build, checksum, install, and upgrade contract
 - `office-bitness-validation.md`: supported x64 compile, isolated test, consumer-smoke evidence, diagnostic X86 rejection, and source-level ABI guard
-- `protocol-host-validation.md`: fail-closed HTTPS HTTP/2/HTTP/3 negotiated-host evidence, Office/WinHTTP metadata, and redacted schema
+- `protocol-host-validation.md`: fail-closed HTTPS HTTP/2 negotiated-host evidence, diagnostic HTTP/3 probe boundary, Office/WinHTTP metadata, and redacted schema
 - `distribution.md` also defines the independent same-extension XLAM base, build target, add-in identity, and smoke gate (ADR-0021)

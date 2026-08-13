@@ -49,12 +49,13 @@ Before a release build:
 6. Run `task release:security` (also invoked by `task release:smoke`) to validate canonical base/output paths, component boundaries, excluded paths, and the checksum sidecar before opening Excel.
 7. Run `task release:smoke` to inspect the actual VBA component collection and call `Main.Run` without injecting test code into the artifact.
 
-Negotiated HTTP/2/HTTP/3 evidence is an opt-in host operation, not part of the
+Negotiated HTTP/2 evidence is an opt-in host operation, not part of the
 offline proof loop. After a clean release build, a host owner may set
-`VBA_HTTP_PROTOCOL_HOST_URL` and `VBA_HTTP_PROTOCOL_EXPECTED`, then run
+`VBA_HTTP_PROTOCOL_HOST_URL` and `VBA_HTTP_PROTOCOL_EXPECTED=HTTP/2`, then run
 `task protocol:host`; the fail-closed result is validated by
 `docs/specs/protocol-host-validation.md` and must be archived with the exact
-artifact and checksum.
+artifact and checksum. HTTP/3/QUIC probing is diagnostic-only under ADR-0035
+and is not a release or compatibility gate.
 
 Generated release artifacts and staging files are not committed. The tracked development workbook is never overwritten by a release build.
 

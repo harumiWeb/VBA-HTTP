@@ -60,7 +60,8 @@ fixture.
 The fixture is loopback-only, target-allowlisted, and uses no PAC/WPAD,
 SOCKS, external network, trust-store mutation, or credentials in URLs. Real
 Windows-domain Negotiate/NTLM and a production proxy's CONNECT policy require
-separate opt-in host evidence. HTTP/3/QUIC evidence is also independent.
+separate opt-in host evidence. HTTP/3/QUIC is outside the supported
+distribution under ADR-0035 and is not part of this proxy gate.
 
 ## Verification
 

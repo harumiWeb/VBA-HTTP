@@ -2,10 +2,10 @@
 
 ## Scope
 
-This record documents six operator-invoked attempts to obtain the pending
-HTTP/3/QUIC negotiated-host evidence. It is a failure/inconclusive record,
-not a compatibility claim. No `protocol-host-http3.json` passing artifact was
-created.
+This record documents six operator-invoked attempts to investigate HTTP/3/QUIC
+on the then-current host. It is historical diagnostic evidence, not a
+compatibility claim. No `protocol-host-http3.json` passing artifact was
+created, and ADR-0035 now classifies HTTP/3/QUIC as unsupported by policy.
 
 ## Runs
 
@@ -20,8 +20,8 @@ created.
 
 These endpoints are public HTTP/3 test-server candidates, but endpoint
 availability alone is not evidence that this Windows/WinHTTP host negotiated
-QUIC. The runner therefore remains fail-closed and leaves the HTTP/3 matrix
-row pending.
+QUIC. The runner therefore remained fail-closed; the HTTP/3 matrix row is now
+`unsupported-by-policy` under ADR-0035 rather than a pending promotion gate.
 
 ## Safety and cleanup
 
@@ -73,7 +73,7 @@ and publishes no evidence; it does not repeat the earlier Excel automation
 crash. The x64 HTTP/2 control run was refreshed with the passing preflight and
 public-consumer result in `benchmarks/results/protocol-host-http2.json`.
 
-Repeat the same runner on a Windows/WinHTTP host with confirmed UDP/QUIC
-egress and a trusted HTTP/3 endpoint. A result is promotable only when the
-consumer returns `ProtocolUsed=HTTP/3`; a timeout, RPC failure, fallback, or
-unsupported option must remain non-evidence.
+If HTTP/3 support is reconsidered, a superseding ADR must first restore an
+explicit promotion path on a Windows/WinHTTP host with confirmed UDP/QUIC
+egress and a trusted HTTP/3 endpoint. Until then, HTTP/3 probes remain
+diagnostic-only and no `ProtocolUsed=HTTP/3` result is a release claim.

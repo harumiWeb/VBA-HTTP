@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [string]$Url = [Environment]::GetEnvironmentVariable("VBA_HTTP_PROTOCOL_HOST_URL", "Process"),
-    [ValidateSet("HTTP/2", "HTTP/3")]
+    [ValidateSet("HTTP/2")]
     [string]$ExpectedProtocol = [Environment]::GetEnvironmentVariable("VBA_HTTP_PROTOCOL_EXPECTED", "Process"),
     [string]$ArtifactPath = "build/Release/VBA-HTTP.xlsm",
     [string]$OutputPath = "",
@@ -32,7 +32,7 @@ function Invoke-ProtocolCapabilityPreflight([Uri]$Target, [string]$Protocol, [in
         throw "WinHTTP capability probe is missing: $probePath"
     }
 
-    $requestedMask = if ($Protocol -eq "HTTP/2") { 1 } else { 2 }
+    $requestedMask = 1
     $probeOutput = @(
         & powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass `
             -File $probePath `
@@ -125,7 +125,7 @@ function Assert-CleanWorktreeExcept([string]$AllowedPath) {
 }
 
 if ([string]::IsNullOrWhiteSpace($Url)) { throw "Set -Url or VBA_HTTP_PROTOCOL_HOST_URL to a trusted HTTPS endpoint." }
-if ([string]::IsNullOrWhiteSpace($ExpectedProtocol)) { throw "Set -ExpectedProtocol or VBA_HTTP_PROTOCOL_EXPECTED to HTTP/2 or HTTP/3." }
+if ([string]::IsNullOrWhiteSpace($ExpectedProtocol)) { throw "Set -ExpectedProtocol or VBA_HTTP_PROTOCOL_EXPECTED to HTTP/2." }
 $ExpectedProtocol = $ExpectedProtocol.ToUpperInvariant()
 
 $targetUri = $null
@@ -141,7 +141,7 @@ $resolvedArtifact = Resolve-ProjectPath $ArtifactPath
 $resolvedManifest = "$resolvedArtifact.build.json"
 $resolvedChecksum = "$resolvedArtifact.checksum.json"
 $resolvedOutput = if ([string]::IsNullOrWhiteSpace($OutputPath)) {
-    Join-Path $projectRoot ("benchmarks\results\protocol-host-{0}.json" -f $ExpectedProtocol.ToLowerInvariant().Replace("/", ""))
+    Join-Path $projectRoot "benchmarks\results\protocol-host-http2.json"
 }
 else { Resolve-ProjectPath $OutputPath }
 Assert-CleanWorktreeExcept $resolvedOutput

@@ -31,10 +31,16 @@ if ($runner -match '(?im)Stop-Process\s+-Name\s+EXCEL') {
 if ($runner.IndexOf('preflight = $capabilityPreflight', [StringComparison]::Ordinal) -lt 0) {
     throw "Protocol host runner does not archive preflight metadata."
 }
+if ($runner -match 'HTTP/3') {
+    throw "Protocol host promotion runner must not accept HTTP/3 after the support-boundary decision."
+}
 
 $validator = [IO.File]::ReadAllText($validatorPath)
 if ($validator.IndexOf('environment.winhttp.preflight', [StringComparison]::Ordinal) -lt 0) {
     throw "Protocol host evidence validator does not validate preflight metadata."
+}
+if ($validator -match 'HTTP/3') {
+    throw "Protocol host evidence validator must not accept HTTP/3 promotion records."
 }
 
 Write-Output "Protocol host preflight safety contract passed."

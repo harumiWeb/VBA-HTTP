@@ -11,7 +11,9 @@ protocol, and optionally require that an enabled protocol be used. These
 options are not exposed by the late-bound `WinHttp.WinHttpRequest.5.1` COM
 object used by the default transport. The library therefore needs a
 transport-specific policy that does not silently change the COM backend or
-claim HTTP/2/3 support on hosts where WinHTTP lacks the capability.
+claim HTTP/2/3 support on hosts where WinHTTP lacks the capability. ADR-0035
+later establishes that HTTP/3/QUIC is unsupported by policy for the current
+distribution; the implementation below remains diagnostic/future-compatible.
 
 ## Decision
 
@@ -36,8 +38,9 @@ claim HTTP/2/3 support on hosts where WinHTTP lacks the capability.
   I/O. It does not pretend that its legacy `WinHttpRequestOption` values are
   HTTP/2 or HTTP/3 controls.
 - `HttpResponse.ProtocolUsed` remains the only negotiated-protocol evidence.
-  The library does not infer HTTP/2 or HTTP/3 from requested flags, and actual
-  HTTP/2/3 host evidence remains part of the OS compatibility matrix.
+  The library does not infer HTTP/2 or HTTP/3 from requested flags. HTTP/2 host
+  evidence remains part of the supported OS compatibility matrix; HTTP/3
+  evidence is diagnostic-only under ADR-0035.
 - Correct the Phase 7 upload length encoding: `dwTotalLength` is a DWORD
   bit-pattern for lengths below 4 GiB and uses
   `WINHTTP_IGNORE_REQUEST_TOTAL_LENGTH = 0` only for lengths at or above 4
@@ -50,8 +53,8 @@ claim HTTP/2/3 support on hosts where WinHTTP lacks the capability.
 - Required mode is intentionally strict and may fail on older Windows/WinHTTP
   versions or endpoints that cannot negotiate the requested protocol.
 - Plain loopback HTTP remains a deterministic fallback test; a TLS-enabled
-  HTTP/2/3 fixture is required before claiming negotiated modern-protocol
-  evidence for a release matrix.
+  HTTP/2 fixture is required before claiming negotiated HTTP/2 evidence for a
+  release matrix. HTTP/3/QUIC is not a current release claim.
 - Protocol options are not coupled to proxy credentials, authentication
   replay, or compression. Those policies remain separate Phase 8 decisions.
 

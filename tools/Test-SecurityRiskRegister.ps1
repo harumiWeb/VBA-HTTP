@@ -20,7 +20,7 @@ try {
     }
 
     $fixture = Get-Content -LiteralPath $validPath -Raw | ConvertFrom-Json
-    $fixture.current_release_blockers = @('compat-http3-negotiation')
+    $fixture.current_release_blockers = @('integrated-proxy-challenge-auth')
     [IO.File]::WriteAllText($invalidPath, ($fixture | ConvertTo-Json -Depth 10), [Text.UTF8Encoding]::new($false))
     $accepted = $true
     try { & $validator -Path $invalidPath | Out-Null } catch { $accepted = $false }

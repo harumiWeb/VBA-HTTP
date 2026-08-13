@@ -4,7 +4,7 @@ VBA-HTTP is a Windows Excel/VBA HTTP client designed for deterministic testing, 
 
 ## Development status
 
-Phase 6 adds constant-memory downloads and Phase 7 adds file/multipart uploads on the synchronous native WinHTTP backend. Phase 8 adds explicit native-only HTTP/2/HTTP/3 negotiation, gzip/deflate response decompression, and shared OS/direct/manual HTTP proxy routing. The default remains the late-bound `WinHttp.WinHttpRequest.5.1` transport; the native backend provides pointer-safe handles, negotiated protocol reporting, bounded file streaming, and OS-owned response decoding without a WinHTTP type-library reference.
+Phase 6 adds constant-memory downloads and Phase 7 adds file/multipart uploads on the synchronous native WinHTTP backend. Phase 8 adds explicit native-only HTTP/2 negotiation, diagnostic-only HTTP/3 capability code, gzip/deflate response decompression, and shared OS/direct/manual HTTP proxy routing. The default remains the late-bound `WinHttp.WinHttpRequest.5.1` transport; the native backend provides pointer-safe handles, negotiated protocol reporting, bounded file streaming, and OS-owned response decoding without a WinHTTP type-library reference.
 
 The supported runtime target is Windows x64 Office. 32-bit Office is
 unsupported by policy because no real 32-bit Office compile, integration, and
@@ -72,7 +72,6 @@ Dim protocols As HttpProtocolOptions
 
 Set protocols = VBAHttp.CreateProtocolOptions()
 protocols.AllowHttp2 = True
-protocols.AllowHttp3 = True
 protocols.Mode = HttpProtocolAllowFallback
 Set nativeClient.ProtocolOptions = protocols
 Set nativeResponse = nativeClient.GetResponse("https://example.com/api")
@@ -82,16 +81,20 @@ Debug.Print nativeResponse.ProtocolUsed
 Required mode is strict and requires HTTPS; unsupported capabilities raise the
 stable `HttpErrorProtocol` category. The COM transport rejects advanced
 protocol flags because its late-bound option surface has no HTTP/2/HTTP/3
-control. See [`docs/specs/protocol-policy.md`](docs/specs/protocol-policy.md)
+control. HTTP/3/QUIC is unsupported by policy; its native option path is
+retained only for future diagnostics and is not a release or compatibility
+guarantee. See [`docs/specs/protocol-policy.md`](docs/specs/protocol-policy.md)
+and [`docs/adr/ADR-0035-http3-support-boundary.md`](docs/adr/ADR-0035-http3-support-boundary.md)
 for the compatibility and evidence rules.
 
-The offline loopback server intentionally speaks HTTP/1.1, so negotiated
-HTTP/2/HTTP/3 promotion requires the separate fail-closed host runner. The
-current x64 HTTP/2 record is archived at
-`benchmarks/results/protocol-host-http2.json`; it does not promote HTTP/3.
-The host runner is x64-only under the support boundary. After a release build, set `VBA_HTTP_PROTOCOL_HOST_URL` and
-`VBA_HTTP_PROTOCOL_EXPECTED`, then run `task protocol:host`; it records only
-path-free target metadata and the exact `ProtocolUsed` result.
+The offline loopback server intentionally speaks HTTP/1.1. Negotiated HTTP/2
+promotion uses the separate fail-closed host runner; the current x64 record is
+archived at `benchmarks/results/protocol-host-http2.json`. HTTP/3/QUIC is
+unsupported by policy and has no promotion path. The host runner is x64-only
+under the support boundary. After a release build, set
+`VBA_HTTP_PROTOCOL_HOST_URL` and `VBA_HTTP_PROTOCOL_EXPECTED=HTTP/2`, then run
+`task protocol:host`; it records only path-free target metadata and the exact
+`ProtocolUsed` result.
 
 Response decompression is also native-only. Select gzip/deflate explicitly; the
 default leaves response bytes and `Accept-Encoding` unchanged:

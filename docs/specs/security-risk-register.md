@@ -22,20 +22,20 @@ request data.
 `tools/Validate-SecurityRiskRegister.ps1` is run by `task verify` and by the
 release security validator before Excel opens. It prints a deterministic count
 summary and fails closed for missing, malformed, duplicate, or contradictory
-records. The current register intentionally keeps HTTP/3/QUIC and
-host-specific integrated/proxy challenge authentication as future-v1 work
-without making them current release blockers. 32-bit Office is explicitly
-unsupported by policy under ADR-0030 and is not a future-v1 evidence obligation
-unless that decision is superseded. The bounded
+records. The current register intentionally keeps host-specific integrated/
+proxy challenge authentication as future-v1 work without making it a current
+release blocker. HTTP/3/QUIC is explicitly unsupported by policy under
+ADR-0035. 32-bit Office is explicitly unsupported by policy under ADR-0030 and
+is not a future-v1 evidence obligation unless that decision is superseded. The bounded
 loopback challenge contract is covered by ADR-0023 and the loopback CONNECT
 boundary by ADR-0031; real domain/trusted-proxy evidence remains deferred. The
 protocol-host runner has produced a passing x64 HTTP/2
-record at benchmarks/results/protocol-host-http2.json; that record is
-host-specific and does not satisfy the remaining HTTP/3 requirement.
+record at benchmarks/results/protocol-host-http2.json; that record remains
+host-specific evidence only.
 The 2026-08-13 HTTP/3 endpoint attempts are recorded separately as
 non-evidence in
 `docs/verification/protocol-host-http3-attempt-2026-08-13.md`; they do not
-change the deferred risk status.
+change the unsupported-by-policy boundary.
 Repeated COM receive-timeout handle growth is
 mitigated on the current x64 host by the canonical cancellation stress result;
 the same evidence must be rerun on each supported Office host.

@@ -31,3 +31,10 @@
 - Office bitness validation must prove that its metadata COM object created a
   new Excel PID before calling `Quit`; if ownership is ambiguous, fail closed
   and leave every pre-existing Excel process untouched.
+
+## Support-boundary decisions
+
+- Treat unverified protocol or Office-bitness combinations as explicit policy
+  boundaries before adding fixtures or release gates. Diagnostic flags and
+  capability probes must not become compatibility claims; promotion runners,
+  manifests, and risk registers must accept only evidence for supported rows.

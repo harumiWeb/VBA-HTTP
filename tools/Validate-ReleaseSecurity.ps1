@@ -299,7 +299,7 @@ if ($null -ne $resolvedReportPath) {
             'checksum_sidecar'
         )
         deferred_security_review = @(
-            'http2_http3_tls_matrix',
+            'http2_tls_matrix',
             'host_specific_integrated_and_proxy_challenge_fixtures'
         )
     }
