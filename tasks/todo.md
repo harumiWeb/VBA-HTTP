@@ -510,7 +510,7 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 
 ### Exit Criteria
 
-- [~] clean environmentでtest、build、smoke、packageを再現できる（現行x64 Windowsでは`task verify`／`task release:build`成功。32-bit／fresh-host証跡はcompatibility gateとして継続）。
+- [x] clean environmentでtest、build、smoke、packageを再現できる（`tools/Test-CleanCheckout.ps1 -FullRelease`でgit archiveからXLSM/XLAM build・checksum・smokeを実証。32-bitはcompatibility gateとして継続）。
 - [x] 全public APIに例とerror behaviorの説明がある（`docs/API.md`、README、spec、examples）。
 - [x] development-only codeを含まない配布workbookを生成できる。
 - [x] build失敗時に既存release artifactが破壊されない（atomic publication／checksum／tamper tests）。
