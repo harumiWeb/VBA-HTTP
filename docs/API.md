@@ -1,6 +1,14 @@
 # VBA-HTTP API quick reference
 
-The distributed workbook exposes `PublicNotCreatable` classes through the
+## Installation
+
+The primary distribution is `VBA-HTTP-source.zip`. Extract it and run
+`Install-VBAHttp.ps1 -Workbook <closed-workbook.xlsm>` to import all production
+modules in one operation. The installer validates manifest hashes and creates a
+backup before changing the workbook. A compiled XLSM/XLAM artifact is optional;
+see [`docs/specs/source-package.md`](specs/source-package.md).
+
+The optional compiled release workbook exposes `PublicNotCreatable` classes through the
 `VBAHttp` factory module. Consumers should use the factories instead of
 instantiating public classes directly.
 

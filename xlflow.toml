@@ -1,9 +1,7 @@
-# Project identity and entry point.
+# Project identity.
 [project]
 # Project name used in output messages. Falls back to the workbook base name.
 name = "VBA-HTTP"
-# Default macro invoked by xlflow run when no positional macro is given.
-entry = "Main.Run"
 
 # Excel automation settings.
 [excel]

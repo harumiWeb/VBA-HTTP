@@ -12,7 +12,7 @@ if ([int]$result.schema_version -ne 1 -or [string]$result.benchmark -ne "office-
     throw "Office bitness result schema identity is invalid."
 }
 if ([string]$result.architecture -notin @("X86", "X64") -or [string]$result.status -notin @("passed", "diagnostic") -or
-    [string]$result.consumer_smoke -ne "passed" -or [bool]$result.external_network -or
+    [string]$result.consumer_smoke -ne "deferred-to-release-harness" -or [bool]$result.external_network -or
     [string]$result.support_status -notin @("supported", "unsupported-by-policy")) {
     throw "Office bitness result status or architecture is invalid."
 }

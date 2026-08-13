@@ -57,6 +57,7 @@ tasks:
       - task: test:native-declarations
       - task: test:office-policy
       - task: test:license
+      - task: test:source-package
 
   test:
     desc: Run the complete xlflow test suite
@@ -133,6 +134,11 @@ tasks:
     desc: Verify the MIT license text, notices, and package documentation contract
     cmds:
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-LicenseContract.ps1
+
+  test:source-package:
+    desc: Verify the VBA-Web-style source package manifest and installer payload
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-SourcePackage.ps1
 
   test:xlam:
     desc: Verify the tracked XLAM base identity and independent dry-run build plan
@@ -260,6 +266,18 @@ tasks:
     desc: Validate release manifest boundaries and write deterministic security evidence
     cmds:
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Validate-ReleaseSecurity.ps1 -ReportPath .xlflow/release-security/release-security.json
+
+  package:source:
+    desc: Build the VBA-Web-style source package and installer payload
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/New-SourcePackage.ps1 -OutputPath dist/VBA-HTTP-source.zip
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Validate-SourceArchive.ps1 -ArchivePath dist/VBA-HTTP-source.zip
+
+  release:source:
+    desc: Validate and publish the source package for module-based consumers
+    cmds:
+      - task: check
+      - task: package:source
 
   verify:
     desc: Run source, test, and release-plan verification

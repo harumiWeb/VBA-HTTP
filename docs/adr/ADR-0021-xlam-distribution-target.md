@@ -22,7 +22,9 @@ same-extension base workbook or independent validation path existed.
 - Validate the XLAM dry-run against the same production component policy, then
   require VBE compile/save/close, atomic publication, checksum, `Workbook.IsAddin`
   identity, component inspection, risk-register validation, and an external
-  `Main.Run` consumer smoke.
+  component and identity validation. The shared external consumer harness is
+  the primary runtime smoke path; an XLAM-specific consumer smoke can be added
+  separately. The artifact itself has no scaffold entry macro.
 - Keep XLAM generation as a separate Taskfile target; it is not an implicit
   second output of `task release:build`.
 

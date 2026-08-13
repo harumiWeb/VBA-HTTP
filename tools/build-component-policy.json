@@ -1,6 +1,5 @@
 {
   "included": [
-    "App",
     "HttpBatchItem",
     "HttpBatchOptions",
     "HttpBatchResult",
@@ -53,10 +52,8 @@
     "IHttpUploadTransport",
     "IHttpReliabilityRuntime",
     "IHttpTransport",
-    "Main",
     "Sheet1",
     "ThisWorkbook",
-    "Ui",
     "VBAHttp",
     "WinHttpComOperation",
     "WinHttpComTransport",

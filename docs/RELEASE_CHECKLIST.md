@@ -1,6 +1,7 @@
 # Release checklist
 
-This checklist is for a verified XLSM artifact. It is intentionally separate
+This checklist covers the source package and optional verified workbook
+artifacts. It is intentionally separate
 from `tasks/todo.md`: the roadmap tracks implementation progress, while this
 document records the repeatable handoff gate.
 
@@ -13,6 +14,8 @@ document records the repeatable handoff gate.
 - [ ] `task test:security-risks` reports zero current release blockers.
 - [ ] `task test:license` passes; `LICENSE` and
       `THIRD_PARTY_NOTICES.md` identify the project and comparator boundary.
+- [ ] `task test:source-package` passes and `task release:source` produces a
+      manifest-verified source archive with installer, hashes, and notices.
 - [ ] Any public API change has matching spec, README/API, example, and
       CHANGELOG updates.
 - [ ] The compatibility record names the Windows version, Office bitness, and
@@ -23,7 +26,20 @@ document records the repeatable handoff gate.
 - [ ] `task test:clean-checkout` passes; for a clean-environment release
       evidence bundle, `tools/Test-CleanCheckout.ps1 -FullRelease` also passes.
 
-## Build and inspect
+## Source package handoff
+
+Run:
+
+```powershell
+task release:source
+```
+
+Archive `dist/VBA-HTTP-source.zip` with its source revision. Validate it with
+`Validate-SourcePackage.ps1` after extraction. The archive is the primary
+library distribution and does not contain tests, workbook document modules, or
+the old scaffold entry modules.
+
+## Optional workbook build and inspect
 
 Run from the repository root:
 

@@ -90,11 +90,4 @@ finally {
 if ($null -ne (Compare-Object @($policy.included | Sort-Object) @($actualComponents | Sort-Object))) {
     throw "XLAM workbook components differ from the production policy."
 }
-$runJson = & xlflow run Main.Run --input $resolvedArtifact --no-save --direct --json
-if ($LASTEXITCODE -ne 0) { throw "XLAM consumer macro failed with exit code $LASTEXITCODE." }
-$runResult = $runJson | Out-String | ConvertFrom-Json
-if ($runResult.status -ne "ok" -or $runResult.macro.name -ne "Main.Run") {
-    throw "XLAM consumer macro returned an unexpected result."
-}
-
-Write-Output "XLAM artifact is valid: $($actualComponents.Count) production components; add-in identity, manifest, checksum, policy, and consumer smoke passed."
+Write-Output "XLAM artifact is valid: $($actualComponents.Count) production components; add-in identity, manifest, checksum, and policy passed."

@@ -30,7 +30,10 @@ Recorded: 2026-08-12
 - Publication: atomic replace
 - Included components: `App`, `Main`, `Ui`, `Sheet1`, `ThisWorkbook`
 - Excluded components: `BenchmarkSupport`, `DevSupport`, `BootstrapTests`, `XlflowAssert`, `XlflowDebug`, `XlflowRuntime`, `XlflowUI`
-- `task release:smoke`: the actual workbook exposed exactly the 5 allowed VBA components and external `Main.Run` execution passed without source injection
+- Historical baseline: `task release:smoke` exposed the scaffold workbook's 5
+  allowed components and `Main.Run` passed without source injection. The
+  scaffold entry modules were removed by ADR-0037; current smoke calls public
+  `VBAHttp` factories directly.
 
 Release artifacts and manifests are generated evidence and remain ignored. This document records the baseline result; future release milestones must retain their generated manifest and checksum as release evidence.
 

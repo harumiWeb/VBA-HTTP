@@ -1,17 +1,20 @@
 # Distribution specification
 
-## Two artifacts, two responsibilities
+## Three artifacts, three responsibilities
 
-The repository maintains two distinct deliverables:
+The repository maintains three distinct deliverables:
 
-1. The tracked `build/VBA-HTTP.xlsm` is the development workbook. It mirrors
+1. `dist/VBA-HTTP-source.zip` is the primary library distribution. It is a
+   manifest-verified source package with an installer for existing consumer
+   workbooks.
+2. The tracked `build/VBA-HTTP.xlsm` is the development workbook. It mirrors
    source through xlflow and contains production code, unit/integration/stress
    tests, benchmarks, and xlflow support modules.
-2. `build/Release/VBA-HTTP.xlsm` is a generated consumer artifact. It is built
+3. `build/Release/VBA-HTTP.xlsm` is an optional generated consumer artifact. It is built
    from the development workbook with `xlflow build` and contains only the
    production allowlist. Tests, benchmarks, Xlflow helpers, and Dev modules are
    excluded by `xlflow.toml`.
-3. `build/VBA-HTTP.xlam` is the tracked same-extension add-in base. Its
+4. `build/VBA-HTTP.xlam` is the tracked same-extension add-in base. Its
    independent `build/Release/VBA-HTTP.xlam` target uses the same production
    allowlist but has a separate manifest, checksum, add-in identity check, and
    smoke command.
@@ -21,10 +24,17 @@ the source of truth, and release modules are never removed by hand.
 
 ## Reproducible release flow
 
-From a clean Windows checkout with Excel/VBIDE available:
+From a clean Windows checkout:
 
 ```powershell
 task verify
+task release:source
+```
+
+The source package does not start Excel. Workbook release commands additionally
+require Excel/VBIDE:
+
+```powershell
 task release:build
 task release:security
 ```
@@ -75,11 +85,37 @@ task release:xlam:build
 The target runs `xlflow build --base build/VBA-HTTP.xlam --out
 build/Release/VBA-HTTP.xlam`, requires the filtered component policy and atomic
 VBE build evidence, verifies the SHA-256 sidecar, checks `Workbook.IsAddin`,
-and runs `Main.Run` through the external xlflow consumer path. It does not
-overwrite either the XLSM base or the XLSM release artifact. The decision and
+and validates identity and component policy. The XLSM external consumer harness
+remains the primary runtime smoke path; an XLAM-specific consumer smoke may be
+run separately after promotion. It does not overwrite either the XLSM base or
+the XLSM release artifact. The decision and
 validation boundary are recorded in ADR-0021.
 
-## Consumer installation and upgrade
+## Source-package installation and upgrade
+
+The module distribution follows the VBA-Web installation model. Unzip the
+package and point the installer at a closed target workbook:
+
+```powershell
+Expand-Archive .\VBA-HTTP-source.zip -DestinationPath .\VBA-HTTP-source
+.\VBA-HTTP-source\Install-VBAHttp.ps1 -Workbook .\MyApplication.xlsm
+```
+
+The installer validates the manifest and every SHA-256 record before opening
+Excel, writes a complete `.vba-http.bak` backup, and imports the production
+`.bas`/`.cls` components in one operation. Existing package component names
+require `-Force` for replacement. `-WhatIf` validates the package and reports
+the intended action without opening Excel. `Uninstall-VBAHttp.ps1` uses the
+same manifest and backup boundary and also requires `-Force` before removing
+existing components.
+
+The installer starts one hidden Excel instance for the explicitly named target
+workbook and closes only that instance. It does not enumerate or terminate
+unrelated Excel processes. The target must be closed before installation and
+must permit VBProject access. Consumers should keep the generated backup until
+the new version passes their own smoke test.
+
+## Workbook consumer installation and upgrade
 
 For a consumer, copy the verified release workbook to a controlled add-in or
 library location and reference it from the consuming VBA project. Call
@@ -92,15 +128,17 @@ file atomically while Excel is closed. Keep the previous verified artifact for
 rollback. Do not copy test modules from the development workbook into the
 consumer workbook.
 
-Source-vendored consumers may instead import the `src/` components and run the
-full xlflow proof loop. Such consumers own their workbook packaging and must
-retain the same excluded-component and source-boundary rules. The vendored
+Source-vendored consumers may instead use the package installer or import the
+`components/` files from the package. They own their workbook packaging and
+must retain the same excluded-component and source-boundary rules. The vendored
 `references/VBA-Web` tree is a benchmark comparator, not a product dependency;
 its upstream specs are not run against external network services.
 
 ## Evidence retention
 
-Release evidence consists of the exact workbook, `.build.json` manifest,
+Source-package evidence consists of the exact ZIP, extracted `manifest.json`,
+source revision, and package hashes. Workbook release evidence consists of the
+exact workbook, `.build.json` manifest,
 `.checksum.json` sidecar, `release-security.json` report, smoke output,
 `LICENSE`, and `THIRD_PARTY_NOTICES.md`.
 Evidence is path-stable and secret-free. Record the source revision and host

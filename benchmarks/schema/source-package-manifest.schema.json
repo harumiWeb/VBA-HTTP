@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["schema_version", "package_id", "package_version", "source_revision", "target", "install", "components", "files"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "package_id": { "const": "VBA-HTTP" },
+    "package_version": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$" },
+    "source_revision": { "type": "string", "minLength": 1 },
+    "target": { "const": "windows-x64-office" },
+    "install": {
+      "type": "object",
+      "required": ["script", "uninstall_script", "requires_closed_workbook", "requires_vbproject_access"],
+      "properties": {
+        "script": { "const": "Install-VBAHttp.ps1" },
+        "uninstall_script": { "const": "Uninstall-VBAHttp.ps1" },
+        "requires_closed_workbook": { "const": true },
+        "requires_vbproject_access": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "components": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "type", "source_path", "package_path", "sha256"],
+        "properties": {
+          "name": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$" },
+          "type": { "enum": ["class", "standard"] },
+          "source_path": { "type": "string", "pattern": "^src/(classes|modules)/" },
+          "package_path": { "type": "string", "pattern": "^components/(classes|modules)/[^/]+\\.(cls|bas)$" },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "files": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

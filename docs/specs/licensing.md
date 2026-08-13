@@ -3,7 +3,7 @@
 ## Canonical project license
 
 Project-authored VBA source, documentation, examples, deterministic tooling,
-and generated release workbooks are distributed under MIT. The complete grant
+source packages, and generated release workbooks are distributed under MIT. The complete grant
 and warranty disclaimer are the root [`LICENSE`](../../LICENSE) file; its
 copyright holder is currently `harumiWeb` for 2026.
 
@@ -12,11 +12,9 @@ third-party notice is governed by that notice for the indicated material.
 
 ## Packaging contract
 
-Every source or workbook distribution must retain these files beside the
-artifact:
-
-- `LICENSE`
-- `THIRD_PARTY_NOTICES.md`
+Every source or workbook distribution must retain the root `LICENSE` and
+`THIRD_PARTY_NOTICES.md`. A source package must additionally retain its
+`manifest.json` beside the component payload.
 - the release `.build.json` manifest, checksum sidecar, and security report
 
 The filtered workbook is produced by `xlflow build`; license files are package

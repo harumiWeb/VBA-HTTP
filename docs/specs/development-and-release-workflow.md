@@ -38,18 +38,24 @@ The current local `xlflow` development build rewrites `XlflowAssert.bas` into a 
 
 Production source must not call, instantiate, or otherwise depend on an excluded component. VBE compilation of the filtered workbook is the final dependency check. `tools/build-component-policy.json` is the explicit allowlist/denylist for the current component set; update it intentionally whenever components are added or renamed.
 
-Before a release build:
+Before a source-package or workbook release:
 
 1. Run `task verify`.
-2. Run `task test:license` and verify the root `LICENSE` and
+2. Run `task test:source-package` and `task release:source` for the primary
+   module distribution. Verify the extracted manifest, source revision, and
+   package hashes.
+3. Run `task test:license` and verify the root `LICENSE` and
    `THIRD_PARTY_NOTICES.md` are present for the handoff package.
-3. Inspect the dry-run included and excluded component sets.
-4. Run `xlflow build --json --out build/Release/VBA-HTTP.xlsm`.
-5. Run `task release:checksum` to generate the deterministic
+4. For an optional workbook release, inspect the dry-run included and excluded
+   component sets.
+5. Run `xlflow build --json --out build/Release/VBA-HTTP.xlsm`.
+6. Run `task release:checksum` to generate the deterministic
    `VBA-HTTP.xlsm.checksum.json` sidecar for the artifact and build manifest.
-6. Verify the build manifest reports successful source application, VBE compile, save, close, and atomic publication, and verify both SHA-256 values in the sidecar.
-7. Run `task release:security` (also invoked by `task release:smoke`) to validate canonical base/output paths, component boundaries, excluded paths, and the checksum sidecar before opening Excel.
-8. Run `task release:smoke` to inspect the actual VBA component collection and call `Main.Run` without injecting test code into the artifact.
+7. Verify the build manifest reports successful source application, VBE compile, save, close, and atomic publication, and verify both SHA-256 values in the sidecar.
+8. Run `task release:security` (also invoked by `task release:smoke`) to validate canonical base/output paths, component boundaries, excluded paths, and the checksum sidecar before opening Excel.
+9. Run `task release:smoke` to inspect the actual VBA component collection and
+   call the public `VBAHttp` factories through the external consumer harness
+   without injecting test code into the artifact.
 
 Negotiated HTTP/2 evidence is an opt-in host operation, not part of the
 offline proof loop. After a clean release build, a host owner may set

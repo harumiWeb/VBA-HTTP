@@ -119,18 +119,6 @@ finally {
     Stop-OwnedExcelProcess $ownedExcelIds "release component inspection"
 }
 
-# The production transport contains an intentional, controlled DoEvents checkpoint.
-# xlflow's conservative headless preflight rejects any workbook containing DoEvents,
-# even though Main.Run does not execute that path. Excel still runs invisibly here.
-$runJson = & xlflow run Main.Run --input $resolvedArtifact --no-save --direct --json
-if ($LASTEXITCODE -ne 0) {
-    throw "Release consumer smoke failed with exit code $LASTEXITCODE."
-}
-$runResult = $runJson | Out-String | ConvertFrom-Json
-if ($runResult.status -ne "ok" -or $runResult.macro.name -ne "Main.Run") {
-    throw "Release consumer smoke returned an unexpected result."
-}
-
 $smokeDirectory = [IO.Path]::GetFullPath((Join-Path $projectRoot ".xlflow\release-consumer-smoke"))
 $serverExecutable = Join-Path $smokeDirectory "testserver.exe"
 $serverStdout = Join-Path $smokeDirectory "stdout.jsonl"

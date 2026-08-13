@@ -16,8 +16,9 @@ task test:office-bitness
 `tools/Run-OfficeBitnessValidation.ps1` checks synchronized source/workbook
 state, records the xlflow bridge architecture, runs the isolated VBA suite,
 builds a temporary production workbook with VBE compile/save/close evidence,
-executes the deterministic loopback integration suite, and invokes `Main.Run`
-from that artifact. It publishes a path-stable,
+executes the deterministic loopback integration suite. Artifact consumer smoke
+is owned by the separate release harness, so this runner records
+`consumer_smoke=deferred-to-release-harness`. It publishes a path-stable,
 loopback-free JSON result under `benchmarks/results/` and removes the temporary
 artifact. Before reading Office metadata, the runner snapshots existing Excel
 PIDs and proves that its COM instance created a new PID. It calls `Quit` only

@@ -13,6 +13,7 @@ $required = @(
     'docs/API.md',
     'docs/RELEASE_CHECKLIST.md',
     'docs/specs/distribution.md',
+    'docs/specs/source-package.md',
     'docs/specs/licensing.md',
     'docs/specs/powershell-quality.md',
     'docs/specs/development-and-release-workflow.md',
@@ -21,8 +22,16 @@ $required = @(
     'docs/adr/ADR-0030-32-bit-office-support-boundary.md',
     'docs/adr/ADR-0035-http3-support-boundary.md',
     'docs/adr/ADR-0036-mit-license-and-distribution-boundary.md',
+    'docs/adr/ADR-0037-vba-web-style-source-package.md',
     'tools/Test-LicenseContract.ps1',
     'tools/Invoke-PSScriptAnalyzer.ps1',
+    'tools/New-SourcePackage.ps1',
+    'tools/Validate-SourcePackage.ps1',
+    'tools/Validate-SourceArchive.ps1',
+    'tools/Install-VBAHttp.ps1',
+    'tools/Uninstall-VBAHttp.ps1',
+    'tools/Test-SourcePackage.ps1',
+    'benchmarks/schema/source-package-manifest.schema.json',
     'PSScriptAnalyzerSettings.psd1',
     'tools/Validate-XlamBuildPlan.ps1',
     'tools/Validate-XlamArtifact.ps1',
@@ -55,7 +64,7 @@ $tokens = @{
     'README.md' = @('docs/API.md', 'CONTRIBUTING.md', 'docs/specs/distribution.md', 'LICENSE', 'MIT', 'task verify')
     'CONTRIBUTING.md' = @('task check', 'xlflow push', 'task release:build', 'LICENSE')
     'docs/API.md' = @('CreateClient', 'HttpResponse', 'HttpError')
-    'docs/specs/distribution.md' = @('xlflow build', 'checksum', 'rollback', 'xlam', 'release:xlam:build', 'Workbook.IsAddin', 'LICENSE', 'THIRD_PARTY_NOTICES')
+    'docs/specs/distribution.md' = @('xlflow build', 'source package', 'Install-VBAHttp.ps1', 'checksum', 'rollback', 'xlam', 'release:xlam:build', 'Workbook.IsAddin', 'LICENSE', 'THIRD_PARTY_NOTICES')
     'docs/RELEASE_CHECKLIST.md' = @('task release:build', 'task release:security', 'task release:xlam:build', 'risk-register', 'task test:license', 'THIRD_PARTY_NOTICES')
 }
 

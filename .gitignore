@@ -11,5 +11,10 @@ build/*
 build/Release/
 build/Staging/
 
+# Generated source distribution
+dist/
+*.vba-http.bak
+*.vba-http-uninstall.bak
+
 references/
 docs/design.md

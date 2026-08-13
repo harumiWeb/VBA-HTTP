@@ -55,7 +55,21 @@ URL path, query, credentials, or body.
 Never save a workbook after a failed proof. Follow xlflow recovery guidance if
 the session reports a recovery-required state.
 
-## Release artifact
+## Source package and release artifacts
+
+The primary consumer handoff is the VBA-Web-style module package:
+
+```powershell
+task release:source
+```
+
+This creates `dist/VBA-HTTP-source.zip` with a manifest, production `.bas` and
+`.cls` files, installer/uninstaller scripts, hashes, and license notices. The
+package installer targets a closed workbook and owns only the Excel instance
+it starts. Use `-Force` for component replacement and retain the generated
+backup. See [`docs/specs/source-package.md`](docs/specs/source-package.md).
+
+Compiled workbooks remain optional release artifacts.
 
 The development workbook contains tests and tooling. A distributable workbook
 is generated separately with `task release:build`, which runs `xlflow build`

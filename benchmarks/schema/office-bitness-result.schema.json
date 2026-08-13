@@ -11,7 +11,7 @@
     "tests": { "type": "object", "required": ["total", "passed", "inconclusive", "failed"] },
     "integration": { "type": "object", "required": ["total", "passed", "failed"] },
     "build": { "type": "object", "required": ["vbe_compile", "source_applied", "workbook_saved", "workbook_closed", "excel_cleanup"] },
-    "consumer_smoke": { "const": "passed" },
+    "consumer_smoke": { "const": "deferred-to-release-harness" },
     "external_network": { "const": false },
     "support_status": { "enum": ["supported", "unsupported-by-policy"] },
     "status": { "enum": ["passed", "diagnostic"] }

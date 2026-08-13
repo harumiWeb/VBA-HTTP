@@ -107,11 +107,6 @@ try {
             throw "Office $architecture build did not provide complete VBE evidence."
         }
 
-        $smoke = Invoke-JsonCommand "xlflow" @("run", "Main.Run", "--input", $artifactPath, "--no-save", "--direct", "--json")
-        if ($smoke.status -ne "ok" -or $smoke.macro.name -ne "Main.Run") {
-            throw "Office $architecture consumer smoke did not pass."
-        }
-
         $relativeOutput = if ([string]::IsNullOrWhiteSpace($OutputPath)) {
             "benchmarks/results/office-bitness-$($architecture.ToLowerInvariant()).json"
         }
@@ -126,7 +121,7 @@ try {
             tests = [ordered]@{ total = $testRecords.Count; passed = $passed; inconclusive = @($testRecords | Where-Object { $_.status -eq "inconclusive" }).Count; failed = @($testRecords | Where-Object { $_.status -eq "failed" }).Count }
             integration = [ordered]@{ total = $integrationRecords.Count; passed = @($integrationRecords | Where-Object { $_.status -eq "passed" }).Count; failed = @($integrationRecords | Where-Object { $_.status -ne "passed" }).Count }
             build = [ordered]@{ vbe_compile = [string]$validation.vbe_compile; source_applied = [bool]$validation.source_applied; workbook_saved = [bool]$validation.workbook_saved; workbook_closed = [bool]$validation.workbook_closed; excel_cleanup = [string]$validation.excel_cleanup }
-            consumer_smoke = "passed"
+            consumer_smoke = "deferred-to-release-harness"
             external_network = $false
             support_status = if ($architecture -eq "X64") { "supported" } else { "unsupported-by-policy" }
             status = if ($architecture -eq "X64") { "passed" } else { "diagnostic" }

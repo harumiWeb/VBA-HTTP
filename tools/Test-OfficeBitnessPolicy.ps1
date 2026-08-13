@@ -33,6 +33,7 @@ try {
     $fixture.architecture = "X86"
     $fixture.support_status = "unsupported-by-policy"
     $fixture.status = "diagnostic"
+    $fixture.consumer_smoke = "deferred-to-release-harness"
     $fixture | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $fixturePath -Encoding UTF8
     try {
         & $validator -Path $fixturePath | Out-Null

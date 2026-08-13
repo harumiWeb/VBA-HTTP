@@ -1,5 +1,10 @@
 ## Unreleased
 
+- Changed the primary consumer distribution to a VBA-Web-style manifest-based
+  source package with one-command installer/uninstaller, backup, and hash
+  validation. The empty `App`, `Main`, and `Ui` scaffold entry modules were
+  removed; compiled XLSM/XLAM artifacts remain optional release targets.
+
 - Added a repository PSScriptAnalyzer settings contract and
   `task powershell:lint` gate for all `tools/*.ps1`; warnings and errors now
   stop the Lefthook pre-commit check.
