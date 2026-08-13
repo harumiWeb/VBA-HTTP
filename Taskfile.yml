@@ -31,6 +31,11 @@ tasks:
     cmds:
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Normalize-ClassSource.ps1
 
+  test:native-declarations:
+    desc: Verify the VBA7/legacy WinHTTP declaration ABI contract without Excel
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-NativeDeclarationContract.ps1
+
   check:
     desc: Run all pre-commit quality gates
     cmds:
@@ -38,6 +43,7 @@ tasks:
       - task: analyze
       - task: format
       - task: class-source:check
+      - task: test:native-declarations
 
   test:
     desc: Run the complete xlflow test suite

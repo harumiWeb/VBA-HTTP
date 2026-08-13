@@ -361,6 +361,7 @@ streamingとadvanced protocolの土台となる安全なNative WinHTTP transport
 - [x] native callbackからVBA application logicを呼ばないADRを作成する。
 - [x] native handle ownershipとcleanup policyをspec化する。
 - [x] 32-bit／64-bit対応WinHTTP declarationを実装する。
+- [x] VBA7／legacy declarationのpointer-size ABI static contract gateを追加する（`task test:native-declarations`。real x86 Office evidenceとは分離）。
 - [x] session、connection、request handle wrapperを実装する。
 - [x] buffered GET、request headers、response headersを実装する。
 - [x] protocol query、TLS validation、error mappingを実装する。

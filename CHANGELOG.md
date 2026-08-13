@@ -1,5 +1,10 @@
 ## Unreleased
 
+- Added an Excel-free native declaration ABI gate that verifies the VBA7
+  `PtrSafe`/`LongPtr` and legacy `Long` WinHTTP branches, including the
+  upload DWORD sentinel. This guards source regressions while keeping real
+  32-bit Office evidence host-specific.
+
 - Added `VBAHttp.CreateRequest()` so workbook-reference consumers can
   configure request-level timeouts and transport options without constructing
   `PublicNotCreatable` classes directly. The protocol-host consumer probe now
