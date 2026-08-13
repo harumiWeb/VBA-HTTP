@@ -31,4 +31,5 @@ End Sub
 Public Sub Test_Factory_CreatesAuthenticationProviders()
     XlflowAssert.AssertIsNotNothing VBAHttp.CreateBasicAuthProvider("user", "pass")
     XlflowAssert.AssertIsNotNothing VBAHttp.CreateBearerAuthProvider("token", True)
+    XlflowAssert.AssertIsNotNothing VBAHttp.CreateWindowsAuthProvider("user", "pass", HttpAuthSchemeBasic, HttpAuthTargetServer, True)
 End Sub

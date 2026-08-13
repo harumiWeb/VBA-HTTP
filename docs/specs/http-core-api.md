@@ -47,7 +47,12 @@ providers through `VBAHttp.CreateBasicAuthProvider` and
 `Authorization` header, require HTTPS by default, and disable automatic
 redirects on the execution snapshot so a credential-bearing header is never
 forwarded implicitly. `auth-policy.md` defines the explicit loopback-only
-insecure opt-in, secret redaction, and the no-challenge-replay boundary.
+insecure opt-in, secret redaction, and the preemptive-provider boundary.
+`VBAHttp.CreateWindowsAuthProvider` adds a bounded buffered challenge policy for
+server or proxy targets; COM configures WinHTTP before send and native buffered
+requests replay the retained body on the same handle. Native file/multipart
+uploads reject that provider before opening a one-shot source. The complete
+contract is in `challenge-authentication.md`.
 
 `HttpClient.Diagnostics` accepts an opt-in `HttpDiagnostics` collector created
 by `VBAHttp.CreateDiagnostics`. It records bounded top-level operation events

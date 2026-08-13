@@ -130,9 +130,11 @@ Set response = client.GetResponse("https://example.com/protected")
 ```
 
 `VBAHttp.CreateBasicAuthProvider` uses UTF-8 RFC 7617 encoding. 401/407
-responses are returned normally and are never replayed automatically. Windows
-integrated authentication, proxy credentials, and OAuth flows are outside the
-current provider contract; see
+responses are returned normally for preemptive providers. Buffered requests may
+opt into bounded Windows/Digest/server-or-proxy challenge authentication with
+`VBAHttp.CreateWindowsAuthProvider`; streaming uploads reject that provider
+before opening a one-shot source. OAuth flows and interactive callbacks remain
+outside the current provider contract; see
 [`docs/specs/auth-policy.md`](docs/specs/auth-policy.md).
 
 Requests carrying `Authorization`, `Proxy-Authorization`, or `Cookie` headers

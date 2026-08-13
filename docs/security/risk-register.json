@@ -15,13 +15,13 @@
     },
     {
       "id": "integrated-proxy-challenge-auth",
-      "title": "Windows integrated and proxy challenge authentication",
+      "title": "Host-specific integrated and proxy challenge authentication evidence",
       "status": "deferred",
       "severity": "medium",
       "blocks_current_release": false,
       "blocks_v1": true,
-      "required_evidence": "Buffered replay contract, credential redaction, bounded challenge loop, and opt-in host fixture",
-      "evidence": "docs/specs/auth-policy.md"
+      "required_evidence": "Real Windows-domain Negotiate/NTLM and manual-proxy CONNECT challenge fixtures, plus 32/64-bit release smoke",
+      "evidence": "docs/specs/challenge-authentication.md; docs/specs/compatibility-matrix.md"
     },
     {
       "id": "com-receive-timeout-abort-growth",

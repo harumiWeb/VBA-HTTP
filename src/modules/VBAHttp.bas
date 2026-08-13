@@ -76,6 +76,14 @@ Public Function CreateBearerAuthProvider(ByVal Token As String, Optional ByVal A
     Set CreateBearerAuthProvider = provider
 End Function
 
+''' Creates a bounded WinHTTP challenge-auth provider for buffered requests.
+Public Function CreateWindowsAuthProvider(ByVal Username As String, ByVal Password As String, Optional ByVal Scheme As HttpAuthChallengeScheme = HttpAuthSchemeAuto, Optional ByVal Target As HttpAuthChallengeTarget = HttpAuthTargetServer, Optional ByVal AllowInsecureHttp As Boolean = False, Optional ByVal MaxChallenges As Long = 3) As IHttpAuthProvider
+    Dim provider As New HttpWindowsAuthProvider
+
+    provider.Initialize Username, Password, Scheme, Target, AllowInsecureHttp, MaxChallenges
+    Set CreateWindowsAuthProvider = provider
+End Function
+
 ''' Creates an ordered multipart form for referenced-workbook consumers.
 Public Function CreateMultipartForm() As HttpMultipartForm
     Set CreateMultipartForm = New HttpMultipartForm

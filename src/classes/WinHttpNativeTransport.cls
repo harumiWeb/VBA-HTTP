@@ -48,6 +48,8 @@ Private Function ExecuteCore(ByVal Request As HttpRequest) As HttpResponse
     Dim errorNumber As Long
     Dim errorSource As String
     Dim errorDescription As String
+    Dim challengeProvider As HttpWindowsAuthProvider
+    Dim challengeCount As Long
     #If VBA7 Then
     Dim handleValue As LongPtr
     #Else
@@ -57,6 +59,7 @@ Private Function ExecuteCore(ByVal Request As HttpRequest) As HttpResponse
 
     On Error GoTo NativeFailure
     If Request Is Nothing Then HttpErrors.RaiseValidation TransportSource, "Request cannot be Nothing."
+    ValidateChallengeProvider Request
 
     started = HttpTiming.CounterValue()
     Set Url = New WinHttpNativeUrl
@@ -83,7 +86,15 @@ Private Function ExecuteCore(ByVal Request As HttpRequest) As HttpResponse
     ApplyRequestOptions nativeRequest, Request
     If Not WinHttpNativeApi.AddRequestHeaders(nativeRequest.Value, BuildRequestHeaders(Request.Headers)) Then RaiseNativeFailure "AddRequestHeaders"
     If Not WinHttpNativeApi.SendBody(nativeRequest.Value, Request.Body.Bytes) Then RaiseNativeFailure "SendRequest"
-    If Not WinHttpNativeApi.ReceiveResponse(nativeRequest.Value) Then RaiseNativeFailure "ReceiveResponse"
+    If Not Request.AuthProvider Is Nothing Then
+        If TypeOf Request.AuthProvider Is HttpWindowsAuthProvider Then Set challengeProvider = Request.AuthProvider
+    End If
+    Do
+        If Not WinHttpNativeApi.ReceiveResponse(nativeRequest.Value) Then RaiseNativeFailure "ReceiveResponse"
+        If challengeProvider Is Nothing Then Exit Do
+        If challengeCount >= challengeProvider.MaxChallenges Then Exit Do
+        If Not TryNativeChallenge(nativeRequest.Value, challengeProvider, Request.Body.Bytes, challengeCount, TransportSource) Then Exit Do
+    Loop
 
     Set response = BuildResponse(nativeRequest, HttpTiming.ElapsedMilliseconds(started, HttpTiming.CounterValue()))
     Set ExecuteCore = response
@@ -108,6 +119,74 @@ NativeFailure:
         Err.Raise HttpErrIo, TransportSource, "Native WinHTTP failure did not provide an error number."
     End If
 End Function
+
+#If VBA7 Then
+Private Function TryNativeChallenge(ByVal HandleValue As LongPtr, ByVal Provider As HttpWindowsAuthProvider, ByVal Body As Variant, ByRef ChallengeCount As Long, ByVal Source As String) As Boolean
+    Dim statusCode As Long
+    Dim supportedSchemes As Long
+    Dim firstScheme As Long
+    Dim target As Long
+    Dim scheme As Long
+
+    If Not IsChallengeStatus(HandleValue, statusCode, Source) Then Exit Function
+    If Not WinHttpNativeApi.QueryAuthSchemes(HandleValue, supportedSchemes, firstScheme, target) Then Exit Function
+    scheme = Provider.SelectScheme(supportedSchemes, firstScheme, target)
+    If scheme = 0 Then Exit Function
+    If Not Provider.ApplyNativeCredentials(HandleValue, target, scheme, Source) Then RaiseNativeFailure "SetCredentials", Source
+    If Not WinHttpNativeApi.SendBody(HandleValue, Body) Then RaiseNativeFailure "ResendRequest", Source
+    ChallengeCount = ChallengeCount + 1
+    TryNativeChallenge = True
+End Function
+#Else
+Private Function TryNativeChallenge(ByVal HandleValue As Long, ByVal Provider As HttpWindowsAuthProvider, ByVal Body As Variant, ByRef ChallengeCount As Long, ByVal Source As String) As Boolean
+    Dim statusCode As Long
+    Dim supportedSchemes As Long
+    Dim firstScheme As Long
+    Dim target As Long
+    Dim scheme As Long
+
+    If Not IsChallengeStatus(HandleValue, statusCode, Source) Then Exit Function
+    If Not WinHttpNativeApi.QueryAuthSchemes(HandleValue, supportedSchemes, firstScheme, target) Then Exit Function
+    scheme = Provider.SelectScheme(supportedSchemes, firstScheme, target)
+    If scheme = 0 Then Exit Function
+    If Not Provider.ApplyNativeCredentials(HandleValue, target, scheme, Source) Then RaiseNativeFailure "SetCredentials", Source
+    If Not WinHttpNativeApi.SendBody(HandleValue, Body) Then RaiseNativeFailure "ResendRequest", Source
+    ChallengeCount = ChallengeCount + 1
+    TryNativeChallenge = True
+End Function
+#End If
+
+#If VBA7 Then
+Private Function IsChallengeStatus(ByVal HandleValue As LongPtr, ByRef StatusCode As Long, ByVal Source As String) As Boolean
+    Dim statusText As String
+
+    If Not WinHttpNativeApi.QueryHeaderString(HandleValue, WinHttpNativeApi.WinHttpQueryStatusCode, statusText) Then Exit Function
+    On Error GoTo InvalidStatus
+    StatusCode = CLng(Trim$(statusText))
+    On Error GoTo 0
+    IsChallengeStatus = (StatusCode = 401 Or StatusCode = 407)
+    Exit Function
+
+InvalidStatus:
+    On Error GoTo 0
+    Err.Raise HttpErrProtocol, Source, "WinHTTP returned an invalid response status."
+End Function
+#Else
+Private Function IsChallengeStatus(ByVal HandleValue As Long, ByRef StatusCode As Long, ByVal Source As String) As Boolean
+    Dim statusText As String
+
+    If Not WinHttpNativeApi.QueryHeaderString(HandleValue, WinHttpNativeApi.WinHttpQueryStatusCode, statusText) Then Exit Function
+    On Error GoTo InvalidStatus
+    StatusCode = CLng(Trim$(statusText))
+    On Error GoTo 0
+    IsChallengeStatus = (StatusCode = 401 Or StatusCode = 407)
+    Exit Function
+
+InvalidStatus:
+    On Error GoTo 0
+    Err.Raise HttpErrProtocol, Source, "WinHTTP returned an invalid response status."
+End Function
+#End If
 
 Private Function DownloadCore(ByVal Request As HttpRequest, ByVal DestinationPath As String, ByVal Options As HttpExecutionOptions, Optional ByVal Progress As IHttpProgressSink = Nothing) As HttpDownloadResult
     Dim Url As WinHttpNativeUrl
@@ -136,6 +215,8 @@ Private Function DownloadCore(ByVal Request As HttpRequest, ByVal DestinationPat
     Dim finalChunk() As Byte
     Dim copyIndex As Long
     Dim cleanupSucceeded As Boolean
+    Dim challengeProvider As HttpWindowsAuthProvider
+    Dim challengeCount As Long
     #If VBA7 Then
     Dim handleValue As LongPtr
     #Else
@@ -144,6 +225,7 @@ Private Function DownloadCore(ByVal Request As HttpRequest, ByVal DestinationPat
 
     On Error GoTo DownloadFailure
     If Request Is Nothing Then HttpErrors.RaiseValidation DownloadSource, "Request cannot be Nothing."
+    ValidateChallengeProvider Request
     If Request.Method <> "GET" Then HttpErrors.RaiseValidation DownloadSource, "Streaming downloads require the GET method."
     If Options Is Nothing Then HttpErrors.RaiseValidation DownloadSource, "Execution options cannot be Nothing."
 
@@ -174,7 +256,15 @@ Private Function DownloadCore(ByVal Request As HttpRequest, ByVal DestinationPat
     ApplyRequestOptions nativeRequest, Request, DownloadSource
     If Not WinHttpNativeApi.AddRequestHeaders(nativeRequest.Value, BuildRequestHeaders(Request.Headers)) Then RaiseNativeFailure "AddRequestHeaders", DownloadSource
     If Not WinHttpNativeApi.SendBody(nativeRequest.Value, Request.Body.Bytes) Then RaiseNativeFailure "SendRequest", DownloadSource
-    If Not WinHttpNativeApi.ReceiveResponse(nativeRequest.Value) Then RaiseNativeFailure "ReceiveResponse", DownloadSource
+    If Not Request.AuthProvider Is Nothing Then
+        If TypeOf Request.AuthProvider Is HttpWindowsAuthProvider Then Set challengeProvider = Request.AuthProvider
+    End If
+    Do
+        If Not WinHttpNativeApi.ReceiveResponse(nativeRequest.Value) Then RaiseNativeFailure "ReceiveResponse", DownloadSource
+        If challengeProvider Is Nothing Then Exit Do
+        If challengeCount >= challengeProvider.MaxChallenges Then Exit Do
+        If Not TryNativeChallenge(nativeRequest.Value, challengeProvider, Request.Body.Bytes, challengeCount, DownloadSource) Then Exit Do
+    Loop
     ReadResponseMetadata nativeRequest, statusCode, reasonPhrase, responseHeaders, protocolUsed, DownloadSource
 
     If TryParseContentLength(responseHeaders, contentLength) Then
@@ -308,11 +398,17 @@ Private Function UploadCore(ByVal Request As HttpRequest, ByVal Source As IHttpU
     If Len(SourceName) = 0 Then SourceName = UploadSource
     On Error GoTo UploadFailure
     If Request Is Nothing Then HttpErrors.RaiseValidation SourceName, "Request cannot be Nothing."
+    ValidateChallengeProvider Request
     If Source Is Nothing Then HttpErrors.RaiseValidation SourceName, "Upload source cannot be Nothing."
     If Options Is Nothing Then HttpErrors.RaiseValidation SourceName, "Execution options cannot be Nothing."
     If Request.Method <> "POST" Then HttpErrors.RaiseValidation SourceName, "Streaming uploads require the POST method."
     If Request.FollowRedirects Then HttpErrors.RaiseValidation SourceName, "Streaming uploads do not follow redirects."
     If Request.Headers.Contains("Transfer-Encoding") Then HttpErrors.RaiseValidation SourceName, "Streaming uploads manage transfer encoding internally."
+    If Not Request.AuthProvider Is Nothing Then
+        If TypeOf Request.AuthProvider Is HttpWindowsAuthProvider Then
+            HttpErrors.RaiseValidation SourceName, "Challenge authentication cannot replay a streaming upload source."
+        End If
+    End If
 
     contentLength = Source.ContentLength
     If contentLength < 0 Then HttpErrors.RaiseValidation SourceName, "Upload content length cannot be negative."
@@ -379,6 +475,12 @@ UploadFailure:
         Err.Raise HttpErrIo, SourceName, "Native streaming upload failed without an error number."
     End If
 End Function
+
+Private Sub ValidateChallengeProvider(ByVal Request As HttpRequest)
+    If Request Is Nothing Then Exit Sub
+    If Request.AuthProvider Is Nothing Then Exit Sub
+    If TypeOf Request.AuthProvider Is HttpWindowsAuthProvider Then Request.AuthProvider.Apply Request
+End Sub
 
 Private Sub CloseNativeHandles(ByVal nativeRequest As WinHttpRequestHandle, ByVal connection As WinHttpConnectionHandle, ByVal session As WinHttpSessionHandle)
     If Not nativeRequest Is Nothing Then nativeRequest.ReleaseHandle

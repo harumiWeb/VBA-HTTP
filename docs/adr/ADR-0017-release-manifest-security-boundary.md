@@ -32,8 +32,10 @@ names `build/VBA-HTTP.xlsm` as its base and reports an atomic publication
   hashes, checks performed, and deferred security topics without host paths or
   secrets. Reports are written atomically under `.xlflow` by the release task.
 - Keep the gate lexical and manifest-focused. It does not claim HTTP/2/HTTP/3
-  TLS compatibility or integrated/proxy challenge authentication; those remain
-  explicit residual risks until their dedicated fixtures and policies exist.
+  TLS compatibility or host-specific integrated/proxy challenge authentication;
+  those remain explicit residual risks until their dedicated fixtures and
+  policies exist. The bounded loopback challenge contract is covered separately
+  by ADR-0023 and is not a substitute for those host runs.
   Certificate rejection is covered by the loopback fixture in the integration
   suite, and cookie handling is covered by ADR-0018.
 

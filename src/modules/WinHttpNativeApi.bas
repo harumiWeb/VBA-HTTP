@@ -27,6 +27,13 @@ Public Const WinHttpAddRequestHeader As Long = &H20000000
 Public Const WinHttpErrorInsufficientBuffer As Long = 122
 Public Const WinHttpErrorHeaderNotFound As Long = 12150
 Public Const WinHttpErrorInvalidOption As Long = 12009
+Public Const WinHttpErrorResendRequest As Long = 12032
+Public Const WinHttpAuthTargetServer As Long = 0
+Public Const WinHttpAuthTargetProxy As Long = 1
+Public Const WinHttpAuthSchemeBasic As Long = 1
+Public Const WinHttpAuthSchemeNtlm As Long = 2
+Public Const WinHttpAuthSchemeDigest As Long = 8
+Public Const WinHttpAuthSchemeNegotiate As Long = 16
 Public Const WinHttpIgnoreRequestTotalLength As Long = 0
 
 #If VBA7 Then
@@ -39,6 +46,8 @@ Private Declare PtrSafe Function WinHttpSetTimeouts Lib "winhttp.dll" (ByVal hIn
 Private Declare PtrSafe Function WinHttpSendRequest Lib "winhttp.dll" (ByVal hRequest As LongPtr, ByVal lpszHeaders As LongPtr, ByVal dwHeadersLength As Long, ByVal lpOptional As LongPtr, ByVal dwOptionalLength As Long, ByVal dwTotalLength As Long, ByVal dwContext As LongPtr) As Long
 Private Declare PtrSafe Function WinHttpWriteData Lib "winhttp.dll" (ByVal hRequest As LongPtr, ByRef lpBuffer As Any, ByVal dwNumberOfBytesToWrite As Long, ByRef lpdwNumberOfBytesWritten As Long) As Long
 Private Declare PtrSafe Function WinHttpReceiveResponse Lib "winhttp.dll" (ByVal hRequest As LongPtr, ByVal lpReserved As LongPtr) As Long
+Private Declare PtrSafe Function WinHttpQueryAuthSchemes Lib "winhttp.dll" (ByVal hRequest As LongPtr, ByRef supportedSchemes As Long, ByRef firstScheme As Long, ByRef target As Long) As Long
+Private Declare PtrSafe Function WinHttpSetCredentials Lib "winhttp.dll" (ByVal hRequest As LongPtr, ByVal target As Long, ByVal scheme As Long, ByVal username As LongPtr, ByVal password As LongPtr, ByVal authParams As LongPtr) As Long
 Private Declare PtrSafe Function WinHttpQueryHeaders Lib "winhttp.dll" (ByVal hRequest As LongPtr, ByVal dwInfoLevel As Long, ByVal pwszName As LongPtr, ByVal lpBuffer As LongPtr, ByRef lpdwBufferLength As Long, ByRef lpdwIndex As Long) As Long
 Private Declare PtrSafe Function WinHttpQueryDataAvailable Lib "winhttp.dll" (ByVal hRequest As LongPtr, ByRef lpdwNumberOfBytesAvailable As Long) As Long
 Private Declare PtrSafe Function WinHttpReadData Lib "winhttp.dll" (ByVal hRequest As LongPtr, ByRef lpBuffer As Any, ByVal dwNumberOfBytesToRead As Long, ByRef lpdwNumberOfBytesRead As Long) As Long
@@ -58,6 +67,8 @@ Private Declare Function WinHttpSetTimeouts Lib "winhttp.dll" (ByVal hInternet A
 Private Declare Function WinHttpSendRequest Lib "winhttp.dll" (ByVal hRequest As Long, ByVal lpszHeaders As Long, ByVal dwHeadersLength As Long, ByVal lpOptional As Long, ByVal dwOptionalLength As Long, ByVal dwTotalLength As Long, ByVal dwContext As Long) As Long
 Private Declare Function WinHttpWriteData Lib "winhttp.dll" (ByVal hRequest As Long, ByRef lpBuffer As Any, ByVal dwNumberOfBytesToWrite As Long, ByRef lpdwNumberOfBytesWritten As Long) As Long
 Private Declare Function WinHttpReceiveResponse Lib "winhttp.dll" (ByVal hRequest As Long, ByVal lpReserved As Long) As Long
+Private Declare Function WinHttpQueryAuthSchemes Lib "winhttp.dll" (ByVal hRequest As Long, ByRef supportedSchemes As Long, ByRef firstScheme As Long, ByRef target As Long) As Long
+Private Declare Function WinHttpSetCredentials Lib "winhttp.dll" (ByVal hRequest As Long, ByVal target As Long, ByVal scheme As Long, ByVal username As Long, ByVal password As Long, ByVal authParams As Long) As Long
 Private Declare Function WinHttpQueryHeaders Lib "winhttp.dll" (ByVal hRequest As Long, ByVal dwInfoLevel As Long, ByVal pwszName As Long, ByVal lpBuffer As Long, ByRef lpdwBufferLength As Long, ByRef lpdwIndex As Long) As Long
 Private Declare Function WinHttpQueryDataAvailable Lib "winhttp.dll" (ByVal hRequest As Long, ByRef lpdwNumberOfBytesAvailable As Long) As Long
 Private Declare Function WinHttpReadData Lib "winhttp.dll" (ByVal hRequest As Long, ByRef lpBuffer As Any, ByVal dwNumberOfBytesToRead As Long, ByRef lpdwNumberOfBytesRead As Long) As Long
@@ -143,6 +154,14 @@ End Function
 
 Public Function ReceiveResponse(ByVal HandleValue As LongPtr) As Boolean
     ReceiveResponse = (WinHttpReceiveResponse(HandleValue, 0) <> 0)
+End Function
+
+Public Function QueryAuthSchemes(ByVal HandleValue As LongPtr, ByRef SupportedSchemes As Long, ByRef FirstScheme As Long, ByRef Target As Long) As Boolean
+    QueryAuthSchemes = (WinHttpQueryAuthSchemes(HandleValue, SupportedSchemes, FirstScheme, Target) <> 0)
+End Function
+
+Public Function SetCredentials(ByVal HandleValue As LongPtr, ByVal Target As Long, ByVal Scheme As Long, ByVal Username As String, ByVal Password As String) As Boolean
+    SetCredentials = (WinHttpSetCredentials(HandleValue, Target, Scheme, StrPtr(Username), StrPtr(Password), 0) <> 0)
 End Function
 
 Public Function QueryHeaderString(ByVal HandleValue As LongPtr, ByVal InfoLevel As Long, ByRef Value As String) As Boolean
@@ -270,6 +289,14 @@ End Function
 
 Public Function ReceiveResponse(ByVal HandleValue As Long) As Boolean
     ReceiveResponse = (WinHttpReceiveResponse(HandleValue, 0) <> 0)
+End Function
+
+Public Function QueryAuthSchemes(ByVal HandleValue As Long, ByRef SupportedSchemes As Long, ByRef FirstScheme As Long, ByRef Target As Long) As Boolean
+    QueryAuthSchemes = (WinHttpQueryAuthSchemes(HandleValue, SupportedSchemes, FirstScheme, Target) <> 0)
+End Function
+
+Public Function SetCredentials(ByVal HandleValue As Long, ByVal Target As Long, ByVal Scheme As Long, ByVal Username As String, ByVal Password As String) As Boolean
+    SetCredentials = (WinHttpSetCredentials(HandleValue, Target, Scheme, StrPtr(Username), StrPtr(Password), 0) <> 0)
 End Function
 
 Public Function QueryHeaderString(ByVal HandleValue As Long, ByVal InfoLevel As Long, ByRef Value As String) As Boolean

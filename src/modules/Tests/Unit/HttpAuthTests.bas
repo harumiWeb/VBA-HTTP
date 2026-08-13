@@ -72,6 +72,42 @@ Public Sub Test_Auth_BearerSetsOpaqueTokenAndDisablesRedirects()
     XlflowAssert.AssertFalse transport.LastRequest.FollowRedirects
 End Sub
 
+Public Sub Test_Auth_WindowsChallengeProviderSnapshotsWithoutAddingHeader()
+    Dim client As New HttpClient
+    Dim transport As New MockHttpTransport
+    Dim configuredResponse As New HttpResponse
+    Dim provider As IHttpAuthProvider
+
+    configuredResponse.Initialize 401
+    transport.SetResponse configuredResponse
+    Set client.Transport = transport
+    client.BaseUrl = "https://example.test"
+    Set provider = VBAHttp.CreateWindowsAuthProvider("user", "pass", HttpAuthSchemeBasic, HttpAuthTargetServer)
+    Set client.AuthProvider = provider
+
+    Call client.GetResponse("/protected")
+
+    XlflowAssert.AssertEquals "", transport.LastRequest.Headers.GetValue("Authorization")
+    XlflowAssert.AssertFalse transport.LastRequest.FollowRedirects
+    XlflowAssert.AssertNotSame provider, transport.LastRequest.AuthProvider
+End Sub
+
+'@ExpectedError(-2147200503, "Challenge authentication requires an HTTPS request URL.", "HttpWindowsAuthProvider.Apply")
+Public Sub Test_Auth_WindowsChallengeProviderRequiresHttpsByDefault()
+    Dim client As New HttpClient
+    Dim transport As New MockHttpTransport
+    Dim configuredResponse As New HttpResponse
+    Dim provider As IHttpAuthProvider
+
+    configuredResponse.Initialize 401
+    transport.SetResponse configuredResponse
+    Set client.Transport = transport
+    Set provider = VBAHttp.CreateWindowsAuthProvider("user", "pass")
+    Set client.AuthProvider = provider
+
+    Call client.GetResponse("http://example.test/protected")
+End Sub
+
 Public Sub Test_Auth_RequestProviderOverridesClientProvider()
     Dim client As New HttpClient
     Dim transport As New MockHttpTransport

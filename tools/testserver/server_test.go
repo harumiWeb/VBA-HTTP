@@ -383,6 +383,7 @@ func TestAuthEndpointsVerifyWithoutReflectingCredentials(t *testing.T) {
 	}{
 		{name: "basic", path: "/auth/basic", credential: basicAuthValue, challenge: `Basic realm="vba-http-test", charset="UTF-8"`},
 		{name: "bearer", path: "/auth/bearer", credential: bearerAuthValue, challenge: `Bearer realm="vba-http-test", error="invalid_token"`},
+		{name: "basic-challenge", path: "/auth/challenge/basic", credential: basicAuthValue, challenge: `Basic realm="vba-http-challenge"`},
 	}
 	for _, test := range cases {
 		t.Run(test.name, func(t *testing.T) {

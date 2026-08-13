@@ -300,7 +300,7 @@ if ($null -ne $resolvedReportPath) {
         )
         deferred_security_review = @(
             'http2_http3_tls_matrix',
-            'integrated_and_proxy_challenge_authentication'
+            'host_specific_integrated_and_proxy_challenge_fixtures'
         )
     }
     Publish-Report $resolvedReportPath (($report | ConvertTo-Json -Depth 5 -Compress) + [Environment]::NewLine)

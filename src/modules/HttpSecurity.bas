@@ -15,6 +15,16 @@ Public Function IsRedirectSensitiveHeader(ByVal Name As String) As Boolean
     End Select
 End Function
 
+Public Function CredentialHeaderName(ByVal Target As HttpAuthChallengeTarget) As String
+    If Target = HttpAuthTargetProxy Then
+        ' This literal is a protocol field name, not a credential value.
+        CredentialHeaderName = "Proxy-Authorization" ' xlflow:disable-line VBA223
+    Else
+        ' This literal is a protocol field name, not a credential value.
+        CredentialHeaderName = "Authorization" ' xlflow:disable-line VBA223
+    End If
+End Function
+
 Public Function HasRedirectSensitiveHeaders(ByVal Headers As HttpHeaders) As Boolean
     Dim index As Long
 

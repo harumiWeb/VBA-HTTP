@@ -41,9 +41,11 @@ automatic redirect unchanged. The same boundary applies to caller-supplied
 the 3xx response and must apply an origin-aware redirect policy before issuing a
 follow-up request; see `redirect-policy.md`.
 
-401 and 407 are returned as normal responses. There is no automatic challenge
-replay, credential refresh, or proxy authentication in this slice. Streaming
-uploads remain one-shot and must never be replayed implicitly.
+401 and 407 are returned as normal responses for preemptive providers.
+Bounded buffered challenge authentication is an explicit
+`HttpWindowsAuthProvider` capability documented in
+`challenge-authentication.md`. Streaming uploads remain one-shot and must
+never be replayed implicitly.
 
 ## Redaction
 
@@ -55,10 +57,11 @@ secrets or raw sensitive header values.
 
 ## Deferred capabilities
 
-Windows integrated Negotiate/NTLM, Digest, proxy credentials, OAuth flows, and
-interactive callbacks are not implemented here. A future native capability must
-define bounded challenge replay, source reset semantics for uploads, keep-alive
-requirements, and 401/407 loop limits in a separate ADR.
+OAuth flows and interactive callbacks remain out of scope. Windows
+Negotiate/NTLM, Digest, and proxy credentials are available only through the
+bounded buffered provider contract in `challenge-authentication.md`; source
+reset for streaming uploads and host-specific CONNECT/domain evidence remain
+deferred.
 
 ## Evidence
 

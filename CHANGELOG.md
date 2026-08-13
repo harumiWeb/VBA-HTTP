@@ -10,8 +10,9 @@
 
 - Added a machine-validated Phase 9 security-risk register with an explicit
   zero-current-blocker gate, fail-closed tamper tests, and release-security
-  integration. Deferred HTTP/2/HTTP/3 and 32-bit evidence, integrated/proxy
-  challenge authentication remain visible as future-v1 obligations; repeated
+  integration. Deferred HTTP/2/HTTP/3 and 32-bit evidence plus host-specific
+  integrated/proxy challenge fixtures remain visible as future-v1 obligations;
+  repeated
   COM receive-timeout growth is mitigated by the canonical x64 stress result.
 
 - Added the public API quick reference, contributor proof-loop guide, consumer
@@ -41,8 +42,8 @@
   canonical base/output paths, VBE/atomic-publication evidence, exact
   included/excluded component policy, development-only source boundaries, and
   checksum verification are checked before release smoke. HTTP/2/HTTP/3 TLS
-  negotiation evidence and integrated/proxy challenge authentication remain
-  explicitly deferred.
+  negotiation evidence and host-specific integrated/proxy challenge fixtures
+  remain explicitly deferred.
 
 - Added a Phase 9 cancellation/timeout stress gate with repeated COM active
   cancellation and request-deadline scenarios, native streaming download
@@ -78,8 +79,9 @@
 - Added snapshot-safe preemptive Basic/Bearer authentication providers for COM
   and native requests, deterministic loopback auth endpoints, redirect
   suppression, secret-header redaction helpers, and release consumer auth smoke.
-  Windows integrated/Digest authentication, proxy credentials, and challenge
-  replay remain explicitly deferred.
+  Bounded buffered server/proxy challenge authentication is now available via
+  `HttpWindowsAuthProvider`; streaming upload replay, real Windows-domain
+  credentials, and proxy CONNECT challenge fixtures remain deferred.
 
 - Added shared default, direct, and manual HTTP proxy routing via
   `HttpProxyOptions` for COM and native transports, with deterministic loopback

@@ -64,6 +64,7 @@ func (s *testServer) routes() http.Handler {
 	mux.HandleFunc("GET /headers", s.headers)
 	mux.HandleFunc("GET /auth/basic", s.authBasic)
 	mux.HandleFunc("GET /auth/bearer", s.authBearer)
+	mux.HandleFunc("GET /auth/challenge/basic", s.authChallengeBasic)
 	mux.HandleFunc("GET /cookie/set", s.cookieSet)
 	mux.HandleFunc("GET /cookie/echo", s.cookieEcho)
 	mux.HandleFunc("GET /cookie/clear", s.cookieClear)
@@ -280,6 +281,16 @@ func (s *testServer) authBearer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("WWW-Authenticate", `Bearer realm="vba-http-test", error="invalid_token"`)
+	w.WriteHeader(http.StatusUnauthorized)
+}
+
+func (s *testServer) authChallengeBasic(w http.ResponseWriter, r *http.Request) {
+	if constantTimeEqual(r.Header.Get("Authorization"), basicAuthValue) {
+		w.Header().Set("X-Auth-Verified", "1")
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	w.Header().Set("WWW-Authenticate", `Basic realm="vba-http-challenge"`)
 	w.WriteHeader(http.StatusUnauthorized)
 }
 

@@ -2,7 +2,7 @@
 
 ## Status
 
-`accepted`
+`superseded`
 
 ## Background
 
@@ -77,4 +77,4 @@ sent, without pretending to implement Windows integrated authentication.
 
 ## Superseded by
 
-- None
+- ADR-0023: Bounded buffered challenge authentication

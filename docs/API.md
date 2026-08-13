@@ -29,6 +29,7 @@ decompression, proxy, authentication, cookie, and diagnostics options.
 | `CreateProtocolOptions` / `CreateDecompressionOptions` | native capability policy |
 | `CreateProxyOptions` | default, direct, or manual proxy routing |
 | `CreateBasicAuthProvider` / `CreateBearerAuthProvider` | preemptive HTTPS credentials |
+| `CreateWindowsAuthProvider` | bounded buffered Basic/Digest/NTLM/Negotiate challenge credentials |
 | `CreateCookieJar` / `CreateDiagnostics` | explicit session state and redacted events |
 
 ## Response and errors
@@ -63,6 +64,8 @@ failure, and report cancellation/timeout without replaying one-shot bodies.
 
 - credentials require HTTPS unless a caller explicitly opts into insecure
   loopback testing;
+- buffered Windows/Digest challenge credentials are replayed only within their
+  configured limit; streaming uploads reject them before opening the source;
 - authorization, proxy-authorization, and cookie-bearing requests do not
   automatically follow redirects;
 - POST/PATCH and streaming bodies are not retried by default;

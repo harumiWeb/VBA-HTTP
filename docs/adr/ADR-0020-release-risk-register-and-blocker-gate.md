@@ -7,9 +7,10 @@
 ## Background
 
 The Phase 9 security review has completed the controls that can be proven on
-the current x64 host, while protocol/bitness compatibility and integrated
-challenge authentication require different Windows capabilities or a separate
-replay contract. A prose-only list of residual risks can silently drift and
+the current x64 host, while protocol/bitness compatibility and host-specific
+integrated/proxy challenge fixtures require different Windows capabilities.
+The bounded loopback replay contract is now recorded separately by ADR-0023.
+A prose-only list of residual risks can silently drift and
 cannot prove that the current release has no known blocker.
 
 ## Decision
@@ -28,8 +29,8 @@ cannot prove that the current release has no known blocker.
 
 ## Consequences
 
-- The current x64 release can prove zero known current blockers without falsely
-  claiming HTTP/2/3, 32-bit, or integrated-auth compatibility.
+  - The current x64 release can prove zero known current blockers without falsely
+  claiming HTTP/2/3, 32-bit, or host-specific integrated-auth compatibility.
 - A future release cannot hide a newly discovered blocker in prose; the
   machine-readable register and release gate must be updated together.
 - Deferred issues remain visible and block the v1.0 checklist until their

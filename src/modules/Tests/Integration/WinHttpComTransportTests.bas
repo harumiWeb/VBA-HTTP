@@ -164,6 +164,21 @@ Public Sub Test_ComTransport_BasicAndBearerAuth()
 End Sub
 
 '@Tag("integration")
+Public Sub Test_ComTransport_BoundedChallengeAuth()
+    Dim client As New HttpClient
+    Dim provider As IHttpAuthProvider
+    Dim response As HttpResponse
+
+    client.BaseUrl = RequireBaseUrl()
+    Set provider = VBAHttp.CreateWindowsAuthProvider("user", "pass", HttpAuthSchemeBasic, HttpAuthTargetServer, True)
+    Set client.AuthProvider = provider
+    Set response = client.GetResponse("/auth/challenge/basic")
+
+    XlflowAssert.AssertEquals 204, response.StatusCode
+    XlflowAssert.AssertEquals "1", response.Headers.GetValue("X-Auth-Verified")
+End Sub
+
+'@Tag("integration")
 Public Sub Test_ComTransport_RejectsUntrustedCertificate()
     Dim client As New HttpClient
     Dim observedNumber As Long

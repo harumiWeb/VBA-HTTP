@@ -24,7 +24,7 @@ The current blocker assertion is separately recorded in
 | TLS trust and certificate rejection | Self-signed loopback fixture is rejected by both COM/native transports and maps to `HttpErrorTls`; no ignore-certificate option exists | covered |
 | Repeated COM receive-timeout cleanup | ADR-0022 `Abort`/bounded drain plus canonical 25-iteration loopback stress with idle handle budget | mitigated on current x64 host |
 | HTTP/2/HTTP/3 TLS and Office bitness | Compatibility evidence is still environment-dependent (current proof is x64) | deferred |
-| Integrated/proxy challenge auth | Explicitly outside the preemptive Basic/Bearer contract and challenge replay | deferred |
+| Buffered challenge auth | Bounded server Basic challenge is covered by COM/native tests, release smoke, redaction, and streaming pre-network rejection | covered for loopback; host-specific domain/CONNECT evidence deferred |
 | Current release blockers | Versioned risk register and fail-closed validator | covered (0) |
 
 ## Verification commands
@@ -53,7 +53,8 @@ mitigated on the current x64 host. The mitigation is not silently treated as
 cross-bitness compatibility evidence.
 This record does not declare the broader protocol/auth compatibility matrix
 complete; HTTP/2/HTTP/3 negotiation evidence, 32-bit Office evidence, and
-integrated/proxy challenge authentication remain explicit follow-up gates. The
+host-specific integrated/proxy challenge authentication remain explicit
+follow-up gates. The
 certificate-negative test is covered by the deterministic HTTPS fixture and
 both transport integration tests. The explicit cookie jar policy is covered by
 ADR-0018 and its unit/integration/release smoke tests.

@@ -64,6 +64,7 @@ Private Function ExecuteCore(ByVal Request As HttpRequest) As HttpResponse
     started = HttpTiming.CounterValue()
     backend.Open Request.Method, Request.Url, False
     ApplyProxy backend, Request.ProxyOptions, TransportSource
+    ApplyChallengeCredentials backend, Request, Request.AuthProvider, TransportSource
     ApplyRequestHeaders backend, Request.Headers
     SendRequest backend, Request.Body
     finished = HttpTiming.CounterValue()
@@ -447,6 +448,7 @@ Private Function CreateAsyncOperation(ByVal Request As HttpRequest, ByVal itemIn
     started = HttpTiming.CounterValue()
     backend.Open Request.Method, Request.Url, True
     ApplyProxy backend, Request.ProxyOptions, TransportSource
+    ApplyChallengeCredentials backend, Request, Request.AuthProvider, TransportSource
     ApplyRequestHeaders backend, Request.Headers
     SendRequest backend, Request.Body
     operation.Initialize itemIndex, backend, started, deadlineMilliseconds
@@ -516,6 +518,16 @@ Private Sub ApplyProxy(ByVal backend As Object, ByVal Options As HttpProxyOption
     Case Else
         HttpErrors.RaiseValidation Source, "Unsupported proxy mode."
     End Select
+End Sub
+
+Private Sub ApplyChallengeCredentials(ByVal backend As Object, ByVal Request As HttpRequest, ByVal Provider As IHttpAuthProvider, ByVal Source As String)
+    Dim challengeProvider As HttpWindowsAuthProvider
+
+    If backend Is Nothing Or Provider Is Nothing Then Exit Sub
+    If Not TypeOf Provider Is HttpWindowsAuthProvider Then Exit Sub
+    Provider.Apply Request
+    Set challengeProvider = Provider
+    challengeProvider.ConfigureCom backend, Source
 End Sub
 
 Private Function ProxyServerName(ByVal ProxyUrl As String) As String

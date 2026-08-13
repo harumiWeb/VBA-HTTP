@@ -310,6 +310,22 @@ Public Sub Test_NativeTransport_BasicAndBearerAuth()
 End Sub
 
 '@Tag("integration")
+Public Sub Test_NativeTransport_BoundedChallengeAuth()
+    Dim client As New HttpClient
+    Dim provider As IHttpAuthProvider
+    Dim response As HttpResponse
+
+    client.BaseUrl = RequireBaseUrl()
+    Set client.Transport = New WinHttpNativeTransport
+    Set provider = VBAHttp.CreateWindowsAuthProvider("user", "pass", HttpAuthSchemeBasic, HttpAuthTargetServer, True)
+    Set client.AuthProvider = provider
+    Set response = client.GetResponse("/auth/challenge/basic")
+
+    XlflowAssert.AssertEquals 204, response.StatusCode
+    XlflowAssert.AssertEquals "1", response.Headers.GetValue("X-Auth-Verified")
+End Sub
+
+'@Tag("integration")
 Public Sub Test_NativeTransport_RejectsUntrustedCertificate()
     Dim client As New HttpClient
     Dim observedNumber As Long
@@ -732,6 +748,43 @@ Public Sub Test_NativeTransport_ReturnsAuthenticationChallengeWithoutReplay()
     XlflowAssert.AssertFalse result.IsSuccess
     XlflowAssert.AssertTrue result.AuthenticationChallenged
     XlflowAssert.AssertEquals CCur(65536), result.BytesWritten
+    DeleteUploadFile sourcePath
+    Exit Sub
+
+Cleanup:
+    errorNumber = Err.Number
+    errorSource = Err.Source
+    errorDescription = Err.Description
+    Err.Clear
+    DeleteUploadFile sourcePath
+    Err.Raise errorNumber, errorSource, errorDescription
+End Sub
+
+'@Tag("integration")
+Public Sub Test_NativeTransport_RejectsChallengeProviderForStreamingUpload()
+    Dim client As New HttpClient
+    Dim options As New HttpExecutionOptions
+    Dim provider As IHttpAuthProvider
+    Dim sourcePath As String
+    Dim observedNumber As Long
+    Dim observedSource As String
+    Dim errorNumber As Long
+    Dim errorSource As String
+    Dim errorDescription As String
+
+    sourcePath = NewUploadSource("challenge-provider")
+    On Error GoTo Cleanup
+    WriteUploadRepeatedByte sourcePath, 42, 65536
+    client.BaseUrl = RequireBaseUrl()
+    Set client.Transport = New WinHttpNativeTransport
+    Set provider = VBAHttp.CreateWindowsAuthProvider("user", "pass", HttpAuthSchemeBasic, HttpAuthTargetServer, True)
+    Set client.AuthProvider = provider
+
+    observedNumber = CaptureUploadError(client, "/upload/hash", sourcePath, options, Nothing, observedSource)
+
+    XlflowAssert.AssertEquals HttpErrorValidation, HttpErrors.CategoryFromNumber(observedNumber)
+    XlflowAssert.AssertEquals "WinHttpNativeTransport.Upload", observedSource
+    XlflowAssert.AssertEquals 65536, FileLen(sourcePath)
     DeleteUploadFile sourcePath
     Exit Sub
 

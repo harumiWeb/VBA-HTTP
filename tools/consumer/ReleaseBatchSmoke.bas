@@ -118,6 +118,7 @@ End Sub
 
 Public Sub RunAuthSmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As String)
     Dim client As Object
+    Dim nativeClient As Object
     Dim provider As Object
     Dim response As Object
 
@@ -135,6 +136,22 @@ Public Sub RunAuthSmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As St
     Set response = client.GetResponse("/auth/bearer")
     If response.StatusCode <> 204 Or response.Headers.GetValue("X-Auth-Verified") <> "1" Then
         Err.Raise vbObjectError + 752, "ReleaseBatchSmoke.RunAuthSmoke", "Release Bearer authentication smoke returned an unexpected response."
+    End If
+
+    Set provider = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateWindowsAuthProvider", "user", "pass", 1, 0, True, 3)
+    Set client.AuthProvider = provider
+    Set response = client.GetResponse("/auth/challenge/basic")
+    If response.StatusCode <> 204 Or response.Headers.GetValue("X-Auth-Verified") <> "1" Then
+        Err.Raise vbObjectError + 761, "ReleaseBatchSmoke.RunAuthSmoke", "Release COM challenge authentication smoke returned an unexpected response."
+    End If
+
+    Set nativeClient = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateNativeClient")
+    nativeClient.BaseUrl = baseUrl
+    Set provider = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateWindowsAuthProvider", "user", "pass", 1, 0, True, 3)
+    Set nativeClient.AuthProvider = provider
+    Set response = nativeClient.GetResponse("/auth/challenge/basic")
+    If response.StatusCode <> 204 Or response.Headers.GetValue("X-Auth-Verified") <> "1" Then
+        Err.Raise vbObjectError + 762, "ReleaseBatchSmoke.RunAuthSmoke", "Release native challenge authentication smoke returned an unexpected response."
     End If
 End Sub
 

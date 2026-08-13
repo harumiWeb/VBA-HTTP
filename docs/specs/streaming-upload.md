@@ -71,10 +71,12 @@ and leaves the source file untouched. Bytes already accepted by a remote server
 cannot be rolled back.
 
 An `IHttpAuthProvider` may add a preemptive Basic or Bearer header to the
-execution snapshot, but it does not create a challenge callback or replay
-contract. The provider therefore also disables automatic redirects. Windows
-integrated authentication, proxy credentials, and replayable streaming sources
-remain separate future capabilities.
+execution snapshot, but a `HttpWindowsAuthProvider` challenge cannot replay a
+one-shot source. Native file and multipart uploads reject that provider before
+opening the source; without a provider, a 401/407 remains the normal
+`AuthenticationChallenged` result. The provider therefore also disables
+automatic redirects. Replayable streaming sources and host-specific proxy/
+CONNECT evidence remain separate compatibility work.
 
 ## Verification
 

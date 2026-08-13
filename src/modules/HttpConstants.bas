@@ -54,3 +54,16 @@ Public Enum HttpProxyMode
     HttpProxyNoProxy = 1
     HttpProxyManual = 2
 End Enum
+
+Public Enum HttpAuthChallengeScheme
+    HttpAuthSchemeAuto = 0
+    HttpAuthSchemeBasic = 1
+    HttpAuthSchemeNtlm = 2
+    HttpAuthSchemeDigest = 8
+    HttpAuthSchemeNegotiate = 16
+End Enum
+
+Public Enum HttpAuthChallengeTarget
+    HttpAuthTargetServer = 0
+    HttpAuthTargetProxy = 1
+End Enum

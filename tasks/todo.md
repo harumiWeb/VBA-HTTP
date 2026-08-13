@@ -448,7 +448,7 @@ OSが提供するmodern WinHTTP capabilityとcorporate environment対応を安�
 - [x] gzip／deflate decompressionをADR-0010と`docs/specs/decompression-policy.md`で確定し、native WinHTTP option 118、COM拒否、loopback／release smokeを実装する。
 - [x] OS default、no-proxy、manual HTTP proxyをADR-0012と`docs/specs/proxy-policy.md`で確定し、COM/native transportとloopback fixtureで検証する。
 - [x] Basic／Bearerのpreemptive authenticationを実装する（COM/native、HTTPS default、loopback opt-in、redirect suppression、release smokeまで検証済み）。
-- [~] Windows integrated／Digest／proxy challenge authenticationを実装する（bounded challenge replay、streaming source reset、credential redactionを別ADRで確定する）。
+- [x] Windows integrated／Digest／proxy challenge authenticationのbounded buffered契約をADR-0023／`docs/specs/challenge-authentication.md`で確定し、COM/nativeのchallenge replay、redaction、release smokeを実装する。streaming sourceはresetなしでpre-network拒否し、実Windows domain／proxy CONNECT fixtureはcompatibility gateとして残す。
 - [x] `IHttpAuthProvider` を実装する（execution snapshotでcloneし、401／407の自動replayは行わない）。
 - [x] credential／secret redaction helperを実装し、sensitive headerがdiagnosticsへ出ないunit gateを追加する。
 - [x] `HttpDiagnostics` のbounded structured event schemaをADR-0019／`docs/specs/diagnostics-policy.md`で確定し、HttpClientとrelease consumer smokeへ統合する。
@@ -546,10 +546,10 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 
 - [x] concurrency、streaming、resource stabilityの実測証跡がある。
 - [x] 現行x64のquality gateが成功する（unit、integration、lint、analyze、format、VBE、release smokeを検証済み）。
-- [~] v1.0 promotion quality gateを完了する（32-bit／HTTP/3 negotiated／challenge-auth gateは未完了）。
+- [~] v1.0 promotion quality gateを完了する（32-bit／HTTP/3 negotiated／host-specific challenge-auth evidenceは未完了）。
 - [x] API、security、compatibility documentationが完成している（現行contract、matrix、security gate、deferred riskを文書化済み）。
 - [x] test、benchmark、xlflow支援コードを含まないproduction-only artifactを生成できる（XLSM/XLAM build・manifest・checksum・smoke済み）。
-- [~] v1.0 promotion evidenceを完了する（32-bit／HTTP/3 negotiated／challenge-auth riskは未解消）。
+- [~] v1.0 promotion evidenceを完了する（32-bit／HTTP/3 negotiated／host-specific challenge-auth riskは未解消）。
 - [x] build manifestからrelease構成を再現・監査できる。
 
 ---

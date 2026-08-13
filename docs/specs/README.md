@@ -23,7 +23,8 @@
 - `protocol-policy.md`: native HTTP/2／HTTP/3 opt-in、fallback／required behavior、transport boundary、compatibility evidence
 - `decompression-policy.md`: native gzip／deflate response decoding, header ownership, fallback, and streaming length contract
 - `proxy-policy.md`: OS/default, direct, and manual proxy routing, validation, and transport mapping
-- `auth-policy.md`: preemptive Basic/Bearer providers, TLS/redirect boundary, redaction, and deferred challenge authentication
+- `auth-policy.md`: preemptive Basic/Bearer providers, TLS/redirect boundary, and redaction
+- `challenge-authentication.md`: bounded buffered Windows/Digest/proxy challenge replay and streaming no-replay boundary
 - `redirect-policy.md`: bounded automatic redirects, credential-header suppression, downgrade protection, and caller-owned follow-up
 - `cookie-policy.md`: explicit caller-owned cookie jar parsing, matching, expiry, redaction, and redirect boundary
 - `diagnostics-policy.md`: opt-in structured operation events, bounded retention, target sanitization, and header redaction
