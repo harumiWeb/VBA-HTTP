@@ -56,6 +56,9 @@ allowing arbitrary forwarding or changing the machine trust store.
 - Contract: `docs/specs/https-connect-proxy.md`,
   `docs/specs/proxy-policy.md`, `docs/specs/challenge-authentication.md`,
   and `docs/specs/local-test-server.md`.
+- Release evidence: `tools/consumer/ReleaseBatchSmoke.bas` and
+  `tools/Validate-ReleaseArtifact.ps1` invoke the boundary from the filtered
+  release workbook and verify ownership-safe Excel cleanup.
 
 ## Supersedes
 

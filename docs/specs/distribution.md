@@ -46,7 +46,14 @@ release build and both consumer artifacts are required as evidence.
 - validates manifest paths, component policy, checksum, and deferred-risk
   register; and
 - opens the generated workbook only through the external consumer smoke
-  harness.
+  harness. The harness covers the HTTP proxy and the deterministic HTTPS
+  CONNECT boundary for both COM and native public factories; it expects the
+  intentionally untrusted TLS certificate to be rejected.
+
+All release validation Excel instances are ownership-checked against the
+pre-existing Excel PID set. Cleanup may terminate only a PID proven to have
+been created by that validation run; unrelated user Excel processes are never
+selected as cleanup targets.
 
 The base workbook is not overwritten. If any build, validation, or smoke step
 fails, an existing published release remains untouched. Generated release

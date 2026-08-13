@@ -464,9 +464,9 @@ OSが提供するmodern WinHTTP capabilityとcorporate environment対応を安�
 - [x] HTTP/1.1 fallbackとrequested-mask contractを識別できる（plain HTTP、unsupported、required mismatchを検証済み）。
 - [~] TLS上のHTTP/2と対応環境のHTTP/3 negotiated protocolを識別する（x64 HTTP/2は`benchmarks/results/protocol-host-http2.json`で実測済み、HTTP/3はTLS/QUIC host evidence待ち。32-bit OfficeはADR-0030で対象外）。
 - [x] unsupported環境のfallback／errorがspec通りである。
-- [x] HTTP forwarding proxyとfixed Basic proxy-challengeのlocal integration testsがCOM/nativeで成功する（HTTPS CONNECTと実Windows domain authはcompatibility gateとして継続）。
+- [x] HTTP forwarding proxyとfixed Basic proxy-challengeのlocal integration testsがCOM/nativeで成功する（HTTPS CONNECTの通常／認証boundaryとrelease consumer smokeも検証済み。trusted corporate CONNECTと実Windows domain authはcompatibility gateとして継続）。
 - [x] secretがdiagnosticsやbenchmark outputへ出ない（diagnostics serializerはquery／user-info／body／descriptionを除外し、sensitive headerを常時redactする。benchmark serializerは既存契約を維持する）。
-- [x] release artifactでprotocol／auth consumer smoke testが成功する（protocol fallbackとBasic／Bearer auth smoke）。
+- [x] release artifactでprotocol／auth consumer smoke testが成功する（protocol fallback、Basic／Bearer／challenge auth、HTTP proxy、HTTPS CONNECT boundaryをCOM/native public factoryで検証）。
 
 ---
 
@@ -514,7 +514,7 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 - [x] xlflow-based contributor guideを完成させる（`CONTRIBUTING.md`、Lefthookの`task check`ゲート）。
 - [x] `xlflow build` によるrelease workbook生成を自動化する（`task release:build`、manifest／VBE／checksum／smoke）。
 - [x] build manifest検証とartifact checksum生成を自動化する。
-- [x] external consumer smoke harnessをrelease pipelineへ統合する。
+- [x] external consumer smoke harnessをrelease pipelineへ統合する（HTTP proxyとHTTPS CONNECT boundaryを含む。Excel cleanupはrunner所有PIDだけを対象とする）。
 - [x] source distributionとworkbook distributionの責務を分離する（`docs/specs/distribution.md`）。
 - [x] source vendoring、install、upgrade手順を文書化する。
 - [x] `.xlam` 用base workbookと独立build targetを追加する（追跡`build/VBA-HTTP.xlam`、`task test:xlam`、`task release:xlam:build`、ADR-0021、manifest/checksum/add-in identity/smoke gate）。

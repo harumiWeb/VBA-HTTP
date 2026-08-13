@@ -1,6 +1,12 @@
 Attribute VB_Name = "ReleaseBatchSmoke"
 Option Explicit
 
+' Keep this external harness independent from the production workbook's
+' private modules. These values mirror HttpErrors.bas without creating a
+' compile-time dependency on the filtered artifact.
+Private Const ReleaseHttpErrTls As Long = vbObjectError + 21005
+Private Const ReleaseHttpErrProtocol As Long = vbObjectError + 21008
+
 Public Sub RunBatchSmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As String)
     Dim client As Object
     Dim Urls As New Collection
@@ -126,7 +132,7 @@ Public Sub RunDecompressionSmoke(ByVal releaseWorkbookName As String, ByVal base
     End If
 End Sub
 
-Public Sub RunProxySmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As String, ByVal proxyUrl As String, ByVal proxyAuthUrl As String)
+Public Sub RunProxySmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As String, ByVal proxyUrl As String, ByVal proxyAuthUrl As String, ByVal proxyTlsTargetUrl As String, ByVal proxyTlsUrl As String, ByVal proxyTlsAuthUrl As String)
     Dim client As Object
     Dim nativeClient As Object
     Dim options As Object
@@ -180,7 +186,86 @@ Public Sub RunProxySmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As S
     If response.StatusCode <> 200 Or response.Headers.GetValue("X-Test-Proxy-Forwarded") <> "1" Then
         Err.Raise vbObjectError + 754, "ReleaseBatchSmoke.RunProxySmoke", "Release native proxy challenge smoke returned an unexpected response."
     End If
+
+    AssertProxyTlsBoundary releaseWorkbookName, baseUrl, proxyTlsTargetUrl, proxyTlsUrl, False, False
+    AssertProxyTlsBoundary releaseWorkbookName, baseUrl, proxyTlsTargetUrl, proxyTlsAuthUrl, True, False
+    AssertProxyTlsBoundary releaseWorkbookName, baseUrl, proxyTlsTargetUrl, proxyTlsUrl, False, True
+    AssertProxyTlsBoundary releaseWorkbookName, baseUrl, proxyTlsTargetUrl, proxyTlsAuthUrl, True, True
 End Sub
+
+Private Sub AssertProxyTlsBoundary(ByVal releaseWorkbookName As String, ByVal baseUrl As String, ByVal targetUrl As String, ByVal proxyUrl As String, ByVal authenticated As Boolean, ByVal nativeTransport As Boolean)
+    Dim statsClient As Object
+    Dim client As Object
+    Dim options As Object
+    Dim provider As Object
+    Dim beforeResponse As Object
+    Dim afterResponse As Object
+    Dim response As Object
+    Dim beforeAttempts As Long
+    Dim beforeAuthorized As Long
+    Dim observedNumber As Long
+    Dim transportName As String
+
+    If nativeTransport Then
+        transportName = "native"
+        Set client = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateNativeClient")
+    Else
+        transportName = "COM"
+        Set client = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateClient")
+    End If
+    Set statsClient = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateClient")
+    statsClient.BaseUrl = baseUrl
+    Set beforeResponse = statsClient.GetResponse("/__admin/proxy-stats")
+    beforeAttempts = ExtractJsonLong(beforeResponse.Text, "connect_attempts")
+    beforeAuthorized = ExtractJsonLong(beforeResponse.Text, "authorized_connects")
+
+    Set options = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateProxyOptions")
+    options.Mode = 2
+    options.ProxyUrl = proxyUrl
+    Set client.ProxyOptions = options
+    client.BaseUrl = targetUrl
+    If authenticated Then
+        Set provider = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateWindowsAuthProvider", "proxy-user", "proxy-pass", 1, 1, True, 3)
+        Set client.AuthProvider = provider
+    End If
+
+    On Error Resume Next
+    Set response = client.GetResponse("/status/204")
+    observedNumber = Err.Number
+    Err.Clear
+    On Error GoTo 0
+    If observedNumber = 0 Or observedNumber <> ReleaseHttpErrTls Then
+        Err.Raise vbObjectError + 763, "ReleaseBatchSmoke.RunProxySmoke", "Release " & transportName & " HTTPS CONNECT boundary did not reject the untrusted TLS certificate."
+    End If
+
+    Set afterResponse = statsClient.GetResponse("/__admin/proxy-stats")
+    If ExtractJsonLong(afterResponse.Text, "connect_attempts") <= beforeAttempts Then
+        Err.Raise vbObjectError + 764, "ReleaseBatchSmoke.RunProxySmoke", "Release " & transportName & " HTTPS CONNECT boundary did not reach the proxy."
+    End If
+    If authenticated And ExtractJsonLong(afterResponse.Text, "authorized_connects") <= beforeAuthorized Then
+        Err.Raise vbObjectError + 765, "ReleaseBatchSmoke.RunProxySmoke", "Release " & transportName & " authenticated HTTPS CONNECT boundary did not authorize the proxy."
+    End If
+End Sub
+
+Private Function ExtractJsonLong(ByVal Text As String, ByVal Name As String) As Long
+    Dim marker As String
+    Dim startIndex As Long
+    Dim endIndex As Long
+
+    marker = Chr$(34) & Name & Chr$(34) & ":"
+    startIndex = InStr(1, Text, marker, vbBinaryCompare)
+    If startIndex = 0 Then Err.Raise ReleaseHttpErrProtocol, "ReleaseBatchSmoke", "JSON field was not found: " & Name
+    startIndex = startIndex + Len(marker)
+    Do While startIndex <= Len(Text) And Mid$(Text, startIndex, 1) = " "
+        startIndex = startIndex + 1
+    Loop
+    endIndex = startIndex
+    Do While endIndex <= Len(Text) And Mid$(Text, endIndex, 1) Like "[0-9]"
+        endIndex = endIndex + 1
+    Loop
+    If endIndex <= startIndex Then Err.Raise ReleaseHttpErrProtocol, "ReleaseBatchSmoke", "JSON field was malformed: " & Name
+    ExtractJsonLong = CLng(Mid$(Text, startIndex, endIndex - startIndex))
+End Function
 
 Public Sub RunAuthSmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As String)
     Dim client As Object

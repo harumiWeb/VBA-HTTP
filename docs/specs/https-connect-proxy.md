@@ -68,5 +68,8 @@ separate opt-in host evidence. HTTP/3/QUIC evidence is also independent.
   challenge (`task testserver:test`).
 - COM/native loopback integration covers ordinary and authenticated CONNECT
   boundaries (`task test:integration`).
+- The external release consumer smoke invokes the same public proxy factories
+  from the filtered artifact for both COM and native transports, and checks
+  the loopback proxy counters before accepting the expected `HttpErrorTls`.
 - The compatibility matrix records these as loopback boundary evidence only;
   it does not promote trusted corporate proxy interoperability.

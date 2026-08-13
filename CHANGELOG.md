@@ -1,5 +1,10 @@
 ## Unreleased
 
+- Extended the filtered release consumer smoke to exercise ordinary and
+  authenticated HTTPS CONNECT boundaries through both COM and native public
+  factories. Release validation now proves ownership of every Excel PID it
+  may clean up, leaving unrelated user Excel processes untouched.
+
 - Added an offline HTTPS CONNECT proxy boundary fixture (including fixed Basic
   proxy challenge) with COM/native integration coverage. The fixture proves
   tunnel reachability before normal untrusted-certificate rejection; trusted

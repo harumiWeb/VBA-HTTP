@@ -25,6 +25,7 @@ The current blocker assertion is separately recorded in
 | Repeated COM receive-timeout cleanup | ADR-0022 `Abort`/bounded drain plus canonical 25-iteration loopback stress with idle handle budget | mitigated on current x64 host |
 | HTTP/2/HTTP/3 TLS | x64 HTTP/2 is recorded at benchmarks/results/protocol-host-http2.json; HTTP/3/QUIC remains environment-dependent | partial / deferred |
 | Buffered challenge auth | Bounded server Basic and proxy Basic challenges are covered by COM/native tests, release smoke, redaction, and streaming pre-network rejection | covered for loopback; host-specific domain/CONNECT evidence deferred |
+| HTTPS CONNECT release boundary | Filtered release consumer invokes ordinary and authenticated CONNECT through both COM/native public factories and requires tunnel reachability before the expected untrusted-TLS rejection | covered for loopback; trusted corporate CONNECT remains deferred |
 | Current release blockers | Versioned risk register and fail-closed validator | covered (0) |
 
 ## Verification commands

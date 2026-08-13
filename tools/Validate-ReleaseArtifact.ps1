@@ -61,13 +61,77 @@ function New-UploadSmokeFile([string]$Path) {
     finally { $stream.Dispose() }
 }
 
+function Get-ExcelProcessIds {
+    return @(
+        Get-Process -Name EXCEL -ErrorAction SilentlyContinue |
+            ForEach-Object { [int]$_.Id }
+    )
+}
+
+if ($null -eq ("ReleaseExcelWindow" -as [type])) {
+    Add-Type @"
+using System;
+using System.Runtime.InteropServices;
+public static class ReleaseExcelWindow {
+    [DllImport("user32.dll")]
+    public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+}
+"@
+}
+
+function Get-OwnedExcelProcessId($Excel, [int[]]$BaselineIds, [string]$Purpose) {
+    $windowHandle = [IntPtr]$Excel.Hwnd
+    if ($windowHandle -eq [IntPtr]::Zero) {
+        throw "Could not obtain the Excel automation window handle for $Purpose; refusing to touch any Excel process."
+    }
+    [uint32]$processId = 0
+    [void][ReleaseExcelWindow]::GetWindowThreadProcessId($windowHandle, [ref]$processId)
+    if ($processId -eq 0 -or $BaselineIds -contains [int]$processId) {
+        throw "Excel automation did not prove a new process for $Purpose; refusing to touch an existing instance."
+    }
+    $process = Get-Process -Id ([int]$processId) -ErrorAction SilentlyContinue
+    if ($null -eq $process -or $process.ProcessName -ne "EXCEL") {
+        throw "Excel automation window did not map to a live Excel process for $Purpose."
+    }
+    return @([int]$processId)
+}
+
+function Stop-OwnedExcelProcesses([int[]]$OwnedIds, [string]$Purpose) {
+    $deadline = [DateTime]::UtcNow.AddSeconds(5)
+    do {
+        $liveOwned = @($OwnedIds | ForEach-Object {
+                $candidate = Get-Process -Id $_ -ErrorAction SilentlyContinue
+                if ($null -ne $candidate -and $candidate.ProcessName -eq "EXCEL") { $candidate }
+            })
+        if ($liveOwned.Count -eq 0) { return }
+        Start-Sleep -Milliseconds 100
+    } while ([DateTime]::UtcNow -lt $deadline)
+
+    foreach ($processId in @($OwnedIds)) {
+        $process = Get-Process -Id $processId -ErrorAction SilentlyContinue
+        if ($null -ne $process -and $process.ProcessName -eq "EXCEL") {
+            try {
+                Stop-Process -Id $processId -Force -ErrorAction Stop
+                Write-Warning "Stopped owned Excel PID $processId after $Purpose cleanup did not complete."
+            }
+            catch {
+                Write-Warning "Could not stop owned Excel PID $processId after $Purpose cleanup: $_"
+            }
+        }
+    }
+}
+
 $excel = $null
+$excelBaselineIds = @()
+$ownedExcelIds = @()
 $workbooks = $null
 $workbook = $null
 $components = $null
 $component = $null
 try {
+    $excelBaselineIds = @(Get-ExcelProcessIds)
     $excel = New-Object -ComObject Excel.Application
+    $ownedExcelIds = @(Get-OwnedExcelProcessId $excel $excelBaselineIds "release component inspection")
     $excel.Visible = $false
     $excel.DisplayAlerts = $false
     $excel.AutomationSecurity = 3
@@ -106,6 +170,8 @@ finally {
         try { $excel.Quit() } catch { Write-Warning "Could not quit Excel inspection process: $_" }
         [void][System.Runtime.InteropServices.Marshal]::FinalReleaseComObject($excel)
     }
+    Start-Sleep -Milliseconds 250
+    Stop-OwnedExcelProcesses $ownedExcelIds "release component inspection"
 }
 
 # The production transport contains an intentional, controlled DoEvents checkpoint.
@@ -124,8 +190,14 @@ $smokeDirectory = [IO.Path]::GetFullPath((Join-Path $projectRoot ".xlflow\releas
 $serverExecutable = Join-Path $smokeDirectory "testserver.exe"
 $serverStdout = Join-Path $smokeDirectory "stdout.jsonl"
 $serverStderr = Join-Path $smokeDirectory "stderr.log"
+$progressPath = Join-Path $smokeDirectory "progress.log"
+function Write-ReleaseProgress([string]$Message) {
+    Add-Content -LiteralPath $progressPath -Value ("{0:o} {1}" -f [DateTime]::UtcNow, $Message)
+}
 $serverProcess = $null
 $consumerExcel = $null
+$consumerExcelBaselineIds = @()
+$ownedConsumerExcelIds = @()
 $consumerWorkbooks = $null
 $consumerWorkbook = $null
 $harnessWorkbook = $null
@@ -151,7 +223,7 @@ try {
 
     $serverProcess = Start-Process `
         -FilePath $serverExecutable `
-        -ArgumentList "-listen", "127.0.0.1:0", "-proxy-listen", "127.0.0.1:0", "-proxy-auth-listen", "127.0.0.1:0" `
+        -ArgumentList "-listen", "127.0.0.1:0", "-tls-listen", "127.0.0.1:0", "-proxy-listen", "127.0.0.1:0", "-proxy-auth-listen", "127.0.0.1:0", "-proxy-tls-listen", "127.0.0.1:0", "-proxy-tls-auth-listen", "127.0.0.1:0" `
         -RedirectStandardOutput $serverStdout `
         -RedirectStandardError $serverStderr `
         -WindowStyle Hidden `
@@ -171,22 +243,32 @@ try {
         }
         Start-Sleep -Milliseconds 50
     }
-    if ($null -eq $ready -or $ready.event -ne "ready" -or -not $ready.url -or -not $ready.proxy_url -or -not $ready.proxy_target_url -or -not $ready.proxy_auth_url) {
-        throw "Release smoke test server did not publish HTTP, proxy, and authenticated-proxy readiness."
+    if ($null -eq $ready -or $ready.event -ne "ready" -or -not $ready.url -or -not $ready.proxy_url -or -not $ready.proxy_target_url -or -not $ready.proxy_auth_url -or -not $ready.proxy_tls_url -or -not $ready.proxy_tls_target_url -or -not $ready.proxy_tls_auth_url) {
+        throw "Release smoke test server did not publish HTTP, HTTPS, proxy, and CONNECT readiness."
     }
+    Write-Output "Release smoke server ready."
+    Write-ReleaseProgress "server-ready"
 
+    $consumerExcelBaselineIds = @(Get-ExcelProcessIds)
     $consumerExcel = New-Object -ComObject Excel.Application
+    $ownedConsumerExcelIds = @(Get-OwnedExcelProcessId $consumerExcel $consumerExcelBaselineIds "release consumer smoke")
     $consumerExcel.Visible = $false
     $consumerExcel.DisplayAlerts = $false
     $consumerExcel.EnableEvents = $false
     $consumerExcel.AutomationSecurity = 1
     $consumerWorkbooks = $consumerExcel.Workbooks
     $consumerWorkbook = $consumerWorkbooks.Open($resolvedArtifact, 0, $true)
+    Write-Output "Release consumer workbook opened."
+    Write-ReleaseProgress "consumer-workbook-opened"
     $factoryMacro = "'$($consumerWorkbook.Name)'!VBAHttp.CreateClient"
     $client = $consumerExcel.Run($factoryMacro)
     if ($null -eq $client) { throw "Release factory returned no HttpClient." }
     $client.BaseUrl = [string]$ready.url
+    Write-Output "Release COM client created; running status smoke."
+    Write-ReleaseProgress "com-status-start"
     $response = $client.GetResponse("/status/204")
+    Write-Output "Release COM status smoke returned."
+    Write-ReleaseProgress "com-status-returned"
     if ($null -eq $response -or $response.StatusCode -ne 204 -or -not $response.IsSuccess) {
         throw "Release HttpClient GET returned an unexpected response."
     }
@@ -194,7 +276,11 @@ try {
     $nativeClient = $consumerExcel.Run("'$($consumerWorkbook.Name)'!VBAHttp.CreateNativeClient")
     if ($null -eq $nativeClient) { throw "Release native factory returned no HttpClient." }
     $nativeClient.BaseUrl = [string]$ready.url
+    Write-Output "Release native client created; running status smoke."
+    Write-ReleaseProgress "native-status-start"
     $nativeResponse = $nativeClient.GetResponse("/status/204")
+    Write-Output "Release native status smoke returned."
+    Write-ReleaseProgress "native-status-returned"
     if ($null -eq $nativeResponse -or $nativeResponse.StatusCode -ne 204 -or -not $nativeResponse.IsSuccess -or [string]::IsNullOrWhiteSpace([string]$nativeResponse.ProtocolUsed)) {
         throw "Release native HttpClient GET returned an unexpected response."
     }
@@ -215,24 +301,44 @@ try {
     $harnessComponent = $harnessWorkbook.VBProject.VBComponents.Import((Join-Path $PSScriptRoot "consumer\ReleaseBatchSmoke.bas"))
     if ($harnessComponent.Name -ne "ReleaseBatchSmoke") { throw "External batch smoke module import failed." }
     $batchMacro = "'$($harnessWorkbook.Name)'!ReleaseBatchSmoke.RunBatchSmoke"
+    Write-Output "Release batch smoke starting."
+    Write-ReleaseProgress "batch-start"
     [void]$consumerExcel.Run($batchMacro, $consumerWorkbook.Name, [string]$ready.url)
+    Write-ReleaseProgress "batch-returned"
     $reliabilityMacro = "'$($harnessWorkbook.Name)'!ReleaseBatchSmoke.RunReliabilitySmoke"
+    Write-Output "Release reliability smoke starting."
+    Write-ReleaseProgress "reliability-start"
     [void]$consumerExcel.Run($reliabilityMacro, $consumerWorkbook.Name, [string]$ready.url)
+    Write-ReleaseProgress "reliability-returned"
     $protocolMacro = "'$($harnessWorkbook.Name)'!ReleaseBatchSmoke.RunProtocolSmoke"
+    Write-Output "Release protocol fallback smoke starting."
+    Write-ReleaseProgress "protocol-start"
     [void]$consumerExcel.Run($protocolMacro, $consumerWorkbook.Name, [string]$ready.url)
+    Write-ReleaseProgress "protocol-returned"
     $decompressionMacro = "'$($harnessWorkbook.Name)'!ReleaseBatchSmoke.RunDecompressionSmoke"
+    Write-Output "Release decompression smoke starting."
+    Write-ReleaseProgress "decompression-start"
     [void]$consumerExcel.Run($decompressionMacro, $consumerWorkbook.Name, [string]$ready.url)
+    Write-ReleaseProgress "decompression-returned"
     $proxyMacro = "'$($harnessWorkbook.Name)'!ReleaseBatchSmoke.RunProxySmoke"
-    [void]$consumerExcel.Run($proxyMacro, $consumerWorkbook.Name, [string]$ready.proxy_target_url, [string]$ready.proxy_url, [string]$ready.proxy_auth_url)
+    Write-Output "Release proxy and CONNECT smoke starting."
+    Write-ReleaseProgress "proxy-start"
+    [void]$consumerExcel.Run($proxyMacro, $consumerWorkbook.Name, [string]$ready.proxy_target_url, [string]$ready.proxy_url, [string]$ready.proxy_auth_url, [string]$ready.proxy_tls_target_url, [string]$ready.proxy_tls_url, [string]$ready.proxy_tls_auth_url)
+    Write-ReleaseProgress "proxy-returned"
     $authMacro = "'$($harnessWorkbook.Name)'!ReleaseBatchSmoke.RunAuthSmoke"
+    Write-Output "Release authentication smoke starting."
     [void]$consumerExcel.Run($authMacro, $consumerWorkbook.Name, [string]$ready.url)
     $diagnosticsMacro = "'$($harnessWorkbook.Name)'!ReleaseBatchSmoke.RunDiagnosticsSmoke"
+    Write-Output "Release diagnostics smoke starting."
     [void]$consumerExcel.Run($diagnosticsMacro, $consumerWorkbook.Name, [string]$ready.url)
     $cookieMacro = "'$($harnessWorkbook.Name)'!ReleaseBatchSmoke.RunCookieSmoke"
+    Write-Output "Release cookie smoke starting."
     [void]$consumerExcel.Run($cookieMacro, $consumerWorkbook.Name, [string]$ready.url)
     $redirectSecurityMacro = "'$($harnessWorkbook.Name)'!ReleaseBatchSmoke.RunRedirectSecuritySmoke"
+    Write-Output "Release redirect security smoke starting."
     [void]$consumerExcel.Run($redirectSecurityMacro, $consumerWorkbook.Name, [string]$ready.url)
     $uploadMacro = "'$($harnessWorkbook.Name)'!ReleaseBatchSmoke.RunUploadSmoke"
+    Write-Output "Release upload smoke starting."
     [void]$consumerExcel.Run($uploadMacro, $consumerWorkbook.Name, [string]$ready.url, $uploadPath)
 }
 finally {
@@ -265,6 +371,8 @@ finally {
         try { $consumerExcel.Quit() } catch { Write-Warning "Could not quit consumer smoke Excel: $_" }
         [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($consumerExcel)
     }
+    Start-Sleep -Milliseconds 250
+    Stop-OwnedExcelProcesses $ownedConsumerExcelIds "release consumer smoke"
     if ($null -ne $ready -and $ready.url) {
         try { Invoke-WebRequest -Method Post -Uri "$($ready.url)/__admin/shutdown" -UseBasicParsing | Out-Null } catch { Write-Warning "Could not request smoke server shutdown: $_" }
     }
@@ -279,4 +387,4 @@ finally {
     }
 }
 
-Write-Output "Release artifact is valid: $($actualComponents.Count) components; external COM/native GET, protocol fallback, decompression, proxy, authentication, cookie jar, redirect security, download, batch, retry, deadline, file-upload, and multipart-upload smoke passed."
+Write-Output "Release artifact is valid: $($actualComponents.Count) components; external COM/native GET, protocol fallback, decompression, HTTP proxy, HTTPS CONNECT boundary, authentication, cookie jar, redirect security, download, batch, retry, deadline, file-upload, and multipart-upload smoke passed."
