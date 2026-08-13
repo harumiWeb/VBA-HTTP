@@ -2,8 +2,8 @@
     "schema_version":  1,
     "benchmark":  "protocol-host-validation",
     "status":  "passed",
-    "run_utc":  "2026-08-13T06:28:30.1367486Z",
-    "source_revision":  "f32bf35c7e84c2ebc077b584814a4186dabbdb9f",
+    "run_utc":  "2026-08-13T11:43:31.9799406Z",
+    "source_revision":  "8e8806ad9617093caad303f3835c191b0c858115",
     "requested_protocol":  "HTTP/2",
     "observed_protocol":  "HTTP/2",
     "mode":  "required",
@@ -30,13 +30,20 @@
                                         "enabled_protocol_option":  133,
                                         "used_protocol_option":  134,
                                         "required_protocol_option":  145,
-                                        "observed_protocol":  "HTTP/2"
+                                        "observed_protocol":  "HTTP/2",
+                                        "preflight":  {
+                                                          "status":  "passed",
+                                                          "requested_mask":  1,
+                                                          "protocol_used_flag":  1,
+                                                          "required":  true,
+                                                          "stage":  "WinHttpQueryOption(134)"
+                                                      }
                                     }
                     },
     "artifact":  {
                      "name":  "VBA-HTTP.xlsm",
-                     "sha256":  "7c848b23e519672b9e57627162c1d8e7961c152502b818dc5e7dd87743eca638",
-                     "manifest_sha256":  "b5f53ea3a6523b5cfdf756984dcfb98d9271d574ca91a28d4a8c22807b7ec7b2"
+                     "sha256":  "463827bc42dabdc2cded11997edc1b7c1861ddbbd4a4b0688638f827211b6630",
+                     "manifest_sha256":  "2a838faac34a55888e1ec3d9f294fd1dba7f34fd4a7e8791505c84c77c46dbe9"
                  },
     "build":  {
                   "vbe_compile":  "passed",
