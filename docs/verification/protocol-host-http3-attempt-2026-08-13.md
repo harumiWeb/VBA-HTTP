@@ -23,9 +23,9 @@ row pending.
 ## Safety and cleanup
 
 - The run started with no Excel process.
-- `Run-ProtocolHostValidation.ps1` recorded the exact runner-owned Excel PID
-  in `Watch-ProtocolHostExcel.ps1`; only that PID was eligible for watchdog
-  cleanup.
+- `Run-ProtocolHostValidation.ps1` records the exact runner-owned Excel PID by
+  mapping the new `Excel.Application.Hwnd` to its process; the watchdog and
+  teardown can target only that proven PID.
 - The run ended with no Excel process, no xlflow recovery state, and no
   `protocol-host-http3.json` output.
 - No pre-existing or unrelated Excel process was stopped.
