@@ -1,5 +1,7 @@
 # VBA-HTTP
 
+[MIT License](LICENSE) · Copyright (c) 2026 harumiWeb
+
 VBA-HTTP is a Windows Excel/VBA HTTP client designed for deterministic testing, bounded concurrency, reliable retries, and constant-memory streaming. The project is built and verified with xlflow.
 
 ## Development status
@@ -272,6 +274,16 @@ Public API quick reference: [`docs/API.md`](docs/API.md). Contributor workflow:
 [`CONTRIBUTING.md`](CONTRIBUTING.md). Distribution, install, and rollback rules:
 [`docs/specs/distribution.md`](docs/specs/distribution.md). The handoff gate is
 [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md).
+
+## License
+
+Project-authored source, documentation, tools, examples, and generated release
+workbooks are released under the MIT License. Preserve the copyright and
+permission notice when copying or redistributing project material. Release
+handoffs include [`LICENSE`](LICENSE) and
+[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md); the pinned VBA-Web
+benchmark checkout and Windows/Excel/WinHTTP platform services retain their
+own terms and are not bundled into the production workbook.
 
 ## Measured loopback evidence
 

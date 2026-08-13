@@ -50,6 +50,7 @@ tasks:
       - task: class-source:check
       - task: test:native-declarations
       - task: test:office-policy
+      - task: test:license
 
   test:
     desc: Run the complete xlflow test suite
@@ -121,6 +122,11 @@ tasks:
     desc: Verify public API, contributor, distribution, and release checklist documentation contracts
     cmds:
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-DocumentationContract.ps1
+
+  test:license:
+    desc: Verify the MIT license text, notices, and package documentation contract
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-LicenseContract.ps1
 
   test:xlam:
     desc: Verify the tracked XLAM base identity and independent dry-run build plan

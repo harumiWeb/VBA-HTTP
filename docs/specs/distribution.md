@@ -59,6 +59,9 @@ The base workbook is not overwritten. If any build, validation, or smoke step
 fails, an existing published release remains untouched. Generated release
 files are ignored by Git and must be archived together with their manifest,
 checksum, and security report when a release is handed off.
+The handoff must also include the root `LICENSE` and
+`THIRD_PARTY_NOTICES.md`; these package files are not embedded in the workbook
+by `xlflow build`.
 
 ## XLAM build target
 
@@ -98,7 +101,8 @@ its upstream specs are not run against external network services.
 ## Evidence retention
 
 Release evidence consists of the exact workbook, `.build.json` manifest,
-`.checksum.json` sidecar, `release-security.json` report, and smoke output.
+`.checksum.json` sidecar, `release-security.json` report, smoke output,
+`LICENSE`, and `THIRD_PARTY_NOTICES.md`.
 Evidence is path-stable and secret-free. Record the source revision and host
 compatibility (Office bitness, Windows version, protocol fixture) beside the
 bundle; x64 is the supported and currently verified path, and the x64 HTTP/2

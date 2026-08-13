@@ -1,5 +1,11 @@
 ## Unreleased
 
+- Established the MIT license for project-authored source, documentation,
+  tooling, examples, and generated release workbooks. Added the canonical
+  `LICENSE`, third-party notice inventory, license ADR/spec, and a pre-commit
+  license contract; pinned VBA-Web remains a benchmark-only upstream MIT
+  component.
+
 - Established ADR-0035: HTTP/3/QUIC is unsupported by policy for the current
   distribution. The native HTTP/3 option and Excel-free probe remain
   diagnostic-only; protocol-host promotion now accepts HTTP/2 evidence only,

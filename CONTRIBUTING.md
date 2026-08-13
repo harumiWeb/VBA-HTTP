@@ -46,9 +46,10 @@ excluded directories.
 6. Confirm `xlflow status --json` reports a synchronized source/workbook pair.
 
 Do not add external endpoints to deterministic tests. Host-specific required
-HTTP/2/HTTP/3 evidence is collected separately with `task protocol:host` only
-after a release artifact is built and the operator has selected a trusted TLS
-endpoint; the runner records no URL path, query, credentials, or body.
+HTTP/2 evidence is collected separately with `task protocol:host` only after a
+release artifact is built and the operator has selected a trusted TLS endpoint;
+HTTP/3/QUIC probing is diagnostic-only under ADR-0035. The runner records no
+URL path, query, credentials, or body.
 
 Never save a workbook after a failed proof. Follow xlflow recovery guidance if
 the session reports a recovery-required state.
@@ -65,6 +66,14 @@ the formal release path.
 See [`docs/specs/distribution.md`](docs/specs/distribution.md) and
 [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md) for the artifact and
 handoff rules.
+
+## License and notices
+
+Project-authored material is released under the MIT License in
+[`LICENSE`](LICENSE). Keep [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)
+with source or workbook handoffs. The ignored VBA-Web checkout is a pinned MIT
+benchmark comparator only and is never a product dependency or release
+component.
 
 ## Commit checklist
 

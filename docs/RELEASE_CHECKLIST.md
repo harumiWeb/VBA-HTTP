@@ -11,6 +11,8 @@ document records the repeatable handoff gate.
 - [ ] `task test`, `task test:integration`, and the applicable benchmark/stress
       tasks are green against the deterministic loopback server.
 - [ ] `task test:security-risks` reports zero current release blockers.
+- [ ] `task test:license` passes; `LICENSE` and
+      `THIRD_PARTY_NOTICES.md` identify the project and comparator boundary.
 - [ ] Any public API change has matching spec, README/API, example, and
       CHANGELOG updates.
 - [ ] The compatibility record names the Windows version, Office bitness, and
@@ -51,8 +53,9 @@ publication. The included component list must match
       decompression, proxy, auth, cookie, diagnostics, download, and upload
       smoke scenarios pass where the host supports the capability.
 - [ ] The artifact, manifest, checksum, security report, and smoke output are
-      archived together. No secrets, request bodies, or host-local paths are
-      included in the evidence bundle.
+      archived together with `LICENSE` and `THIRD_PARTY_NOTICES.md`. No
+      secrets, request bodies, or host-local paths are included in the evidence
+      bundle.
 - [ ] The previous verified artifact remains available for rollback until the
       new workbook is accepted.
 

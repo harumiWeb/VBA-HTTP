@@ -41,13 +41,15 @@ Production source must not call, instantiate, or otherwise depend on an excluded
 Before a release build:
 
 1. Run `task verify`.
-2. Inspect the dry-run included and excluded component sets.
-3. Run `xlflow build --json --out build/Release/VBA-HTTP.xlsm`.
-4. Run `task release:checksum` to generate the deterministic
+2. Run `task test:license` and verify the root `LICENSE` and
+   `THIRD_PARTY_NOTICES.md` are present for the handoff package.
+3. Inspect the dry-run included and excluded component sets.
+4. Run `xlflow build --json --out build/Release/VBA-HTTP.xlsm`.
+5. Run `task release:checksum` to generate the deterministic
    `VBA-HTTP.xlsm.checksum.json` sidecar for the artifact and build manifest.
-5. Verify the build manifest reports successful source application, VBE compile, save, close, and atomic publication, and verify both SHA-256 values in the sidecar.
-6. Run `task release:security` (also invoked by `task release:smoke`) to validate canonical base/output paths, component boundaries, excluded paths, and the checksum sidecar before opening Excel.
-7. Run `task release:smoke` to inspect the actual VBA component collection and call `Main.Run` without injecting test code into the artifact.
+6. Verify the build manifest reports successful source application, VBE compile, save, close, and atomic publication, and verify both SHA-256 values in the sidecar.
+7. Run `task release:security` (also invoked by `task release:smoke`) to validate canonical base/output paths, component boundaries, excluded paths, and the checksum sidecar before opening Excel.
+8. Run `task release:smoke` to inspect the actual VBA component collection and call `Main.Run` without injecting test code into the artifact.
 
 Negotiated HTTP/2 evidence is an opt-in host operation, not part of the
 offline proof loop. After a clean release build, a host owner may set

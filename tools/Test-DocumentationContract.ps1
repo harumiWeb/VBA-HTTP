@@ -7,15 +7,20 @@ $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $required = @(
     'README.md',
+    'LICENSE',
+    'THIRD_PARTY_NOTICES.md',
     'CONTRIBUTING.md',
     'docs/API.md',
     'docs/RELEASE_CHECKLIST.md',
     'docs/specs/distribution.md',
+    'docs/specs/licensing.md',
     'docs/specs/development-and-release-workflow.md',
     'docs/adr/ADR-0021-xlam-distribution-target.md',
     'docs/adr/ADR-0022-com-timeout-failure-cleanup.md',
     'docs/adr/ADR-0030-32-bit-office-support-boundary.md',
     'docs/adr/ADR-0035-http3-support-boundary.md',
+    'docs/adr/ADR-0036-mit-license-and-distribution-boundary.md',
+    'tools/Test-LicenseContract.ps1',
     'tools/Validate-XlamBuildPlan.ps1',
     'tools/Validate-XlamArtifact.ps1',
     'tools/Test-XlamDistribution.ps1',
@@ -44,11 +49,11 @@ foreach ($relativePath in $required) {
 }
 
 $tokens = @{
-    'README.md' = @('docs/API.md', 'CONTRIBUTING.md', 'docs/specs/distribution.md', 'task verify')
-    'CONTRIBUTING.md' = @('task check', 'xlflow push', 'task release:build')
+    'README.md' = @('docs/API.md', 'CONTRIBUTING.md', 'docs/specs/distribution.md', 'LICENSE', 'MIT', 'task verify')
+    'CONTRIBUTING.md' = @('task check', 'xlflow push', 'task release:build', 'LICENSE')
     'docs/API.md' = @('CreateClient', 'HttpResponse', 'HttpError')
-    'docs/specs/distribution.md' = @('xlflow build', 'checksum', 'rollback', 'xlam', 'release:xlam:build', 'Workbook.IsAddin')
-    'docs/RELEASE_CHECKLIST.md' = @('task release:build', 'task release:security', 'task release:xlam:build', 'risk-register')
+    'docs/specs/distribution.md' = @('xlflow build', 'checksum', 'rollback', 'xlam', 'release:xlam:build', 'Workbook.IsAddin', 'LICENSE', 'THIRD_PARTY_NOTICES')
+    'docs/RELEASE_CHECKLIST.md' = @('task release:build', 'task release:security', 'task release:xlam:build', 'risk-register', 'task test:license', 'THIRD_PARTY_NOTICES')
 }
 
 foreach ($relativePath in $tokens.Keys) {
