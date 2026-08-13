@@ -25,7 +25,10 @@ claim HTTP/2/3 support on hosts where WinHTTP lacks the capability.
   requests additionally set `WINHTTP_OPTION_HTTP_PROTOCOL_REQUIRED` (145)
   before sending. A capability miss in allow-fallback mode falls back to the
   legacy protocol; a capability miss or negotiation mismatch in required mode
-  raises the stable `HttpErrorProtocol` category.
+  raises the stable `HttpErrorProtocol` category. Both WinHTTP error 12009
+  (`ERROR_WINHTTP_INVALID_OPTION`) and Win32 error 50 (`ERROR_NOT_SUPPORTED`)
+  are capability misses, because current Windows builds can accept HTTP/2
+  while rejecting an HTTP/3-enabled mask with error 50.
 - HTTP/2 and HTTP/3 options require an HTTPS URL. Allow-fallback requests over
   plain HTTP skip the advanced option and use HTTP/1.1; required requests fail
   before sending.

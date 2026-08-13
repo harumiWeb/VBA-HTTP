@@ -38,6 +38,13 @@ request. A host that cannot complete TLS or protocol negotiation therefore
 fails in a bounded interval instead of inheriting the normal 300-second
 receive default.
 
+For host diagnosis without Excel, `tools/Probe-WinHttpProtocol.ps1` performs
+the same WinHTTP option 133/145 and protocol 134 calls through a direct x64
+P/Invoke. Its output is diagnostic only and is never a promotion record. It is
+useful for separating a WinHTTP capability miss (for example
+`ERROR_NOT_SUPPORTED` 50 for an HTTP/3-enabled mask) from an Excel automation
+failure; a successful probe still does not replace the public-consumer proof.
+
 ## Evidence schema
 
 The runner starts a hidden ownership watchdog (90 seconds by default; the
@@ -104,6 +111,8 @@ field whose name could contain a secret or request payload.
 
 - Offline schema and fail-closed tamper cases:
   `powershell -File tools/Test-ProtocolHostEvidence.ps1`.
+- Excel-free WinHTTP capability diagnosis:
+  `powershell -File tools/Probe-WinHttpProtocol.ps1 -Url https://host.example/ -ProtocolMask 2`.
 - Normal deterministic proof remains `task test:integration`; it does not call
   this runner or access external network.
 - ADR rationale and process-ownership boundary: ADR-0025.

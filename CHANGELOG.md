@@ -1,5 +1,10 @@
 ## Unreleased
 
+- Treated Win32 `ERROR_NOT_SUPPORTED` (50) as a native protocol/decompression
+  capability miss, so HTTP/3 requests on WinHTTP runtimes without HTTP/3 now
+  fail or fall back through the documented `HttpErrorProtocol` contract rather
+  than leaking an unmapped native I/O error.
+
 - Fixed native `WinHttpSetOption` DWORD marshalling so protocol, redirect,
   decompression, and upload options are passed through an explicit 32-bit
   buffer in both VBA7 and legacy declaration branches.

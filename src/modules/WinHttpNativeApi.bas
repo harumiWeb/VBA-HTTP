@@ -27,6 +27,7 @@ Public Const WinHttpAddRequestHeader As Long = &H20000000
 Public Const WinHttpErrorInsufficientBuffer As Long = 122
 Public Const WinHttpErrorHeaderNotFound As Long = 12150
 Public Const WinHttpErrorInvalidOption As Long = 12009
+Public Const WinHttpErrorNotSupported As Long = 50
 Public Const WinHttpErrorResendRequest As Long = 12032
 Public Const WinHttpAuthTargetServer As Long = 0
 Public Const WinHttpAuthTargetProxy As Long = 1
@@ -372,6 +373,11 @@ End Function
 Public Function LastErrorCode() As Long
     LastErrorCode = Err.LastDllError
     If LastErrorCode = 0 Then LastErrorCode = GetLastError()
+End Function
+
+Public Function IsOptionCapabilityError(ByVal ErrorCode As Long) As Boolean
+    ErrorCode = ErrorCode And 65535
+    IsOptionCapabilityError = (ErrorCode = WinHttpErrorInvalidOption Or ErrorCode = WinHttpErrorNotSupported)
 End Function
 
 Public Function ProcessHandleCount(ByRef Count As Long) As Boolean

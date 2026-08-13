@@ -40,6 +40,22 @@ row pending.
   runner-owned Excel process exited during teardown and no unrelated Excel
   process was stopped.
 
+## Excel-free capability diagnosis
+
+The direct x64 probe was run after the fifth consumer attempt to separate the
+WinHTTP capability from Excel automation:
+
+| Probe | Result |
+| --- | --- |
+| `cloudflare-quic.com:443`, mask `HTTP/3`, option 133 | `ERROR_NOT_SUPPORTED` (50) before send; no request was issued |
+| `nghttp2.org:443`, mask `HTTP/2`, option 133 | option accepted and option 134 returned HTTP/2 |
+
+This confirms that the current WinHTTP runtime exposes HTTP/2 but rejects an
+HTTP/3-enabled mask. The native transport now treats error 50 as an explicit
+capability miss: allow-fallback skips the option, while required mode raises
+`HttpErrorProtocol`. The probe is diagnostic evidence only and does not promote
+HTTP/3.
+
 ## Follow-up
 
 Repeat the same runner on a Windows/WinHTTP host with confirmed UDP/QUIC

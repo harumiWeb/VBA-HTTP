@@ -594,8 +594,8 @@ Private Sub ApplyProtocolOptions(ByVal nativeRequest As WinHttpRequestHandle, By
     End If
     If Not WinHttpNativeApi.SetOptionLong(nativeRequest.Value, WinHttpNativeApi.WinHttpOptionEnableHttpProtocol, Options.EnabledProtocols) Then
         errorCode = WinHttpNativeApi.LastErrorCode()
-        If Options.Mode = HttpProtocolAllowFallback And errorCode = WinHttpNativeApi.WinHttpErrorInvalidOption Then Exit Sub
-        If Options.Mode = HttpProtocolRequired And errorCode = WinHttpNativeApi.WinHttpErrorInvalidOption Then
+        If Options.Mode = HttpProtocolAllowFallback And WinHttpNativeApi.IsOptionCapabilityError(errorCode) Then Exit Sub
+        If Options.Mode = HttpProtocolRequired And WinHttpNativeApi.IsOptionCapabilityError(errorCode) Then
             HttpErrors.RaiseTransport HttpErrorProtocol, Source, "Requested HTTP protocol is not supported by this WinHTTP runtime."
         End If
         RaiseNativeFailure "SetHttpProtocol", Source
@@ -603,7 +603,7 @@ Private Sub ApplyProtocolOptions(ByVal nativeRequest As WinHttpRequestHandle, By
     If Options.Mode = HttpProtocolRequired Then
         If Not WinHttpNativeApi.SetOptionLong(nativeRequest.Value, WinHttpNativeApi.WinHttpOptionHttpProtocolRequired, 1) Then
             errorCode = WinHttpNativeApi.LastErrorCode()
-            If errorCode = WinHttpNativeApi.WinHttpErrorInvalidOption Then
+            If WinHttpNativeApi.IsOptionCapabilityError(errorCode) Then
                 HttpErrors.RaiseTransport HttpErrorProtocol, Source, "Required HTTP protocol mode is not supported by this WinHTTP runtime."
             End If
             RaiseNativeFailure "RequireHttpProtocol", Source
@@ -625,8 +625,8 @@ Private Sub ApplyDecompressionOptions(ByVal nativeRequest As WinHttpRequestHandl
     End If
     If Not WinHttpNativeApi.SetOptionLong(nativeRequest.Value, WinHttpNativeApi.WinHttpOptionDecompression, Options.EnabledEncodings) Then
         errorCode = WinHttpNativeApi.LastErrorCode()
-        If Options.Mode = HttpDecompressionAllowFallback And errorCode = WinHttpNativeApi.WinHttpErrorInvalidOption Then Exit Sub
-        If Options.Mode = HttpDecompressionRequired And errorCode = WinHttpNativeApi.WinHttpErrorInvalidOption Then
+        If Options.Mode = HttpDecompressionAllowFallback And WinHttpNativeApi.IsOptionCapabilityError(errorCode) Then Exit Sub
+        If Options.Mode = HttpDecompressionRequired And WinHttpNativeApi.IsOptionCapabilityError(errorCode) Then
             HttpErrors.RaiseTransport HttpErrorProtocol, Source, "Response decompression is not supported by this WinHTTP runtime."
         End If
         RaiseNativeFailure "SetDecompression", Source

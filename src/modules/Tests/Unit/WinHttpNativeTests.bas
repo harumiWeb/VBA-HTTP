@@ -23,6 +23,12 @@ Public Sub Test_NativeErrorMappingDefaultsUnknownCodesToIo()
     XlflowAssert.AssertEquals HttpErrorIo, WinHttpErrorMapping.CategoryFromCode(87)
 End Sub
 
+Public Sub Test_NativeOptionCapabilityErrorsIncludeNotSupported()
+    XlflowAssert.AssertTrue WinHttpNativeApi.IsOptionCapabilityError(WinHttpNativeApi.WinHttpErrorInvalidOption)
+    XlflowAssert.AssertTrue WinHttpNativeApi.IsOptionCapabilityError(WinHttpNativeApi.WinHttpErrorNotSupported)
+    XlflowAssert.AssertFalse WinHttpNativeApi.IsOptionCapabilityError(12002)
+End Sub
+
 Public Sub Test_NativeUploadLengthEncodingPreservesDwordBits()
     XlflowAssert.AssertEquals 2147483647, WinHttpNativeApi.EncodeUploadTotalLength(CCur(2147483647#))
     XlflowAssert.AssertEquals - 2147483648#, WinHttpNativeApi.EncodeUploadTotalLength(CCur(2147483648#))

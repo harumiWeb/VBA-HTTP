@@ -29,12 +29,14 @@ later mutations by the caller cannot alter an in-flight request.
 
 - Native requests apply WinHTTP option 133 before headers/body are sent.
 - In allow-fallback mode, an unsupported option is treated as a capability miss
-  and the request may use HTTP/1.1. The response's `ProtocolUsed` is the
-  authoritative result.
-- In required mode, option 145 prevents fallback. Unsupported runtime options,
-  protocol mismatch (WinHTTP error 12190), or a required advanced protocol on
-  a plain HTTP URL raise `HttpErrProtocol` before a successful response is
-  returned.
+  and the request may use HTTP/1.1. The implementation treats both
+  `ERROR_WINHTTP_INVALID_OPTION` (12009) and Win32 `ERROR_NOT_SUPPORTED` (50)
+  as capability misses. The response's `ProtocolUsed` is the authoritative
+  result.
+- In required mode, option 145 prevents fallback. Unsupported runtime options
+  (12009 or 50), protocol mismatch (WinHTTP error 12190), or a required
+  advanced protocol on a plain HTTP URL raise `HttpErrProtocol` before a
+  successful response is returned.
 - HTTP/2/3 flags are never inferred from the request. A requested flag is not
   evidence that the peer negotiated that protocol.
 
