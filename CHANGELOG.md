@@ -5,6 +5,11 @@
   factories. Release validation now proves ownership of every Excel PID it
   may clean up, leaving unrelated user Excel processes untouched.
 
+- Centralized HWND-to-PID Excel ownership guards for release, Office bitness,
+  and protocol-host validation runners. Concurrent user Excel sessions remain
+  outside cleanup scope, with a five-second graceful-exit window before an
+  exact owned-PID force cleanup.
+
 - Added an offline HTTPS CONNECT proxy boundary fixture (including fixed Basic
   proxy challenge) with COM/native integration coverage. The fixture proves
   tunnel reachability before normal untrusted-certificate rejection; trusted

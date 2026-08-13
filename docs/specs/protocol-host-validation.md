@@ -43,8 +43,11 @@ receive default.
 The runner starts a hidden ownership watchdog (90 seconds by default; the
 MaxRuntimeSeconds parameter can be raised for a slower trusted endpoint). This
 outer deadline is necessary because WinHTTP QUIC capability waits may not
-honor ordinary phase timeouts. The watchdog can terminate only the Excel PID
-created by this runner; a timed-out run publishes no evidence.
+honor ordinary phase timeouts. Before the watchdog starts, the runner maps the
+new `Excel.Application.Hwnd` to its owning PID and requires that PID to be
+absent from the pre-run snapshot. The watchdog can terminate only that exact
+proven PID; a timed-out run publishes no evidence. Normal teardown gives the
+same PID a five-second graceful-exit window before any force-stop is allowed.
 
 The default output is
 `benchmarks/results/protocol-host-http2.json` or

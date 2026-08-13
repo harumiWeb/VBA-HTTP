@@ -26,6 +26,12 @@ external network access into the normal test suite.
   required because WinHTTP QUIC capability waits may not honor ordinary phase
   timeouts. A timed-out run publishes no evidence.
 
+- Ownership is proven by mapping the newly created `Excel.Application.Hwnd`
+  to its PID with `GetWindowThreadProcessId`; a process-name difference alone
+  is insufficient when another user may launch Excel concurrently. Teardown
+  waits five seconds after COM release before force-stopping only that proven
+  PID.
+
 - Add an opt-in external consumer runner that targets one caller-supplied
   `https://` origin and requests exactly one protocol in `Required` mode.
 - The external consumer harness creates its request through
