@@ -4,7 +4,9 @@ param(
     [ValidateSet("HTTP/2", "HTTP/3")]
     [string]$ExpectedProtocol = [Environment]::GetEnvironmentVariable("VBA_HTTP_PROTOCOL_EXPECTED", "Process"),
     [string]$ArtifactPath = "build/Release/VBA-HTTP.xlsm",
-    [string]$OutputPath = ""
+    [string]$OutputPath = "",
+    [ValidateRange(30, 3600)]
+    [int]$MaxRuntimeSeconds = 90
 )
 
 Set-StrictMode -Version Latest
@@ -139,6 +141,7 @@ $harnessWorkbook = $null
 $harnessComponent = $null
 $observedProtocol = $null
 $office = $null
+$watchdog = $null
 try {
     Write-Verbose "Starting an owned Excel automation instance."
     $excel = New-Object -ComObject Excel.Application
@@ -158,6 +161,21 @@ try {
         build = [string]$excel.Build
         operating_system = [string]$excel.OperatingSystem
     }
+    $watchdogScript = Join-Path $PSScriptRoot "Watch-ProtocolHostExcel.ps1"
+    $watchdog = Start-Process -FilePath "powershell.exe" -WindowStyle Hidden -PassThru -ArgumentList @(
+        "-NoLogo",
+        "-NoProfile",
+        "-NonInteractive",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        $watchdogScript,
+        "-ProcessIds",
+        ($ownedExcelIds -join ","),
+        "-TimeoutSeconds",
+        $MaxRuntimeSeconds
+    )
+    Write-Verbose ("Started owned Excel watchdog PID: " + $watchdog.Id)
     $workbooks = $excel.Workbooks
     Write-Verbose "Opening the release artifact read-only."
     $consumerWorkbook = $workbooks.Open($resolvedArtifact, 0, $true)
@@ -173,6 +191,12 @@ try {
     if ($observedProtocol -ne $ExpectedProtocol) { throw "Protocol host consumer returned an unexpected protocol." }
 }
 finally {
+    if ($null -ne $watchdog) {
+        $watchdogProcess = Get-Process -Id $watchdog.Id -ErrorAction SilentlyContinue
+        if ($null -ne $watchdogProcess -and -not $watchdogProcess.HasExited) {
+            Stop-Process -Id $watchdog.Id -Force -ErrorAction SilentlyContinue
+        }
+    }
     if ($null -ne $harnessComponent) { [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($harnessComponent) }
     if ($null -ne $harnessWorkbook) {
         try { $harnessWorkbook.Close($false) } catch { Write-Warning "Could not close protocol harness workbook: $_" }

@@ -16,6 +16,12 @@ external network access into the normal test suite.
 
 ## Decision
 
+- The external consumer must use the public request factory and finite
+  per-phase timeouts. A hidden watchdog monitors only the runner-owned Excel
+  PID(s) and terminates them after the configured outer deadline; this is
+  required because WinHTTP QUIC capability waits may not honor ordinary phase
+  timeouts. A timed-out run publishes no evidence.
+
 - Add an opt-in external consumer runner that targets one caller-supplied
   `https://` origin and requests exactly one protocol in `Required` mode.
 - The external consumer harness creates its request through
@@ -66,3 +72,6 @@ external network access into the normal test suite.
 ## Superseded by
 
 - None
+
+The ownership watchdog is implemented by
+tools/Watch-ProtocolHostExcel.ps1.

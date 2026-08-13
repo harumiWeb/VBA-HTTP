@@ -40,6 +40,12 @@ receive default.
 
 ## Evidence schema
 
+The runner starts a hidden ownership watchdog (90 seconds by default; the
+MaxRuntimeSeconds parameter can be raised for a slower trusted endpoint). This
+outer deadline is necessary because WinHTTP QUIC capability waits may not
+honor ordinary phase timeouts. The watchdog can terminate only the Excel PID
+created by this runner; a timed-out run publishes no evidence.
+
 The default output is
 `benchmarks/results/protocol-host-http2.json` or
 `benchmarks/results/protocol-host-http3.json`.

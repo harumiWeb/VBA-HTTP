@@ -13,6 +13,10 @@
 
 ## Excel process ownership
 
+- External protocol-host validation uses a hidden watchdog with the exact
+  runner-owned Excel PID list. It must stop only those PIDs after the outer
+  deadline and must publish no passing evidence on timeout.
+
 - Stress runners must snapshot and exclude pre-existing Excel PIDs and must
   never terminate a process they did not create. A concurrent user-launched
   Excel process is intentionally treated as an inconclusive observation; do
