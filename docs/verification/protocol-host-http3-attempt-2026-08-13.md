@@ -66,6 +66,13 @@ diagnostic evidence only and does not promote HTTP/3.
 
 ## Follow-up
 
+The protocol-host runner now performs an Excel-free required-mask preflight
+before creating Excel (ADR-0032). Re-running the same HTTP/3 candidate on this
+host therefore stops at `WinHttpSetOption(133)` with `ERROR_NOT_SUPPORTED (50)`
+and publishes no evidence; it does not repeat the earlier Excel automation
+crash. The x64 HTTP/2 control run was refreshed with the passing preflight and
+public-consumer result in `benchmarks/results/protocol-host-http2.json`.
+
 Repeat the same runner on a Windows/WinHTTP host with confirmed UDP/QUIC
 egress and a trusted HTTP/3 endpoint. A result is promotable only when the
 consumer returns `ProtocolUsed=HTTP/3`; a timeout, RPC failure, fallback, or
