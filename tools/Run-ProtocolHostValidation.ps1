@@ -102,6 +102,7 @@ foreach ($requiredPath in @($resolvedArtifact, $resolvedManifest, $resolvedCheck
     -ArtifactPath $resolvedArtifact `
     -ReportPath (Join-Path $projectRoot ".xlflow\release-security\release-security.json")
 & (Join-Path $PSScriptRoot "Verify-ReleaseChecksums.ps1") -ArtifactPath $resolvedArtifact -ManifestPath $resolvedManifest
+Write-Verbose "Release artifact and checksum gates passed."
 
 $manifest = Get-Content -LiteralPath $resolvedManifest -Raw | ConvertFrom-Json
 if ($manifest.validation.vbe_compile -ne "passed" -or
@@ -111,7 +112,9 @@ if ($manifest.validation.vbe_compile -ne "passed" -or
     $manifest.validation.excel_cleanup -ne "clean") {
     throw "Release manifest does not prove a clean compiled artifact."
 }
+Write-Verbose "Running xlflow doctor."
 $doctor = Invoke-JsonCommand "xlflow" @("doctor", "--json")
+Write-Verbose "xlflow doctor completed."
 $architecture = [string]$doctor.bridge.architecture
 if ($architecture -notin @("X86", "X64")) { throw "xlflow did not report an X86 or X64 bridge." }
 $sourceRevision = ((& git rev-parse HEAD 2>$null) | Out-String).Trim()
@@ -128,6 +131,7 @@ $harnessComponent = $null
 $observedProtocol = $null
 $office = $null
 try {
+    Write-Verbose "Starting an owned Excel automation instance."
     $excel = New-Object -ComObject Excel.Application
     $afterExcelIds = @(Get-ExcelProcessIds)
     $ownedExcelIds = @($afterExcelIds | Where-Object { $baselineExcelIds -notcontains $_ })
@@ -139,18 +143,24 @@ try {
     $excel.DisplayAlerts = $false
     $excel.EnableEvents = $false
     $excel.AutomationSecurity = 1
+    Write-Verbose ("Owned Excel PID(s): " + ($ownedExcelIds -join ","))
     $office = [ordered]@{
         version = [string]$excel.Version
         build = [string]$excel.Build
         operating_system = [string]$excel.OperatingSystem
     }
     $workbooks = $excel.Workbooks
+    Write-Verbose "Opening the release artifact read-only."
     $consumerWorkbook = $workbooks.Open($resolvedArtifact, 0, $true)
+    Write-Verbose "Release artifact opened."
     $harnessWorkbook = $workbooks.Add()
     $harnessComponent = $harnessWorkbook.VBProject.VBComponents.Import((Join-Path $PSScriptRoot "consumer\ReleaseBatchSmoke.bas"))
     if ($harnessComponent.Name -ne "ReleaseBatchSmoke") { throw "Protocol host consumer harness import failed." }
+    Write-Verbose "Consumer harness imported."
     $macro = "'$($harnessWorkbook.Name)'!ReleaseBatchSmoke.RunProtocolHostSmoke"
+    Write-Verbose "Calling the required protocol consumer smoke."
     $observedProtocol = [string]$excel.Run($macro, $consumerWorkbook.Name, $Url, $ExpectedProtocol)
+    Write-Verbose ("Protocol consumer returned: " + $observedProtocol)
     if ($observedProtocol -ne $ExpectedProtocol) { throw "Protocol host consumer returned an unexpected protocol." }
 }
 finally {
