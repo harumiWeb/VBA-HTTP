@@ -13,7 +13,8 @@ select the native backend explicitly by assigning it to `HttpClient.Transport`.
 For every request the transport performs this sequence on the VBA thread:
 
 1. parse the absolute HTTP or HTTPS URL into scheme, host, port, and origin
-   path (fragments are not sent);
+   path (fragments are not sent; the execution snapshot is normalized before
+   the request is opened);
 2. validate the request proxy snapshot and open a WinHTTP session using the
    requested OS/default, direct, or named-proxy configuration;
 3. connect to the host and open a request handle;

@@ -13,8 +13,8 @@
                    "operating_system":  "Windows (64-bit) NT 10.00"
                },
     "tests":  {
-                  "total":  234,
-                  "passed":  149,
+                  "total":  237,
+                  "passed":  152,
                   "inconclusive":  85,
                   "failed":  0
               },

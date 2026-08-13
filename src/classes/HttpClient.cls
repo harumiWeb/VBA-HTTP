@@ -427,6 +427,7 @@ Private Function PrepareRequest(ByVal Request As HttpRequest) As HttpRequest
     If snapshot.ProxyOptions Is Nothing Then Set snapshot.ProxyOptions = mProxyOptions
     If snapshot.CookieJar Is Nothing Then Set snapshot.CookieJar = mCookieJar
     ApplyQuery snapshot
+    snapshot.Url = HttpUrlValidation.WithoutFragment(snapshot.Url)
     ApplyDefaultHeaders snapshot
     If snapshot.AuthProvider Is Nothing Then Set snapshot.AuthProvider = mAuthProvider
     If Not snapshot.AuthProvider Is Nothing Then

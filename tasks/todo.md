@@ -371,7 +371,7 @@ streamingとadvanced protocolの土台となる安全なNative WinHTTP transport
 
 ### Exit Criteria
 
-- [x] x64 compile evidenceがある（`benchmarks/results/office-bitness-x64.json`で149 passing／78 integration、VBE compile、consumer smokeを実証）。
+- [x] x64 compile evidenceがある（`benchmarks/results/office-bitness-x64.json`で152 passing／78 integration、VBE compile、consumer smokeを実証）。
 - [~] 32-bit Office compile evidenceを取得する（`Run-OfficeBitnessValidation.ps1 -ExpectedArchitecture X86`の実機実行待ち）。
 - [x] repeated request後にpersistent handle growthがない。
 - [x] COM transportと同じpublic response／error contractを満たす。
@@ -486,6 +486,7 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 - [x] request header valueのC0／NUL／DEL制御文字をHTAB以外拒否する共通入力契約をADR-0026と`HttpHeadersTests`で固定する。
 - [x] wire-level malformed response-header fixtureを追加し、COM/nativeの`HttpErrorProtocol` mappingを検証する。
 - [x] HTTP authority user-infoを全transportとcookie URL parserで拒否し、credentialをURLへ埋め込む経路を閉じる（ADR-0027、unit regression tests）。
+- [x] URI fragmentをHTTP request-targetから除去し、query／fragment順序とCOM/native経路をADR-0029で統一する。
 - [x] 10,000 sequential／scheduled request stress testsを追加する（10,000 warmup後の10,000測定区間）。
 - [x] repeated cancellation／timeout stress testsを追加する（COM active cancellation／request deadline／receive-timeout、native download cancellationの4 scenario。`task test:cancellation-stress`で25 iteration、recovery 204、PID-scoped handle gate、destination/temp cleanupの証跡を生成する）。
 - [x] process memory／native handle leak checksを自動化する（PID scoped、idle handle delta gate、memory peak evidence）。

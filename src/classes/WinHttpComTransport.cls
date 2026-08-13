@@ -47,6 +47,7 @@ Private Function ExecuteCore(ByVal Request As HttpRequest) As HttpResponse
     Dim errorNumber As Long
     Dim errorSource As String
     Dim errorDescription As String
+    Dim requestUrl As String
 
     On Error GoTo TransportFailure
     If Request Is Nothing Then
@@ -63,7 +64,8 @@ Private Function ExecuteCore(ByVal Request As HttpRequest) As HttpResponse
     backend.Option(WinHttpOptionMaxAutomaticRedirects) = Request.MaxRedirects
 
     started = HttpTiming.CounterValue()
-    backend.Open Request.Method, Request.Url, False
+    requestUrl = HttpUrlValidation.WithoutFragment(Request.Url)
+    backend.Open Request.Method, requestUrl, False
     ApplyProxy backend, Request.ProxyOptions, TransportSource
     ApplyChallengeCredentials backend, Request, Request.AuthProvider, TransportSource
     ApplyRequestHeaders backend, Request.Headers
@@ -437,6 +439,7 @@ Private Function CreateAsyncOperation(ByVal Request As HttpRequest, ByVal itemIn
     Dim errorNumber As Long
     Dim errorSource As String
     Dim errorDescription As String
+    Dim requestUrl As String
 
     On Error GoTo TransportFailure
     HttpUrlValidation.ValidateNoUserInfo Request.Url, TransportSource
@@ -448,7 +451,8 @@ Private Function CreateAsyncOperation(ByVal Request As HttpRequest, ByVal itemIn
     backend.Option(WinHttpOptionEnableHttpsToHttpRedirects) = False
     backend.Option(WinHttpOptionMaxAutomaticRedirects) = Request.MaxRedirects
     started = HttpTiming.CounterValue()
-    backend.Open Request.Method, Request.Url, True
+    requestUrl = HttpUrlValidation.WithoutFragment(Request.Url)
+    backend.Open Request.Method, requestUrl, True
     ApplyProxy backend, Request.ProxyOptions, TransportSource
     ApplyChallengeCredentials backend, Request, Request.AuthProvider, TransportSource
     ApplyRequestHeaders backend, Request.Headers

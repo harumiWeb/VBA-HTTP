@@ -59,7 +59,7 @@ Public Sub Test_Client_AppendsQueryBeforeUrlFragment()
 
     Call client.Execute(Request)
 
-    XlflowAssert.AssertEquals "https://example.test/items?q=a%20b#fragment", transport.LastRequest.Url
+    XlflowAssert.AssertEquals "https://example.test/items?q=a%20b", transport.LastRequest.Url
 End Sub
 
 Public Sub Test_Client_ResponseIsIndependentFromMockTemplate()

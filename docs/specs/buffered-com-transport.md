@@ -11,7 +11,8 @@ library.
 ## Request mapping
 
 - The execution snapshot's uppercase method and absolute URL are passed to
-  `Open` in synchronous mode.
+  `Open` in synchronous mode after any URI fragment is removed; fragments are
+  client-only state and never enter the HTTP request-target.
 - Resolve, connect, send, and receive timeouts are passed to `SetTimeouts` in
   milliseconds. Zero retains WinHTTP's infinite-timeout meaning.
 - Headers are emitted in insertion order. Repeated header names are emitted as

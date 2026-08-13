@@ -13,6 +13,9 @@
   before quitting its metadata COM instance.
 - Fixed query-parameter merging so parameters are inserted before a URL
   fragment instead of being appended after it.
+- Normalized execution request-targets to remove client-only URI fragments
+  consistently across the client, COM transport, and native transport
+  (ADR-0029).
 
 - Added an Excel-free native declaration ABI gate that verifies the VBA7
   `PtrSafe`/`LongPtr` and legacy `Long` WinHTTP branches, including the

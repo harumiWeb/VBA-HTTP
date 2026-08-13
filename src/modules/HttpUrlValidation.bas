@@ -27,3 +27,14 @@ Public Sub ValidateNoUserInfo(ByVal value As String, ByVal Source As String)
         HttpErrors.RaiseInvalidUrl Source, "URL user-info is not permitted."
     End If
 End Sub
+
+Public Function WithoutFragment(ByVal value As String) As String
+    Dim fragmentIndex As Long
+
+    fragmentIndex = InStr(1, value, "#", vbBinaryCompare)
+    If fragmentIndex > 0 Then
+        WithoutFragment = Left$(value, fragmentIndex - 1)
+    Else
+        WithoutFragment = value
+    End If
+End Function

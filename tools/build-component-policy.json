@@ -95,6 +95,7 @@
     "HttpDiagnosticsTests",
     "HttpDownloadTests",
     "HttpUploadTests",
+    "HttpUrlValidationTests",
     "HttpHeadersTests",
     "HttpParamsTests",
     "HttpProtocolOptionsTests",
