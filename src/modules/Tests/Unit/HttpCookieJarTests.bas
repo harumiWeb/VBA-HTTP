@@ -13,6 +13,33 @@ Public Sub Test_CookieJar_StoresAndMatchesHostOnlyCookie()
     XlflowAssert.AssertEquals "", jar.GetCookieHeader("http://other.example.test/cookie/echo")
 End Sub
 
+Public Sub Test_CookieJar_AcceptsMatchingDomainAndRejectsBareSuffix()
+    Dim jar As New HttpCookieJar
+    Dim headers As New HttpHeaders
+
+    headers.Add "Set-Cookie", "shared=one; Domain=example.test; Path=/"
+    jar.StoreResponseCookies "http://api.example.test/set", headers
+    XlflowAssert.AssertEquals 1, jar.Count
+    XlflowAssert.AssertEquals "shared=one", jar.GetCookieHeader("http://www.example.test/echo")
+
+    jar.Clear
+    headers.Clear
+    headers.Add "Set-Cookie", "broad=one; Domain=test; Path=/"
+    jar.StoreResponseCookies "http://example.test/set", headers
+    XlflowAssert.AssertEquals 0, jar.Count
+End Sub
+
+Public Sub Test_CookieJar_AllowsExactSingleLabelDomain()
+    Dim jar As New HttpCookieJar
+    Dim headers As New HttpHeaders
+
+    headers.Add "Set-Cookie", "local=one; Domain=localhost; Path=/"
+    jar.StoreResponseCookies "http://localhost/set", headers
+
+    XlflowAssert.AssertEquals 1, jar.Count
+    XlflowAssert.AssertEquals "local=one", jar.GetCookieHeader("http://localhost/echo")
+End Sub
+
 Public Sub Test_CookieJar_OrdersLongestPathFirstAndHonorsSecure()
     Dim jar As New HttpCookieJar
     Dim headers As New HttpHeaders

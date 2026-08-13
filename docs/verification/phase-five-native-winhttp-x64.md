@@ -16,7 +16,7 @@ Recorded: 2026-08-13 (refreshed against the current source revision)
 - `task format`: clean
 - `task class-source:check`: clean
 - `task test:integration`: 78/78 test cases passed as reported by xlflow
-- `task test:office-bitness`: 237 discovered tests, 152 passed, 85
+- `task test:office-bitness`: 239 discovered tests, 154 passed, 85
   inconclusive (environment-gated suites without the loopback server), 0
   failed; the dedicated loopback integration run above passed all 78 tests.
 - Native contract coverage includes GET headers/query, text methods, binary body,

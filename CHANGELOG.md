@@ -16,6 +16,8 @@
 - Normalized execution request-targets to remove client-only URI fragments
   consistently across the client, COM transport, and native transport
   (ADR-0029).
+- Rejected cookie `Domain` attributes that broaden a cookie to a single-label
+  public-suffix-like scope, while preserving exact `localhost` fixtures.
 
 - Added an Excel-free native declaration ABI gate that verifies the VBA7
   `PtrSafe`/`LongPtr` and legacy `Long` WinHTTP branches, including the

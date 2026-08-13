@@ -80,6 +80,7 @@ Public Function TryParseSetCookie(ByVal HeaderValue As String, ByVal origin As H
             item.Domain = LCase$(Trim$(attributeValue))
             If Left$(item.Domain, 1) = "." Then item.Domain = Mid$(item.Domain, 2)
             If Len(item.Domain) = 0 Or Not DomainMatches(origin.Host, item.Domain) Then Exit Function
+            If IsBareDomainScope(item.Domain, origin.Host) Then Exit Function
             item.HostOnly = False
         Case "path"
             If attributeDelimiter = 0 Then Exit Function
@@ -157,6 +158,12 @@ Private Function HostWithoutPort(ByVal authority As String) As String
         HostWithoutPort = Left$(authority, InStrRev(authority, ":") - 1)
     Else
         HostWithoutPort = authority
+    End If
+End Function
+
+Private Function IsBareDomainScope(ByVal domain As String, ByVal originHost As String) As Boolean
+    If InStr(1, domain, ".", vbBinaryCompare) = 0 Then
+        IsBareDomainScope = (StrComp(domain, originHost, vbTextCompare) <> 0)
     End If
 End Function
 

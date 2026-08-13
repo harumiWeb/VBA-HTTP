@@ -19,7 +19,10 @@ may use separate jars to isolate sessions.
 - `Domain` is normalized case-insensitively. A host-only cookie matches only the
   exact request host. A Domain cookie matches the domain itself or a dot-bound
   subdomain, never an IP's unrelated suffix; a Domain that does not match the
-  origin is rejected.
+  origin is rejected. A single-label Domain that is broader than the exact
+  single-label origin (for example `Domain=test` on `example.test`) is
+  rejected as a public-suffix-like scope; `Domain=localhost` is allowed only
+  for the exact `localhost` origin.
 - Without `Path`, default-path is `/` for a root or the request path up to the
   final slash. A cookie path matches the request path when equal, when it is a
   slash-prefix ending in `/`, or when the next request character is `/`.
