@@ -14,6 +14,6 @@
     "consumer_smoke": { "const": "passed" },
     "external_network": { "const": false },
     "support_status": { "enum": ["supported", "unsupported-by-policy"] },
-    "status": { "const": "passed" }
+    "status": { "enum": ["passed", "diagnostic"] }
   }
 }

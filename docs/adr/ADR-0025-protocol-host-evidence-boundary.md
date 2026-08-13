@@ -4,9 +4,9 @@
 
 `accepted`
 
-The x86-specific promotion clauses in this historical record are superseded by
-ADR-0030.  The protocol evidence, trusted-endpoint, and ownership rules remain
-applicable to the supported x64 Office target.
+This historical record is superseded by ADR-0030. Its protocol evidence,
+trusted-endpoint, and ownership rules remain applicable to the supported x64
+Office target; ADR-0030 replaces the former x86 promotion requirement.
 
 ## Context
 
@@ -44,8 +44,9 @@ external network access into the normal test suite.
 - Keep this runner out of `task verify` and ordinary deterministic integration
   tests.  A host owner explicitly invokes it after selecting a trusted TLS
   endpoint and archives the result with the release artifact.
-- Validate x64 and x86 evidence independently; an x64 result never promotes
-  the x86 matrix row, and an HTTP/2 result never promotes HTTP/3.
+- Validate the supported x64 evidence independently; an HTTP/2 result never
+  promotes HTTP/3. The former x86 evidence requirement is replaced by
+  ADR-0030.
 
 ## Consequences
 
@@ -75,8 +76,7 @@ external network access into the normal test suite.
 
 ## Superseded by
 
-- ADR-0030, only the x86 support/promotion clauses; the remaining protocol
-  evidence boundary continues to apply to supported x64 Office.
+- ADR-0030
 
 The ownership watchdog is implemented by
 tools/Watch-ProtocolHostExcel.ps1.

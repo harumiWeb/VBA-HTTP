@@ -25,8 +25,9 @@ matrix stronger than the tested product.
   It protects pointer-size source branches but is not 32-bit runtime evidence
   and must not promote an x86 compatibility row.
 - An operator may explicitly run the office runner in diagnostic-only mode on
-  a future x86 host.  Such output is labeled `unsupported-by-policy`, is not a
-  release or v1 promotion artifact, and must not be used as support evidence.
+  a future x86 host. Such output uses `status=diagnostic` and is labeled
+  `support_status=unsupported-by-policy`; it is not a release or v1 promotion
+  artifact and must not be used as support evidence.
 - The existing process-ownership boundary remains mandatory: validation
   snapshots Excel PIDs, proves a newly created runner-owned PID, and only
   closes or terminates that owned PID.  A pre-existing user Excel process is
@@ -58,9 +59,9 @@ matrix stronger than the tested product.
 
 ## Supersedes
 
-- ADR-0025, only its requirement to obtain or promote x86 protocol-host
-  evidence; the remaining negotiated-protocol evidence boundary remains in
-  force for the supported x64 host.
+- ADR-0025. Its protocol evidence, trusted-endpoint, and ownership rules remain
+  in force, while this ADR replaces its x86 promotion requirement with the
+  x64-only support boundary.
 
 ## Superseded by
 

@@ -140,7 +140,7 @@ try {
             consumer_smoke = "passed"
             external_network = $false
             support_status = if ($architecture -eq "X64") { "supported" } else { "unsupported-by-policy" }
-            status = "passed"
+            status = if ($architecture -eq "X64") { "passed" } else { "diagnostic" }
         }
         Publish-Json $resolvedOutput $evidence
         & (Join-Path $PSScriptRoot "Validate-OfficeBitnessResult.ps1") -Path $resolvedOutput

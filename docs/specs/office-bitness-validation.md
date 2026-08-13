@@ -31,8 +31,9 @@ powershell -File tools/Run-OfficeBitnessValidation.ps1 -ExpectedArchitecture X64
 
 The current repository evidence is X64 only and is the supported release path.
 An explicitly requested exploratory run on a future x86 host must use
-`-DiagnosticOnly`; its result is labeled `unsupported-by-policy` and cannot
-promote a compatibility or release row:
+`-DiagnosticOnly`; its result uses `status=diagnostic` and
+`support_status=unsupported-by-policy`, and cannot promote a compatibility or
+release row:
 
 ```powershell
 powershell -File tools/Run-OfficeBitnessValidation.ps1 `

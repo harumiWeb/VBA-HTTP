@@ -4,6 +4,8 @@ param()
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 $runner = Join-Path $PSScriptRoot "Run-OfficeBitnessValidation.ps1"
+$validator = Join-Path $PSScriptRoot "Validate-OfficeBitnessResult.ps1"
+$fixtureRoot = Join-Path (Split-Path -Parent $PSScriptRoot) ".xlflow\office-bitness-policy-test"
 
 # This is intentionally Excel-free. The policy guard must reject a normal X86
 # promotion invocation before xlflow or COM can create/attach to a workbook.
@@ -22,6 +24,33 @@ if ($childExit -eq 0) {
 }
 if (($output -join "`n") -notmatch "unsupported by policy") {
     throw "Office bitness runner failed without the expected unsupported-by-policy diagnostic."
+}
+
+try {
+    [void](New-Item -ItemType Directory -Path $fixtureRoot -Force)
+    $fixturePath = Join-Path $fixtureRoot "x86-diagnostic.json"
+    $fixture = Get-Content -LiteralPath (Join-Path (Split-Path -Parent $PSScriptRoot) "benchmarks\results\office-bitness-x64.json") -Raw | ConvertFrom-Json
+    $fixture.architecture = "X86"
+    $fixture.support_status = "unsupported-by-policy"
+    $fixture.status = "diagnostic"
+    $fixture | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $fixturePath -Encoding UTF8
+    try {
+        & $validator -Path $fixturePath | Out-Null
+    }
+    catch {
+        throw "X86 diagnostic evidence was rejected by its validator: $($_.Exception.Message)"
+    }
+
+    $fixture.status = "passed"
+    $fixture | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $fixturePath -Encoding UTF8
+    $accepted = $true
+    try { & $validator -Path $fixturePath | Out-Null } catch { $accepted = $false }
+    if ($accepted) { throw "Validator accepted X86 evidence with promotion status passed." }
+}
+finally {
+    if (Test-Path -LiteralPath $fixtureRoot) {
+        Remove-Item -LiteralPath $fixtureRoot -Recurse -Force
+    }
 }
 
 Write-Output "Office bitness policy guard passed: normal X86 validation is rejected before Excel work."
