@@ -103,6 +103,17 @@ Public Sub Test_Auth_ComRejectsExplicitChallengeSchemeBeforeBackend()
     Call client.GetResponse("https://example.test/protected")
 End Sub
 
+'@ExpectedError(-2147200503, "A custom challenge limit requires the native WinHTTP transport; COM delegates the default challenge exchange to WinHTTP.", "WinHttpComTransport.Execute")
+Public Sub Test_Auth_ComRejectsCustomChallengeLimitBeforeBackend()
+    Dim client As New HttpClient
+    Dim provider As IHttpAuthProvider
+
+    Set client.Transport = New WinHttpComTransport
+    Set provider = VBAHttp.CreateWindowsAuthProvider("user", "pass", HttpAuthSchemeAuto, HttpAuthTargetServer, False, 1)
+    Set client.AuthProvider = provider
+    Call client.GetResponse("https://example.test/protected")
+End Sub
+
 '@ExpectedError(-2147200503, "Challenge authentication requires an HTTPS request URL.", "HttpWindowsAuthProvider.Apply")
 Public Sub Test_Auth_WindowsChallengeProviderRequiresHttpsByDefault()
     Dim client As New HttpClient

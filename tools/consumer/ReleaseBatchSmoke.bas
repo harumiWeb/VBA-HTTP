@@ -275,6 +275,7 @@ Public Sub RunAuthSmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As St
     Dim nativeClient As Object
     Dim provider As Object
     Dim response As Object
+    Dim errorNumber As Long
 
     Set client = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateClient")
     client.BaseUrl = baseUrl
@@ -297,6 +298,17 @@ Public Sub RunAuthSmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As St
     Set response = client.GetResponse("/auth/challenge/basic")
     If response.StatusCode <> 204 Or response.Headers.GetValue("X-Auth-Verified") <> "1" Then
         Err.Raise vbObjectError + 761, "ReleaseBatchSmoke.RunAuthSmoke", "Release COM challenge authentication smoke returned an unexpected response."
+    End If
+
+    Set provider = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateWindowsAuthProvider", "user", "pass", 0, 0, True, 1)
+    Set client.AuthProvider = provider
+    On Error Resume Next
+    Set response = client.GetResponse("/auth/challenge/basic")
+    errorNumber = Err.Number
+    Err.Clear
+    On Error GoTo 0
+    If errorNumber <> -2147200503 Then
+        Err.Raise vbObjectError + 766, "ReleaseBatchSmoke.RunAuthSmoke", "Release COM custom challenge limit was not rejected before network."
     End If
 
     Set nativeClient = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateNativeClient")

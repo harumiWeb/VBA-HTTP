@@ -314,7 +314,7 @@ Public Sub Test_ComTransport_ProxyChallengeAuth()
     options.Mode = HttpProxyManual
     options.ProxyUrl = RequireProxyAuthUrl()
     Set client.ProxyOptions = options
-    Set provider = VBAHttp.CreateWindowsAuthProvider("proxy-user", "proxy-pass", HttpAuthSchemeAuto, HttpAuthTargetProxy, True, 1)
+    Set provider = VBAHttp.CreateWindowsAuthProvider("proxy-user", "proxy-pass", HttpAuthSchemeAuto, HttpAuthTargetProxy, True, 3)
     Set client.AuthProvider = provider
 
     Set response = client.GetResponse("/headers")
@@ -334,7 +334,7 @@ Public Sub Test_ComTransport_ProxyChallengeWrongCredentialsRemain407()
     options.Mode = HttpProxyManual
     options.ProxyUrl = RequireProxyAuthUrl()
     Set client.ProxyOptions = options
-    Set provider = VBAHttp.CreateWindowsAuthProvider("proxy-user", "wrong-pass", HttpAuthSchemeAuto, HttpAuthTargetProxy, True, 1)
+    Set provider = VBAHttp.CreateWindowsAuthProvider("proxy-user", "wrong-pass", HttpAuthSchemeAuto, HttpAuthTargetProxy, True, 3)
     Set client.AuthProvider = provider
 
     Set response = client.GetResponse("/headers")
@@ -395,7 +395,7 @@ Public Sub Test_ComTransport_AuthenticatedHTTPSProxyConnectReachesTLSBoundary()
     options.Mode = HttpProxyManual
     options.ProxyUrl = RequireProxyTlsAuthUrl()
     Set client.ProxyOptions = options
-    Set provider = VBAHttp.CreateWindowsAuthProvider("proxy-user", "proxy-pass", HttpAuthSchemeAuto, HttpAuthTargetProxy, True, 1)
+    Set provider = VBAHttp.CreateWindowsAuthProvider("proxy-user", "proxy-pass", HttpAuthSchemeAuto, HttpAuthTargetProxy, True, 3)
     Set client.AuthProvider = provider
     On Error GoTo ExpectedFailure
     Call client.GetResponse("/status/204")

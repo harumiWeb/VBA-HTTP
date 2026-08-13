@@ -6,6 +6,11 @@
   Basic/Digest/NTLM/Negotiate selection fails before COM backend creation and
   remains available through the native transport (ADR-0033).
 
+- Made challenge limits fail closed across backends: native WinHTTP enforces
+  `MaxChallenges`, while COM accepts only the default and rejects custom limits
+  before creating a backend because its API does not expose exchange-count
+  callbacks (ADR-0034).
+
 - Added an Excel-free WinHTTP capability preflight to the opt-in protocol-host
   runner. It checks the exact required HTTP/2 or HTTP/3 mask before creating
   Excel, records only redacted preflight metadata, and fails closed without

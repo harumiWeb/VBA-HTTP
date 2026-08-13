@@ -90,6 +90,9 @@ Friend Sub ValidateComCompatibility(ByVal Source As String)
     If mScheme <> HttpAuthSchemeAuto Then
         HttpErrors.RaiseValidation Source, "Explicit challenge scheme selection requires the native WinHTTP transport; use HttpAuthSchemeAuto for COM."
     End If
+    If mMaxChallenges <> DefaultChallengeLimit Then
+        HttpErrors.RaiseValidation Source, "A custom challenge limit requires the native WinHTTP transport; COM delegates the default challenge exchange to WinHTTP."
+    End If
 End Sub
 
 #If VBA7 Then

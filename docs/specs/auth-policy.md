@@ -46,8 +46,10 @@ Bounded buffered challenge authentication is an explicit
 `HttpWindowsAuthProvider` capability documented in
 `challenge-authentication.md`. COM uses `HttpAuthSchemeAuto`; explicit
 challenge scheme selection is native-only and fails before COM backend
-creation (ADR-0033). Streaming uploads remain one-shot and must never be
-replayed implicitly.
+creation (ADR-0033). `MaxChallenges` is a strict native replay bound; COM
+accepts only the default value and delegates the exchange count to WinHTTP,
+rejecting custom limits before creation (ADR-0034). Streaming uploads remain
+one-shot and must never be replayed implicitly.
 
 ## Redaction
 

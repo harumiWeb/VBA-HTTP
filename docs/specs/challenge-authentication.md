@@ -11,7 +11,10 @@ Use `VBAHttp.CreateNativeClient()` when the provider must request a specific
 scheme, for example `HttpAuthSchemeBasic`.
 
 `HttpWindowsAuthProvider` accepts `Auto`, `Basic`, `Digest`, `Ntlm`, or
-`Negotiate`, and a server or proxy target. Its default challenge limit is 3.
+`Negotiate`, and a server or proxy target. The native transport enforces the
+configured challenge limit (1–3); its default is 3. COM accepts the default
+value for compatibility but delegates the actual exchange count to WinHTTP.
+Any custom limit on COM fails validation before backend creation.
 The URL must be HTTPS unless `AllowInsecureHttp:=True` is explicitly supplied
 for a loopback fixture. Username/password values are validated for header
 control characters and are never returned by the public API.
@@ -33,8 +36,10 @@ The `Scheme` value is a backend capability boundary:
 - The provider is cloned into the execution snapshot and applied exactly once.
 - Automatic redirects are disabled for every challenge provider.
 - Buffered COM requests configure credentials before `Send`; WinHTTP performs
-  its own bounded challenge exchange using the server/proxy's advertised
-  scheme. COM does not silently ignore an explicit scheme request.
+  its own challenge exchange using the server/proxy's advertised
+  scheme. The COM API does not expose a challenge-count callback, so the
+  library does not claim a strict per-provider limit there; custom limits are
+  rejected instead of silently ignored.
 - Native buffered requests query `WWW-Authenticate`/`Proxy-Authenticate`, set
   credentials on the existing handle, and resend the retained request body at
   most three times (or the provider's lower limit).

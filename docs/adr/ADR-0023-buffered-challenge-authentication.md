@@ -16,7 +16,8 @@ native callbacks into VBA application logic are also prohibited by ADR-0006.
 
 - Add an immutable `HttpWindowsAuthProvider` factory with an explicit target
   (server or proxy), preferred WinHTTP scheme (Auto, Basic, Digest, NTLM, or
-  Negotiate), bounded challenge count, and an explicit insecure-loopback opt-in.
+  Negotiate), a native bounded challenge count, and an explicit insecure-loopback
+  opt-in. COM accepts only the default count as documented by ADR-0034.
 - The provider is an `IHttpAuthProvider` execution-snapshot policy. It adds no
   header itself, rejects conflicting caller credentials, disables automatic
   redirects, and never exposes username/password getters to consumers,
@@ -24,7 +25,9 @@ native callbacks into VBA application logic are also prohibited by ADR-0006.
 - The COM transport configures credentials on each fresh buffered request
   before `Send`; WinHTTP owns the challenge exchange and keep-alive details.
   COM uses `HttpAuthSchemeAuto`; explicit scheme selection is a native-only
-  capability boundary defined by ADR-0033.
+  capability boundary defined by ADR-0033. COM also accepts only the default
+  challenge limit and delegates the actual exchange count to WinHTTP; custom
+  limits fail before backend creation under ADR-0034.
   COM async batch operations use the same configuration path.
 - The native buffered transport performs at most the provider's bounded number
   of challenge resends on the same request handle. It queries the server's
@@ -42,7 +45,9 @@ native callbacks into VBA application logic are also prohibited by ADR-0006.
 ## Consequences
 
 - Windows integrated and Digest authentication becomes available for buffered
-  requests without weakening the streaming ownership contract.
+  requests without weakening the streaming ownership contract. Native callers
+  get a strict replay bound; COM callers get WinHTTP-managed exchange behavior
+  and must use the default limit.
 - WinHTTP's native/COM implementations remain backend-specific internally but
   share the public provider snapshot, redirect, redaction, and final-response
   semantics.

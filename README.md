@@ -152,7 +152,9 @@ opt into bounded Windows/Digest/server-or-proxy challenge authentication with
 before opening a one-shot source. The COM backend uses
 `HttpAuthSchemeAuto` and lets WinHTTP negotiate the advertised challenge
 scheme; explicit Basic/Digest/NTLM/Negotiate selection requires the native
-client and fails before COM backend creation. OAuth flows and interactive
+client and fails before COM backend creation. Native enforces the configured
+challenge limit; COM accepts only the default and delegates its exchange count
+to WinHTTP, rejecting custom limits before backend creation. OAuth flows and interactive
 callbacks remain outside the current provider contract; see
 [`docs/specs/auth-policy.md`](docs/specs/auth-policy.md).
 

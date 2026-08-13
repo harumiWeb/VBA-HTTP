@@ -25,7 +25,8 @@ change authentication behavior when a caller switches transports.
 
 - The COM transport accepts `HttpAuthSchemeAuto` for
   `HttpWindowsAuthProvider`. WinHTTP chooses among the schemes advertised by
-  the server or proxy during its bounded challenge exchange.
+  the server or proxy during its internal challenge exchange; the strict
+  provider replay bound is native-only under ADR-0034.
 - An explicit `Basic`, `Digest`, `Ntlm`, or `Negotiate` selection is native-only.
   The COM path raises `HttpErrorValidation` before creating the COM backend, so
   no network request or credential exchange occurs under an ambiguous contract.
