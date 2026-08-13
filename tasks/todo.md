@@ -157,6 +157,7 @@ fresh cloneから同じ開発・test・release buildを再現できるclean base
 - [x] deterministic testで使用するclock、random、transportの差し替え方針をspec化する。
 - [x] x64 Officeのsmoke test証跡を取得する。
 - [x] 32-bit Officeのcompile／smoke testを行う環境と証跡保存方法を文書化する。
+- [x] Office validation runnerが既存Excel PIDを所有済みと誤認せず、owned PIDだけを終了する境界をADR-0028で固定する。
 
 ### Release build foundation
 

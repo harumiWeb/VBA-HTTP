@@ -33,25 +33,40 @@ function Publish-Json([string]$Path, $Document) {
     }
 }
 
+function Get-ExcelProcessIds {
+    @(Get-Process -Name EXCEL -ErrorAction SilentlyContinue | ForEach-Object { [int]$_.Id })
+}
+
 function Get-OfficeInfo {
     $excel = $null
-    $info = [ordered]@{ version = "unknown"; build = "unknown"; operating_system = [Environment]::OSVersion.VersionString }
+    $baselineIds = @(Get-ExcelProcessIds)
+    $ownedIds = @()
     try {
         $excel = New-Object -ComObject Excel.Application
-        $info.version = [string]$excel.Version
-        $info.build = [string]$excel.Build
-        $info.operating_system = [string]$excel.OperatingSystem
-    }
-    catch {
-        $info.error = "Excel metadata query failed"
+        $deadline = [DateTime]::UtcNow.AddSeconds(5)
+        do {
+            $afterIds = @(Get-ExcelProcessIds)
+            $ownedIds = @($afterIds | Where-Object { $baselineIds -notcontains $_ })
+            if ($ownedIds.Count -gt 0) { break }
+            Start-Sleep -Milliseconds 50
+        } while ([DateTime]::UtcNow -lt $deadline)
+        if ($ownedIds.Count -eq 0) {
+            throw "Could not prove ownership of a new Excel process; refusing to quit a pre-existing Excel instance."
+        }
+        return [ordered]@{
+            version = [string]$excel.Version
+            build = [string]$excel.Build
+            operating_system = [string]$excel.OperatingSystem
+        }
     }
     finally {
         if ($null -ne $excel) {
-            try { $excel.Quit() } catch {}
+            if ($ownedIds.Count -gt 0) {
+                try { $excel.Quit() } catch {}
+            }
             [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($excel)
         }
     }
-    return $info
 }
 
 try {

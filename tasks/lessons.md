@@ -21,3 +21,7 @@
   never terminate a process they did not create. A concurrent user-launched
   Excel process is intentionally treated as an inconclusive observation; do
   not broaden cleanup commands to `Get-Process Excel` or a name-only kill.
+
+- Office bitness validation must prove that its metadata COM object created a
+  new Excel PID before calling `Quit`; if ownership is ambiguous, fail closed
+  and leave every pre-existing Excel process untouched.

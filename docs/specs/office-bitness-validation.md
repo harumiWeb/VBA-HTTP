@@ -17,7 +17,10 @@ builds a temporary production workbook with VBE compile/save/close evidence,
 executes the deterministic loopback integration suite, and invokes `Main.Run`
 from that artifact. It publishes a path-stable,
 loopback-free JSON result under `benchmarks/results/` and removes the temporary
-artifact. On a 32-bit Office host use:
+artifact. Before reading Office metadata, the runner snapshots existing Excel
+PIDs and proves that its COM instance created a new PID. It calls `Quit` only
+for that owned instance; if ownership cannot be proven, validation fails closed
+without touching a pre-existing user Excel process. On a 32-bit Office host use:
 
 ```powershell
 powershell -File tools/Run-OfficeBitnessValidation.ps1 -ExpectedArchitecture X86

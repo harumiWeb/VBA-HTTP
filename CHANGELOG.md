@@ -9,6 +9,8 @@
   code points cannot bypass its ASCII-only contract.
 - Hardened cookie-name parsing against signed `AscW` values so non-ASCII names
   are ignored instead of entering the jar.
+- Hardened Office bitness validation to prove ownership of a new Excel PID
+  before quitting its metadata COM instance.
 
 - Added an Excel-free native declaration ABI gate that verifies the VBA7
   `PtrSafe`/`LongPtr` and legacy `Long` WinHTTP branches, including the

@@ -26,7 +26,9 @@ Public Sub Test_Diagnostics_CapturesRedactedResponseEvent()
     diagnostics.Enabled = True
     Set client.Diagnostics = diagnostics
     Request.Method = "GET"
-    Request.Url = "https://user:password@example.test/items?token=query-secret#fragment"
+    'URL user-info is rejected before execution; keep this case focused on
+    'redacting query data while retaining the same safe diagnostic target.
+    Request.Url = "https://example.test/items?token=query-secret#fragment"
     Request.Headers.SetValue "Authorization", "Bearer request-secret"
     Request.Headers.SetValue "X-Trace", "safe-request"
 
