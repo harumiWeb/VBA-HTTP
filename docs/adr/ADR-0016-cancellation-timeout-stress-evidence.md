@@ -30,8 +30,9 @@ promise and must not claim stronger interruption semantics.
 - The PowerShell runner starts the deterministic local server, records the
   existing Excel PID baseline for the complete gate, samples only newly created
   processes across all scenarios, waits for VBA start/done markers, captures
-  before/peak/after/idle process snapshots,
-  opens a release marker, and publishes JSON atomically. Existing user Excel
+  before/peak/after/idle process snapshots; each stress method pauses one
+  second after its post-warmup start marker before beginning the measured loop;
+  it then opens a release marker and publishes JSON atomically. Existing user Excel
   processes are never terminated. Native idle handle growth must be <=8 and
   COM growth <=32. Memory peaks are recorded but remain host-dependent
   evidence; concurrent user-launched Excel is an inconclusive run condition.

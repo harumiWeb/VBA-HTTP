@@ -34,6 +34,7 @@ Public Sub Test_CancellationStress_ComActiveCancellation()
     RunComActiveCancellation client, baseUrl
     WriteRecoveryRequest client
     WriteMarker startMarker
+    HttpTiming.Pause 1000
 
     For index = 1 To iterations
         RunComActiveCancellation client, baseUrl
@@ -73,6 +74,7 @@ Public Sub Test_CancellationStress_ComDeadline()
     RunComDeadline client, baseUrl
     WriteRecoveryRequest client
     WriteMarker startMarker
+    HttpTiming.Pause 1000
 
     For index = 1 To iterations
         RunComDeadline client, baseUrl
@@ -114,6 +116,7 @@ Public Sub Test_CancellationStress_NativeDownloadCancellation()
     RunNativeDownloadCancellation client, "warmup"
     WriteRecoveryRequest client
     WriteMarker startMarker
+    HttpTiming.Pause 1000
 
     For index = 1 To iterations
         RunNativeDownloadCancellation client, CStr(index)
@@ -153,6 +156,7 @@ Public Sub Test_CancellationStress_ComReceiveTimeout()
     RunComReceiveTimeout client, baseUrl
     WriteRecoveryRequest client
     WriteMarker startMarker
+    HttpTiming.Pause 1000
 
     For index = 1 To iterations
         RunComReceiveTimeout client, baseUrl

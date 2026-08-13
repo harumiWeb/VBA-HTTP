@@ -27,7 +27,10 @@ host-specific allocator variation.
 ## Process evidence
 
 The runner records Excel PIDs present before the complete gate and samples only
-new processes across every scenario. Existing Excel processes are baseline-only and are never terminated;
+new processes across every scenario. Each stress method performs a one-second
+post-warmup settling pause after the start marker so the first measured
+operation is separated from Excel startup/COM allocation. Existing Excel
+processes are baseline-only and are never terminated;
 the runner does not assume ownership of an unrelated user session. VBA writes
 `start`, `done`, and waits for `release` markers. The runner captures process
 handles, working set, and private bytes before the measured loop, at peak, one
