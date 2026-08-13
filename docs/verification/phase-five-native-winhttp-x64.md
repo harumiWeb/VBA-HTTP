@@ -1,6 +1,6 @@
 # Phase 5 native WinHTTP evidence (x64)
 
-Recorded: 2026-08-12
+Recorded: 2026-08-13 (refreshed against the current source revision)
 
 ## Host and build
 
@@ -15,10 +15,10 @@ Recorded: 2026-08-12
 - `xlflow analyze --json`: 0 findings, 0 warnings
 - `task format`: clean
 - `task class-source:check`: clean
-- `task test:integration`: 34/34 test cases passed as reported by xlflow
-- `task test`: completed with no failing tests; network-dependent suites are
-  inconclusive without the loopback server and are covered by the integration
-  run above.
+- `task test:integration`: 78/78 test cases passed as reported by xlflow
+- `task test:office-bitness`: 228 discovered tests, 143 passed, 85
+  inconclusive (environment-gated suites without the loopback server), 0
+  failed; the dedicated loopback integration run above passed all 78 tests.
 - Native contract coverage includes GET headers/query, text methods, binary body,
   redirect/status behavior, connection error mapping, negotiated protocol query,
   and 20 repeated requests with process handle-count regression.

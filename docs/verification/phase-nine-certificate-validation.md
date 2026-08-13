@@ -13,7 +13,7 @@ normal OS trust decision without introducing a certificate-ignore switch.
 - `task testserver:unit`: passed, including certificate constraints and SAN
   checks.
 - `task check`: lint, analyze, format, and class-source validation passed.
-- `task test:integration`: 71/71 integration tests passed on the configured
+- `task test:integration`: 78/78 integration tests passed on the configured
   Windows x64 Office host.
 - `WinHttpComTransportTests.Test_ComTransport_RejectsUntrustedCertificate`:
   self-signed HTTPS request mapped to `HttpErrorTls`.
