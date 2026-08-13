@@ -3,6 +3,8 @@
 - Hardened `HttpHeaders` value validation to reject NUL, DEL, and C0 control
   characters (while preserving HTAB and Unicode), preventing control-byte
   injection before COM/native transport serialization.
+- Corrected signed `AscW` handling so non-ASCII header names cannot bypass the
+  ASCII token validation boundary.
 
 - Added an Excel-free native declaration ABI gate that verifies the VBA7
   `PtrSafe`/`LongPtr` and legacy `Long` WinHTTP branches, including the

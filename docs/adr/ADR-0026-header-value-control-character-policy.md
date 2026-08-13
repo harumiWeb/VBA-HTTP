@@ -21,6 +21,8 @@ intermediaries.
 - Preserve the existing dedicated CR/LF validation description for compatible
   diagnostics; other rejected controls use the stable validation description
   `Header value cannot contain control characters.`
+- Treat header names as ASCII tokens: code points at or above U+007F are
+  rejected even when VBA's signed `AscW` representation is negative.
 - Allow HTAB, visible ASCII, and Unicode/obs-text values. This policy checks
   control characters only; it does not silently transcode or normalize values.
 - Apply the rule before any transport, cookie, authentication, or diagnostics

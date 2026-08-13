@@ -125,6 +125,7 @@ Private Sub ValidateName(ByVal Name As String)
     End If
     For index = 1 To Len(Name)
         code = AscW(Mid$(Name, index, 1))
+        If code < 0 Then code = code + 65536
         If code <= 32 Or code >= 127 Or code = 58 Then
             HttpErrors.RaiseValidation "HttpHeaders", "Header name contains an invalid character."
         End If

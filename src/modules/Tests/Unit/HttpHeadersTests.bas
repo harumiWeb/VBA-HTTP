@@ -49,6 +49,13 @@ Public Sub Test_Headers_RejectsColonInName()
     headers.Add "Bad:Name", "value"
 End Sub
 
+'@ExpectedError(-2147200503, "Header name contains an invalid character.", "HttpHeaders")
+Public Sub Test_Headers_RejectsUnicodeNameOutsideAsciiToken()
+    Dim headers As New HttpHeaders
+
+    headers.Add ChrW$(-223), "value"
+End Sub
+
 '@ExpectedError(-2147200503, "Header value cannot contain CR or LF.", "HttpHeaders")
 Public Sub Test_Headers_RejectsLineBreakInValue()
     Dim headers As New HttpHeaders

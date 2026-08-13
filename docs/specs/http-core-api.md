@@ -101,7 +101,7 @@ text.
 
 ## Headers and query parameters
 
-`HttpHeaders` is case-insensitive for lookup and preserves insertion order and original casing for emission. `Add` appends a value, `SetValue` replaces every value for that name, `GetValue` returns the first value or an empty string, and `GetValues` returns a zero-based `String()` copy. Header names reject empty strings, control characters, colon, and surrounding whitespace. Values reject CR, LF, NUL, DEL, and every other C0 control character except horizontal tab (HTAB). Visible Unicode and other non-ASCII text are preserved; transport-specific wire encoding remains the backend's responsibility.
+`HttpHeaders` is case-insensitive for lookup and preserves insertion order and original casing for emission. `Add` appends a value, `SetValue` replaces every value for that name, `GetValue` returns the first value or an empty string, and `GetValues` returns a zero-based `String()` copy. Header names are ASCII tokens: empty strings, control characters, non-ASCII code points, colon, and surrounding whitespace are rejected. Values reject CR, LF, NUL, DEL, and every other C0 control character except horizontal tab (HTAB). Visible Unicode and other non-ASCII text are preserved in values; transport-specific wire encoding remains the backend's responsibility.
 
 `HttpParams` preserves insertion order and repeated names. Query encoding uses UTF-8 percent encoding. RFC 3986 unreserved bytes (`A-Z`, `a-z`, `0-9`, `-`, `.`, `_`, `~`) remain literal; spaces encode as `%20`, never `+`. Both names and values are encoded.
 
