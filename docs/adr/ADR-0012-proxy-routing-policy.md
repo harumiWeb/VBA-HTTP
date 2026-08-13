@@ -29,9 +29,10 @@ the routing value.
   `WINHTTP_ACCESS_TYPE_NO_PROXY`, and `WINHTTP_ACCESS_TYPE_NAMED_PROXY` when it
   calls `WinHttpOpen`. The COM backend calls `IWinHttpRequest::SetProxy` after
   `Open` and before request headers/body are sent.
-- Proxy credentials, `Proxy-Authorization`, PAC/WPAD authoring, SOCKS, and
-  HTTPS CONNECT tunneling policy remain outside this slice and belong to the
-  authentication/security decisions.
+- Proxy credentials, `Proxy-Authorization`, PAC/WPAD authoring, and SOCKS
+  remain outside this routing slice. The deterministic HTTPS CONNECT boundary
+  is defined separately by ADR-0031; trusted corporate CONNECT behavior still
+  belongs to host-specific authentication/security evidence.
 
 ## Consequences
 
@@ -42,8 +43,9 @@ the routing value.
   instead of creating hidden authentication behavior.
 - The native session is recreated for each execution snapshot, so proxy mode
   is request-scoped and does not mutate global WinHTTP settings.
-- HTTPS targets through a manual HTTP proxy are not claimed until a later
-  CONNECT/authentication slice adds its own fixture and security contract.
+- HTTPS targets through a manual HTTP proxy are covered only by the loopback
+  CONNECT boundary in ADR-0031; trusted corporate proxy behavior is not
+  inferred from that fixture.
 
 ## Rationale
 

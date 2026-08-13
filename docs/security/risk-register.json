@@ -20,8 +20,8 @@
       "severity": "medium",
       "blocks_current_release": false,
       "blocks_v1": true,
-      "required_evidence": "Real Windows-domain Negotiate/NTLM and manual-proxy CONNECT challenge fixtures, plus x64 release smoke",
-      "evidence": "docs/specs/challenge-authentication.md; docs/specs/compatibility-matrix.md"
+      "required_evidence": "Real Windows-domain Negotiate/NTLM and trusted corporate manual-proxy CONNECT success evidence, plus x64 release smoke; loopback CONNECT boundary is covered separately",
+      "evidence": "docs/specs/challenge-authentication.md; docs/specs/https-connect-proxy.md; docs/specs/compatibility-matrix.md; docs/adr/ADR-0031-deterministic-https-connect-boundary.md"
     },
     {
       "id": "com-receive-timeout-abort-growth",

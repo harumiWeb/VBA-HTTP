@@ -13,9 +13,9 @@ the focused compile, integration, and release-consumer smoke checks.
 | HTTPS HTTP/2 negotiation | `verified-host-specific` | x64 record at `benchmarks/results/protocol-host-http2.json` against `nghttp2.org:443`; required HTTP/2, Office 16.0 build 17932, Windows x64, and exact `ProtocolUsed=HTTP/2` |
 | HTTPS HTTP/3 negotiation | `pending` | Same fail-closed host runner on a QUIC-capable Windows/WinHTTP endpoint; requested mask and exact `ProtocolUsed` |
 | Native WinHTTP gzip/deflate decompression | `verified` | x64 loopback buffered/download tests and release consumer smoke; option 118 requires Windows 8.1+ |
-| WinHTTP default/direct/manual HTTP proxy routing | `integration-tested` | x64 COM/native loopback proxy tests; WinHTTP access-type mapping and release smoke; HTTPS CONNECT remains pending |
+| WinHTTP default/direct/manual HTTP proxy routing | `integration-tested` | x64 COM/native loopback forwarding and HTTPS CONNECT-boundary tests; WinHTTP access-type mapping and release smoke; trusted corporate CONNECT remains host-dependent |
 | Preemptive Basic/Bearer auth providers | `integration-tested` | x64 COM/native loopback success, HTTPS-by-default validation, redirect suppression, and release consumer smoke |
-| Buffered Windows/Digest/server-or-proxy challenge provider | `integration-tested` | x64 COM/native bounded server Basic and proxy Basic challenge, release smoke, wrong-credential 407, and upload pre-network rejection; real Windows-domain and HTTPS CONNECT fixtures remain pending |
+| Buffered Windows/Digest/server-or-proxy challenge provider | `integration-tested` | x64 COM/native bounded server Basic, HTTP proxy Basic, and loopback HTTPS CONNECT Basic challenge; release smoke, wrong-credential 407, and upload pre-network rejection; real Windows-domain and trusted corporate CONNECT fixtures remain pending |
 | Windows 32-bit Office, native declarations | `unsupported-by-policy` | No promotion evidence is required. A future support claim needs a superseding ADR and a complete real-host compile, loopback integration, release build, and consumer-smoke bundle |
 | COM transport with advanced protocol options | `rejected-by-contract` | Public contract test must reject non-empty options without network I/O |
 

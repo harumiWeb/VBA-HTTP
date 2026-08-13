@@ -29,11 +29,14 @@ control characters and are never returned by the public API.
   and exhausted challenge attempts are not converted into a secret-bearing
   error description.
 
-The deterministic proxy fixture starts on a separate `proxy-auth-listen`
-listener. It requires the fixed loopback-only `proxy-user` / `proxy-pass`
-credential, verifies `HttpAuthTargetProxy` for both transports, and leaves the
-existing unauthenticated forwarding proxy unchanged. It does not claim HTTPS
-CONNECT, PAC, or Windows-domain authentication support.
+The deterministic proxy fixture starts on separate `proxy-auth-listen` and
+`proxy-tls-auth-listen` listeners. It requires the fixed loopback-only
+`proxy-user` / `proxy-pass` credential, verifies `HttpAuthTargetProxy` for both
+transports, and leaves the existing unauthenticated forwarding proxy
+unchanged. The TLS listener proves only that an authenticated CONNECT reaches
+the intentionally untrusted origin before normal `HttpErrorTls` validation;
+it does not claim trusted HTTPS CONNECT, PAC, or Windows-domain authentication
+support. See `docs/specs/https-connect-proxy.md`.
 
 ## Security and compatibility
 
@@ -51,5 +54,8 @@ domain fixtures are host-dependent and remain separate compatibility evidence.
   `tools/testserver/server.go` and COM/native integration tests.
 - Deterministic proxy Basic challenge: `proxy_auth_url` from
   `tools/testserver/main.go`, COM/native proxy-target tests, and release smoke.
+- Deterministic CONNECT boundary: `proxy_tls_url`, `proxy_tls_target_url`, and
+  `proxy_tls_auth_url` from `tools/testserver/main.go`, with COM/native TLS
+  rejection and `/__admin/proxy-stats` assertions.
 - Release consumer smoke invokes the factory without importing test code into
   the release workbook.

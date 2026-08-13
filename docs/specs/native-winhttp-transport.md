@@ -86,7 +86,9 @@ be superseded with a real host evidence bundle.
   while decoding is active because wire length may not equal bytes written.
 - `HttpProxyOptions` maps to the WinHTTP session access type and preserves the
   same default/no-proxy/manual semantics as the COM backend. Manual proxy
-  credentials and HTTPS CONNECT are outside the current contract.
+  credentials remain a challenge-provider concern. The loopback HTTPS CONNECT
+  boundary is specified in `https-connect-proxy.md`; trusted corporate CONNECT
+  behavior remains host-dependent.
 
 ## Resource regression gate
 

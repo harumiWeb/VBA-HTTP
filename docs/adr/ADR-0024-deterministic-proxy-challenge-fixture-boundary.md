@@ -10,7 +10,7 @@
 loopback proxy intentionally forwarded unauthenticated HTTP requests. Reusing
 that listener for 407 tests would make every existing proxy test depend on
 credential setup and would not distinguish routing failures from authentication
-failures. HTTPS CONNECT and real corporate proxy behavior are still
+failures. Trusted HTTPS CONNECT and real corporate proxy behavior are still
 host-dependent.
 
 ## Decision
@@ -18,15 +18,16 @@ host-dependent.
 - Add a separate optional `-proxy-auth-listen` loopback listener to the Go test
   server. Its readiness JSON exposes `proxy_auth_url`; the existing
   `proxy_url` behavior is unchanged.
-- The authenticated fixture forwards only to the same loopback alias as the
-  ordinary proxy, rejects CONNECT and non-target hosts, and returns a fixed
-  Basic 407 challenge until `proxy-user` / `proxy-pass` is supplied.
+- The authenticated HTTP fixture forwards only to the same loopback alias as
+  the ordinary proxy, rejects non-target hosts, and returns a fixed Basic 407
+  challenge until `proxy-user` / `proxy-pass` is supplied. HTTPS CONNECT is a
+  separate listener and boundary decision recorded by ADR-0031.
 - Integration and release consumer smoke use `HttpAuthTargetProxy` with an
   explicit insecure loopback opt-in. No credential is embedded in a proxy URL,
   logged, echoed, or used for an external target.
-- This fixture proves bounded HTTP forwarding challenge behavior only. It does
-  not promote HTTPS CONNECT, PAC/WPAD, or Windows-domain Negotiate/NTLM to the
-  compatibility matrix.
+- This fixture proves bounded HTTP forwarding challenge behavior only. The
+  separate CONNECT boundary does not promote trusted HTTPS CONNECT, PAC/WPAD,
+  or Windows-domain Negotiate/NTLM to the compatibility matrix.
 
 ## Consequences
 
@@ -34,8 +35,8 @@ host-dependent.
   current x64 host, including wrong-credential final 407 behavior.
 - Existing routing tests remain focused on routing and do not inherit an auth
   dependency.
-- A real CONNECT tunnel and domain-auth host remain required before claiming
-  broad proxy/integrated-auth compatibility.
+- A trusted corporate CONNECT and domain-auth host remain required before
+  claiming broad proxy/integrated-auth compatibility.
 
 ## Evidence
 

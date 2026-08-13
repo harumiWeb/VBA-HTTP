@@ -13,14 +13,14 @@
                    "operating_system":  "Windows (64-bit) NT 10.00"
                },
     "tests":  {
-                  "total":  239,
+                  "total":  243,
                   "passed":  154,
-                  "inconclusive":  85,
+                  "inconclusive":  89,
                   "failed":  0
               },
     "integration":  {
-                        "total":  78,
-                        "passed":  78,
+                        "total":  82,
+                        "passed":  82,
                         "failed":  0
                     },
     "build":  {

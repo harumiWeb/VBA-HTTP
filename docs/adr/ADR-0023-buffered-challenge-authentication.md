@@ -47,9 +47,11 @@ native callbacks into VBA application logic are also prohibited by ADR-0006.
 - Credentials may remain in a process-owned provider until its snapshot is
   released; VBA offers no reliable memory zeroization. Callers must still use
   TLS in production and pass `AllowInsecureHttp:=True` only for loopback tests.
-- Proxy challenge integration uses the separate deterministic listener defined
-  by ADR-0024; host-specific proxy/CONNECT and integrated credential evidence
-  remain compatibility follow-up work.
+- Proxy challenge integration uses the separate deterministic listeners defined
+  by ADR-0024 and ADR-0031. The CONNECT fixture proves only a loopback tunnel
+  followed by normal untrusted-certificate rejection; trusted host-specific
+  proxy/CONNECT and integrated credential evidence remain compatibility
+  follow-up work.
 
 ## Evidence
 

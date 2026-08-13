@@ -1,5 +1,10 @@
 ## Unreleased
 
+- Added an offline HTTPS CONNECT proxy boundary fixture (including fixed Basic
+  proxy challenge) with COM/native integration coverage. The fixture proves
+  tunnel reachability before normal untrusted-certificate rejection; trusted
+  corporate CONNECT and HTTP/3/QUIC host evidence remain explicit gates.
+
 - Hardened `HttpHeaders` value validation to reject NUL, DEL, and C0 control
   characters (while preserving HTAB and Unicode), preventing control-byte
   injection before COM/native transport serialization.
@@ -126,12 +131,14 @@
   suppression, secret-header redaction helpers, and release consumer auth smoke.
   Bounded buffered server/proxy challenge authentication is now available via
   `HttpWindowsAuthProvider`; streaming upload replay, real Windows-domain
-  credentials, and proxy CONNECT challenge fixtures remain deferred.
+  credentials, and trusted corporate proxy CONNECT remain deferred. The
+  loopback CONNECT boundary is covered separately by ADR-0031.
 
 - Added shared default, direct, and manual HTTP proxy routing via
   `HttpProxyOptions` for COM and native transports, with deterministic loopback
   forwarding tests. Added a separate fixed Basic proxy-challenge listener and
-  COM/native/release smoke for `HttpAuthTargetProxy`; HTTPS CONNECT and real
+  COM/native/release smoke for `HttpAuthTargetProxy`; the loopback HTTPS
+  CONNECT boundary is covered by ADR-0031, while trusted CONNECT and real
   Windows-domain authentication remain deferred.
 
 ### Added

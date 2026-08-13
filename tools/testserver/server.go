@@ -33,6 +33,8 @@ type testServer struct {
 	attempts          map[string]int
 	inFlight          int
 	maxInFlight       int
+	proxyConnects     int
+	proxyAuthorized   int
 	shutdownOnce      sync.Once
 	shutdownRequested chan struct{}
 }
@@ -50,6 +52,7 @@ func (s *testServer) routes() http.Handler {
 	mux.HandleFunc("POST /__admin/reset", s.reset)
 	mux.HandleFunc("POST /__admin/shutdown", s.shutdown)
 	mux.HandleFunc("GET /__admin/stats", s.stats)
+	mux.HandleFunc("GET /__admin/proxy-stats", s.proxyStats)
 	mux.HandleFunc("GET /status/{code}", s.status)
 	mux.HandleFunc("GET /delay/{milliseconds}", s.delay)
 	mux.HandleFunc("GET /disconnect", s.disconnect)
@@ -101,6 +104,8 @@ func (s *testServer) reset(w http.ResponseWriter, _ *http.Request) {
 	clear(s.attempts)
 	s.inFlight = 0
 	s.maxInFlight = 0
+	s.proxyConnects = 0
+	s.proxyAuthorized = 0
 	s.mu.Unlock()
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -151,6 +156,26 @@ func (s *testServer) stats(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("X-Current-In-Flight", strconv.Itoa(current))
 	w.Header().Set("X-Max-In-Flight", strconv.Itoa(maximum))
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (s *testServer) proxyStats(w http.ResponseWriter, _ *http.Request) {
+	s.mu.Lock()
+	connects := s.proxyConnects
+	authorized := s.proxyAuthorized
+	s.mu.Unlock()
+	writeJSON(w, http.StatusOK, map[string]int{
+		"connect_attempts":    connects,
+		"authorized_connects": authorized,
+	})
+}
+
+func (s *testServer) recordProxyConnect(authorized bool) {
+	s.mu.Lock()
+	s.proxyConnects++
+	if authorized {
+		s.proxyAuthorized++
+	}
+	s.mu.Unlock()
 }
 
 func (s *testServer) beginInFlight() {

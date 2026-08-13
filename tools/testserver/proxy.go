@@ -2,8 +2,10 @@ package main
 
 import (
 	"io"
+	"net"
 	"net/http"
 	"net/url"
+	"time"
 )
 
 const proxyBasicAuthorization = "Basic cHJveHktdXNlcjpwcm94eS1wYXNz"
@@ -13,13 +15,17 @@ const proxyBasicAuthorization = "Basic cHJveHktdXNlcjpwcm94eS1wYXNz"
 // malformed test cannot accidentally reach the external network.
 type loopbackProxy struct {
 	target           *url.URL
+	targetAddress    string
+	owner            *testServer
 	transport        *http.Transport
 	requireBasicAuth bool
 }
 
-func newLoopbackProxy(target *url.URL, requireBasicAuth bool) *loopbackProxy {
+func newLoopbackProxy(target *url.URL, targetAddress string, owner *testServer, requireBasicAuth bool) *loopbackProxy {
 	return &loopbackProxy{
-		target: target,
+		target:        target,
+		targetAddress: targetAddress,
+		owner:         owner,
 		transport: &http.Transport{
 			Proxy: nil,
 		},
@@ -29,7 +35,7 @@ func newLoopbackProxy(target *url.URL, requireBasicAuth bool) *loopbackProxy {
 
 func (p *loopbackProxy) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	if request.Method == http.MethodConnect {
-		http.Error(writer, "CONNECT is not supported by the deterministic test proxy", http.StatusNotImplemented)
+		p.serveConnect(writer, request)
 		return
 	}
 	if p.requireBasicAuth && request.Header.Get("Proxy-Authorization") != proxyBasicAuthorization {
@@ -72,4 +78,63 @@ func (p *loopbackProxy) ServeHTTP(writer http.ResponseWriter, request *http.Requ
 	writer.Header().Set("X-Test-Proxy-Forwarded", "1")
 	writer.WriteHeader(response.StatusCode)
 	_, _ = io.Copy(writer, response.Body)
+}
+
+func (p *loopbackProxy) serveConnect(writer http.ResponseWriter, request *http.Request) {
+	authorized := !p.requireBasicAuth || request.Header.Get("Proxy-Authorization") == proxyBasicAuthorization
+	if p.owner != nil {
+		p.owner.recordProxyConnect(authorized)
+	}
+	if !authorized {
+		writer.Header().Set("Proxy-Authenticate", `Basic realm="vba-http-proxy-challenge"`)
+		writer.WriteHeader(http.StatusProxyAuthRequired)
+		return
+	}
+
+	requestedHost := request.Host
+	if requestedHost == "" && request.URL != nil {
+		requestedHost = request.URL.Host
+	}
+	if requestedHost != p.target.Host {
+		http.Error(writer, "test proxy refuses a non-loopback CONNECT target", http.StatusBadGateway)
+		return
+	}
+	if p.targetAddress == "" {
+		http.Error(writer, "test proxy has no CONNECT target", http.StatusBadGateway)
+		return
+	}
+
+	targetConnection, err := net.DialTimeout("tcp", p.targetAddress, 5*time.Second)
+	if err != nil {
+		http.Error(writer, "test proxy CONNECT target failed", http.StatusBadGateway)
+		return
+	}
+
+	hijacker, ok := writer.(http.Hijacker)
+	if !ok {
+		_ = targetConnection.Close()
+		http.Error(writer, "connection hijacking unavailable", http.StatusInternalServerError)
+		return
+	}
+	proxyConnection, _, err := hijacker.Hijack()
+	if err != nil {
+		_ = targetConnection.Close()
+		return
+	}
+
+	defer proxyConnection.Close()
+	defer targetConnection.Close()
+	if _, err = io.WriteString(proxyConnection, "HTTP/1.1 200 Connection Established\r\n\r\n"); err != nil {
+		return
+	}
+
+	completed := make(chan struct{}, 2)
+	go proxyCopy(targetConnection, proxyConnection, completed)
+	go proxyCopy(proxyConnection, targetConnection, completed)
+	<-completed
+}
+
+func proxyCopy(destination net.Conn, source net.Conn, completed chan<- struct{}) {
+	_, _ = io.Copy(destination, source)
+	completed <- struct{}{}
 }

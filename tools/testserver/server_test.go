@@ -1,15 +1,18 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"compress/flate"
 	"compress/gzip"
 	"crypto/sha256"
+	"crypto/tls"
 	"crypto/x509"
 	"encoding/hex"
 	"encoding/json"
 	"io"
 	"mime/multipart"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -271,7 +274,7 @@ func TestLoopbackProxyForwardsOnlyToTarget(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	proxy := httptest.NewServer(newLoopbackProxy(targetURL, false))
+	proxy := httptest.NewServer(newLoopbackProxy(targetURL, target.Listener.Addr().String(), nil, false))
 	defer proxy.Close()
 	proxyURL, err := url.Parse(proxy.URL)
 	if err != nil {
@@ -305,7 +308,7 @@ func TestLoopbackProxyBasicChallenge(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	proxy := httptest.NewServer(newLoopbackProxy(targetURL, true))
+	proxy := httptest.NewServer(newLoopbackProxy(targetURL, target.Listener.Addr().String(), nil, true))
 	defer proxy.Close()
 	proxyURL, err := url.Parse(proxy.URL)
 	if err != nil {
@@ -335,6 +338,117 @@ func TestLoopbackProxyBasicChallenge(t *testing.T) {
 	if response.StatusCode != http.StatusOK || response.Header.Get("X-Test-Proxy-Forwarded") != "1" {
 		t.Fatalf("authenticated proxy response = %d, forwarded = %q", response.StatusCode, response.Header.Get("X-Test-Proxy-Forwarded"))
 	}
+}
+
+func TestLoopbackProxyConnectTunnelsTLS(t *testing.T) {
+	target := httptest.NewTLSServer(newTestServer().routes())
+	defer target.Close()
+	targetURL, err := url.Parse(target.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	owner := newTestServer()
+	proxy := httptest.NewServer(newLoopbackProxy(targetURL, target.Listener.Addr().String(), owner, false))
+	defer proxy.Close()
+
+	connection := connectThroughProxy(t, proxy.Listener.Addr().String(), targetURL.Host, "")
+	defer connection.Close()
+	connectResponse, err := http.ReadResponse(bufio.NewReader(connection), &http.Request{Method: http.MethodConnect})
+	if err != nil {
+		t.Fatal(err)
+	}
+	connectResponse.Body.Close()
+	if connectResponse.StatusCode != http.StatusOK {
+		t.Fatalf("CONNECT status = %d, want %d", connectResponse.StatusCode, http.StatusOK)
+	}
+	secure := tls.Client(connection, &tls.Config{InsecureSkipVerify: true, ServerName: "127.0.0.1"}) // test fixture is intentionally untrusted.
+	defer secure.Close()
+	if err := secure.Handshake(); err != nil {
+		t.Fatal(err)
+	}
+	request, err := http.NewRequest(http.MethodGet, target.URL+"/headers", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := request.Write(secure); err != nil {
+		t.Fatal(err)
+	}
+	response, err := http.ReadResponse(bufio.NewReader(secure), request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		t.Fatalf("tunneled response status = %d, want %d", response.StatusCode, http.StatusOK)
+	}
+	owner.mu.Lock()
+	connects := owner.proxyConnects
+	authorized := owner.proxyAuthorized
+	owner.mu.Unlock()
+	if connects != 1 || authorized != 1 {
+		t.Fatalf("CONNECT stats = attempts=%d authorized=%d, want 1/1", connects, authorized)
+	}
+}
+
+func TestLoopbackProxyConnectBasicChallenge(t *testing.T) {
+	target := httptest.NewTLSServer(newTestServer().routes())
+	defer target.Close()
+	targetURL, err := url.Parse(target.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	owner := newTestServer()
+	proxy := httptest.NewServer(newLoopbackProxy(targetURL, target.Listener.Addr().String(), owner, true))
+	defer proxy.Close()
+
+	unauthorized := connectThroughProxy(t, proxy.Listener.Addr().String(), targetURL.Host, "")
+	unauthorizedResponse, err := http.ReadResponse(bufio.NewReader(unauthorized), &http.Request{Method: http.MethodConnect})
+	if err != nil {
+		unauthorized.Close()
+		t.Fatal(err)
+	}
+	unauthorized.Close()
+	if unauthorizedResponse.StatusCode != http.StatusProxyAuthRequired || unauthorizedResponse.Header.Get("Proxy-Authenticate") != `Basic realm="vba-http-proxy-challenge"` {
+		unauthorizedResponse.Body.Close()
+		t.Fatalf("CONNECT challenge = status=%d header=%q", unauthorizedResponse.StatusCode, unauthorizedResponse.Header.Get("Proxy-Authenticate"))
+	}
+	unauthorizedResponse.Body.Close()
+
+	connection := connectThroughProxy(t, proxy.Listener.Addr().String(), targetURL.Host, proxyBasicAuthorization)
+	defer connection.Close()
+	response, err := http.ReadResponse(bufio.NewReader(connection), &http.Request{Method: http.MethodConnect})
+	if err != nil {
+		t.Fatal(err)
+	}
+	response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		t.Fatalf("authenticated CONNECT status = %d, want %d", response.StatusCode, http.StatusOK)
+	}
+	owner.mu.Lock()
+	connects := owner.proxyConnects
+	authorized := owner.proxyAuthorized
+	owner.mu.Unlock()
+	if connects != 2 || authorized != 1 {
+		t.Fatalf("authenticated CONNECT stats = attempts=%d authorized=%d, want 2/1", connects, authorized)
+	}
+}
+
+func connectThroughProxy(t *testing.T, proxyAddress string, targetHost string, authorization string) net.Conn {
+	t.Helper()
+	connection, err := net.DialTimeout("tcp", proxyAddress, 5*time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	request := "CONNECT " + targetHost + " HTTP/1.1\r\nHost: " + targetHost + "\r\n"
+	if authorization != "" {
+		request += "Proxy-Authorization: " + authorization + "\r\n"
+	}
+	request += "\r\n"
+	if _, err := io.WriteString(connection, request); err != nil {
+		connection.Close()
+		t.Fatal(err)
+	}
+	return connection
 }
 
 func TestAdminShutdownSignalsLifecycle(t *testing.T) {

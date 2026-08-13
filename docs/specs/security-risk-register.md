@@ -27,8 +27,9 @@ host-specific integrated/proxy challenge authentication as future-v1 work
 without making them current release blockers. 32-bit Office is explicitly
 unsupported by policy under ADR-0030 and is not a future-v1 evidence obligation
 unless that decision is superseded. The bounded
-loopback challenge contract is covered by ADR-0023; domain/CONNECT fixtures
-remain deferred. The protocol-host runner has produced a passing x64 HTTP/2
+loopback challenge contract is covered by ADR-0023 and the loopback CONNECT
+boundary by ADR-0031; real domain/trusted-proxy evidence remains deferred. The
+protocol-host runner has produced a passing x64 HTTP/2
 record at benchmarks/results/protocol-host-http2.json; that record is
 host-specific and does not satisfy the remaining HTTP/3 requirement.
 The 2026-08-13 HTTP/3 endpoint attempts are recorded separately as

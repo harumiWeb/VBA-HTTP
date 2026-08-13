@@ -450,9 +450,9 @@ OSが提供するmodern WinHTTP capabilityとcorporate environment対応を安�
 - [~] HTTP/3のTLS/QUIC negotiated-host evidenceを実機で取得する（対応Windows/WinHTTP hostとfixture待ち）。
 - [x] unsupported option、plain HTTP、required mismatchのfallback／`HttpErrorProtocol`を実装する。
 - [x] gzip／deflate decompressionをADR-0010と`docs/specs/decompression-policy.md`で確定し、native WinHTTP option 118、COM拒否、loopback／release smokeを実装する。
-- [x] OS default、no-proxy、manual HTTP proxyをADR-0012と`docs/specs/proxy-policy.md`で確定し、COM/native transportとloopback fixtureで検証する。
+- [x] OS default、no-proxy、manual HTTP proxyをADR-0012と`docs/specs/proxy-policy.md`で確定し、COM/native transportとloopback HTTP/HTTPS CONNECT boundary fixtureで検証する（trusted corporate CONNECTはhost-dependent gate）。
 - [x] Basic／Bearerのpreemptive authenticationを実装する（COM/native、HTTPS default、loopback opt-in、redirect suppression、release smokeまで検証済み）。
-- [x] Windows integrated／Digest／proxy challenge authenticationのbounded buffered契約をADR-0023／`docs/specs/challenge-authentication.md`で確定し、COM/nativeのchallenge replay、redaction、release smokeを実装する。streaming sourceはresetなしでpre-network拒否し、実Windows domain／proxy CONNECT fixtureはcompatibility gateとして残す。
+- [x] Windows integrated／Digest／proxy challenge authenticationのbounded buffered契約をADR-0023／`docs/specs/challenge-authentication.md`で確定し、COM/nativeのchallenge replay、redaction、release smokeを実装する。streaming sourceはresetなしでpre-network拒否し、loopback proxy CONNECT boundaryはADR-0031で検証、実Windows domain／trusted proxy CONNECTはcompatibility gateとして残す。
 - [x] `IHttpAuthProvider` を実装する（execution snapshotでcloneし、401／407の自動replayは行わない）。
 - [x] credential／secret redaction helperを実装し、sensitive headerがdiagnosticsへ出ないunit gateを追加する。
 - [x] `HttpDiagnostics` のbounded structured event schemaをADR-0019／`docs/specs/diagnostics-policy.md`で確定し、HttpClientとrelease consumer smokeへ統合する。

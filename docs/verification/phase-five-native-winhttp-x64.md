@@ -15,10 +15,10 @@ Recorded: 2026-08-13 (refreshed against the current source revision)
 - `xlflow analyze --json`: 0 findings, 0 warnings
 - `task format`: clean
 - `task class-source:check`: clean
-- `task test:integration`: 78/78 test cases passed as reported by xlflow
-- `task test:office-bitness`: 239 discovered tests, 154 passed, 85
+- `task test:integration`: 82/82 test cases passed as reported by xlflow
+- `task test:office-bitness`: 243 discovered tests, 154 passed, 89
   inconclusive (environment-gated suites without the loopback server), 0
-  failed; the dedicated loopback integration run above passed all 78 tests.
+failed; the dedicated loopback integration run above passed all 82 tests.
 - Native contract coverage includes GET headers/query, text methods, binary body,
   redirect/status behavior, connection error mapping, negotiated protocol query,
   and 20 repeated requests with process handle-count regression.

@@ -16,14 +16,22 @@
   Basic-authenticated HTTP forward proxy; readiness then includes
   `proxy_auth_url`. Its fixed test-only credential is `proxy-user` /
   `proxy-pass` and the listener remains loopback-only.
+- Passing `-proxy-tls-listen 127.0.0.1:0` together with `-tls-listen` starts a
+  deterministic HTTP CONNECT proxy restricted to the server's own TLS
+  listener; readiness includes `proxy_tls_url` and `proxy_tls_target_url`.
+- Passing `-proxy-tls-auth-listen 127.0.0.1:0` adds a fixed Basic-challenge
+  CONNECT listener and readiness includes `proxy_tls_auth_url`. CONNECT
+  attempts and authorized attempts are observable only through the plain
+  origin's `GET /__admin/proxy-stats` endpoint.
 - Passing `-tls-listen 127.0.0.1:0` starts a second HTTPS listener with a
   process-local, self-signed certificate whose trust chain is intentionally not
   installed in the OS. Readiness then includes `https_url`; the listener is
   used only for certificate-rejection tests and never as a trust bypass.
 - Port `0` asks the OS for a free port. The first stdout line is JSON:
   `{"event":"ready","url":"http://127.0.0.1:<port>"}` or, when enabled,
-  includes `https_url`, `proxy_url`, `proxy_target_url`, and `proxy_auth_url`
-  for the requested listeners.
+  includes `https_url`, `proxy_url`, `proxy_target_url`, `proxy_auth_url`,
+  `proxy_tls_url`, `proxy_tls_target_url`, and `proxy_tls_auth_url` for the
+  requested listeners.
 - The process accepts Ctrl+C or termination and allows five seconds for graceful shutdown.
 - `GET /healthz` returns 200 when ready.
 - `POST /__admin/reset` clears all flaky and rate-limit counters and returns 204.
@@ -55,13 +63,15 @@
 | `POST /upload/multipart` | Parses an ordered multipart form and returns file hashes, file byte counts, filenames, and UTF-8 field values in response headers and JSON. |
 | `POST /upload/challenge` | Returns a deterministic 401 with `WWW-Authenticate` and never consumes the request body. |
 
-The optional loopback proxy forwards only to the server's own target address,
-adds `X-Test-Proxy-Forwarded: 1`, rejects CONNECT, and returns 502 for any
-non-target host. It is used by the COM/native manual-proxy integration tests.
-The authenticated proxy has the same target restriction and returns 407 with a
-fixed `Proxy-Authenticate: Basic` challenge until the test credential is sent.
-It is HTTP forwarding only; CONNECT authentication remains a separate
-host-dependent compatibility gate.
+The optional loopback HTTP proxy forwards only to the server's own target
+address, adds `X-Test-Proxy-Forwarded: 1`, and returns 502 for any non-target
+host. The authenticated proxy has the same target restriction and returns 407
+with a fixed `Proxy-Authenticate: Basic` challenge until the test credential
+is sent. The optional TLS proxy accepts only CONNECT to the server-owned TLS
+alias, tunnels bytes to that listener, and never forwards arbitrary external
+addresses. Its authenticated variant applies the same fixed 407 challenge.
+The TLS certificate remains intentionally untrusted; the integration contract
+expects normal certificate rejection after tunnel establishment.
 
 The optional HTTPS listener uses the same route set as the HTTP listener. Its
 certificate is deliberately untrusted, so clients must fail through normal OS

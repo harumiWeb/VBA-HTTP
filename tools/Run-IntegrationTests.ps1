@@ -13,10 +13,15 @@ $client = $null
 $ready = $null
 $proxyUrl = $null
 $proxyAuthUrl = $null
+$proxyTlsUrl = $null
+$proxyTlsAuthUrl = $null
 $previousBaseUrl = [Environment]::GetEnvironmentVariable("VBA_HTTP_TEST_BASE_URL", "Process")
 $previousProxyUrl = [Environment]::GetEnvironmentVariable("VBA_HTTP_TEST_PROXY_URL", "Process")
 $previousProxyTargetUrl = [Environment]::GetEnvironmentVariable("VBA_HTTP_TEST_PROXY_TARGET_URL", "Process")
 $previousProxyAuthUrl = [Environment]::GetEnvironmentVariable("VBA_HTTP_TEST_PROXY_AUTH_URL", "Process")
+$previousProxyTlsUrl = [Environment]::GetEnvironmentVariable("VBA_HTTP_TEST_PROXY_TLS_URL", "Process")
+$previousProxyTlsTargetUrl = [Environment]::GetEnvironmentVariable("VBA_HTTP_TEST_PROXY_TLS_TARGET_URL", "Process")
+$previousProxyTlsAuthUrl = [Environment]::GetEnvironmentVariable("VBA_HTTP_TEST_PROXY_TLS_AUTH_URL", "Process")
 $previousHttpsUrl = [Environment]::GetEnvironmentVariable("VBA_HTTP_TEST_HTTPS_URL", "Process")
 
 try {
@@ -32,7 +37,7 @@ try {
 
     $process = Start-Process `
         -FilePath $executablePath `
-        -ArgumentList "-listen", "127.0.0.1:0", "-tls-listen", "127.0.0.1:0", "-proxy-listen", "127.0.0.1:0", "-proxy-auth-listen", "127.0.0.1:0" `
+        -ArgumentList "-listen", "127.0.0.1:0", "-tls-listen", "127.0.0.1:0", "-proxy-listen", "127.0.0.1:0", "-proxy-auth-listen", "127.0.0.1:0", "-proxy-tls-listen", "127.0.0.1:0", "-proxy-tls-auth-listen", "127.0.0.1:0" `
         -RedirectStandardOutput $stdoutPath `
         -RedirectStandardError $stderrPath `
         -WindowStyle Hidden `
@@ -53,14 +58,17 @@ try {
         }
         Start-Sleep -Milliseconds 50
     }
-    if ($null -eq $ready -or $ready.event -ne "ready" -or -not $ready.url -or -not $ready.https_url -or -not $ready.proxy_url -or -not $ready.proxy_target_url -or -not $ready.proxy_auth_url) {
-        throw "Test server did not publish valid HTTP, HTTPS, proxy, and authenticated-proxy readiness URLs."
+    if ($null -eq $ready -or $ready.event -ne "ready" -or -not $ready.url -or -not $ready.https_url -or -not $ready.proxy_url -or -not $ready.proxy_target_url -or -not $ready.proxy_auth_url -or -not $ready.proxy_tls_url -or -not $ready.proxy_tls_target_url -or -not $ready.proxy_tls_auth_url) {
+		throw "Test server did not publish valid HTTP, HTTPS, proxy, authenticated-proxy, CONNECT, and authenticated-CONNECT readiness URLs."
     }
 
     [Environment]::SetEnvironmentVariable("VBA_HTTP_TEST_BASE_URL", [string]$ready.url, "Process")
     [Environment]::SetEnvironmentVariable("VBA_HTTP_TEST_PROXY_URL", [string]$ready.proxy_url, "Process")
     [Environment]::SetEnvironmentVariable("VBA_HTTP_TEST_PROXY_TARGET_URL", [string]$ready.proxy_target_url, "Process")
     [Environment]::SetEnvironmentVariable("VBA_HTTP_TEST_PROXY_AUTH_URL", [string]$ready.proxy_auth_url, "Process")
+    [Environment]::SetEnvironmentVariable("VBA_HTTP_TEST_PROXY_TLS_URL", [string]$ready.proxy_tls_url, "Process")
+    [Environment]::SetEnvironmentVariable("VBA_HTTP_TEST_PROXY_TLS_TARGET_URL", [string]$ready.proxy_tls_target_url, "Process")
+    [Environment]::SetEnvironmentVariable("VBA_HTTP_TEST_PROXY_TLS_AUTH_URL", [string]$ready.proxy_tls_auth_url, "Process")
     [Environment]::SetEnvironmentVariable("VBA_HTTP_TEST_HTTPS_URL", [string]$ready.https_url, "Process")
     # Isolate each module in its own temporary workbook.  Integration modules
     # use Application.OnTime/DoEvents and must not share callback state.
@@ -72,8 +80,8 @@ try {
     }
     $result = $testJson | Out-String | ConvertFrom-Json
     $tests = @($result.tests)
-    if ($result.status -ne "ok" -or $tests.Count -ne 78 -or @($tests | Where-Object status -ne "passed").Count -ne 0) {
-        throw "Integration suite did not return seventy-eight passing tests."
+    if ($result.status -ne "ok" -or $tests.Count -ne 82 -or @($tests | Where-Object status -ne "passed").Count -ne 0) {
+		throw "Integration suite did not return eighty-two passing tests."
     }
 }
 finally {
@@ -81,6 +89,9 @@ finally {
     [Environment]::SetEnvironmentVariable("VBA_HTTP_TEST_PROXY_URL", $previousProxyUrl, "Process")
     [Environment]::SetEnvironmentVariable("VBA_HTTP_TEST_PROXY_TARGET_URL", $previousProxyTargetUrl, "Process")
     [Environment]::SetEnvironmentVariable("VBA_HTTP_TEST_PROXY_AUTH_URL", $previousProxyAuthUrl, "Process")
+    [Environment]::SetEnvironmentVariable("VBA_HTTP_TEST_PROXY_TLS_URL", $previousProxyTlsUrl, "Process")
+    [Environment]::SetEnvironmentVariable("VBA_HTTP_TEST_PROXY_TLS_TARGET_URL", $previousProxyTlsTargetUrl, "Process")
+    [Environment]::SetEnvironmentVariable("VBA_HTTP_TEST_PROXY_TLS_AUTH_URL", $previousProxyTlsAuthUrl, "Process")
     [Environment]::SetEnvironmentVariable("VBA_HTTP_TEST_HTTPS_URL", $previousHttpsUrl, "Process")
     if ($null -ne $ready -and $ready.url) {
         try {

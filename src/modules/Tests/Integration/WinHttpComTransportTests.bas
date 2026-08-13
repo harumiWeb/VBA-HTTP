@@ -344,6 +344,75 @@ Public Sub Test_ComTransport_ProxyChallengeWrongCredentialsRemain407()
 End Sub
 
 '@Tag("integration")
+Public Sub Test_ComTransport_HTTPSProxyConnectReachesTLSBoundary()
+    Dim client As New HttpClient
+    Dim statsClient As New HttpClient
+    Dim options As New HttpProxyOptions
+    Dim beforeResponse As HttpResponse
+    Dim afterResponse As HttpResponse
+    Dim observedNumber As Long
+    Dim beforeAttempts As Long
+
+    statsClient.BaseUrl = RequireBaseUrl()
+    Set beforeResponse = statsClient.GetResponse("/__admin/proxy-stats")
+    beforeAttempts = ExtractJsonLong(beforeResponse.Text, "connect_attempts")
+
+    client.BaseUrl = RequireProxyTlsTargetUrl()
+    options.Mode = HttpProxyManual
+    options.ProxyUrl = RequireProxyTlsUrl()
+    Set client.ProxyOptions = options
+    On Error GoTo ExpectedFailure
+    Call client.GetResponse("/status/204")
+    XlflowAssert.AssertTrue False, "COM CONNECT proxy accepted the untrusted TLS fixture."
+    Exit Sub
+
+    ExpectedFailure: ' xlflow:disable-line VBA237
+    observedNumber = Err.Number
+    Err.Clear
+    On Error GoTo 0
+    XlflowAssert.AssertEquals HttpErrorTls, HttpErrors.CategoryFromNumber(observedNumber)
+
+    Set afterResponse = statsClient.GetResponse("/__admin/proxy-stats")
+    XlflowAssert.AssertTrue ExtractJsonLong(afterResponse.Text, "connect_attempts") > beforeAttempts
+End Sub
+
+'@Tag("integration")
+Public Sub Test_ComTransport_AuthenticatedHTTPSProxyConnectReachesTLSBoundary()
+    Dim client As New HttpClient
+    Dim statsClient As New HttpClient
+    Dim options As New HttpProxyOptions
+    Dim provider As IHttpAuthProvider
+    Dim beforeResponse As HttpResponse
+    Dim afterResponse As HttpResponse
+    Dim observedNumber As Long
+    Dim beforeAuthorized As Long
+
+    statsClient.BaseUrl = RequireBaseUrl()
+    Set beforeResponse = statsClient.GetResponse("/__admin/proxy-stats")
+    beforeAuthorized = ExtractJsonLong(beforeResponse.Text, "authorized_connects")
+
+    client.BaseUrl = RequireProxyTlsTargetUrl()
+    options.Mode = HttpProxyManual
+    options.ProxyUrl = RequireProxyTlsAuthUrl()
+    Set client.ProxyOptions = options
+    Set provider = VBAHttp.CreateWindowsAuthProvider("proxy-user", "proxy-pass", HttpAuthSchemeBasic, HttpAuthTargetProxy, True, 1)
+    Set client.AuthProvider = provider
+    On Error GoTo ExpectedFailure
+    Call client.GetResponse("/status/204")
+    XlflowAssert.AssertTrue False, "COM authenticated CONNECT proxy accepted the untrusted TLS fixture."
+    Exit Sub
+
+    ExpectedFailure: ' xlflow:disable-line VBA237
+    observedNumber = Err.Number
+    Err.Clear
+    On Error GoTo 0
+    XlflowAssert.AssertEquals HttpErrorTls, HttpErrors.CategoryFromNumber(observedNumber)
+
+    Set afterResponse = statsClient.GetResponse("/__admin/proxy-stats")
+    XlflowAssert.AssertTrue ExtractJsonLong(afterResponse.Text, "authorized_connects") > beforeAuthorized
+End Sub
+
+'@Tag("integration")
 '@ExpectedError(-2147200498, "WinHTTP request timed out (12002).", "WinHttpComTransport.Execute")
 Public Sub Test_ComTransport_MapsReceiveTimeout()
     Dim client As New HttpClient
@@ -425,9 +494,50 @@ Private Function RequireProxyAuthUrl() As String
     End If
 End Function
 
+Private Function RequireProxyTlsUrl() As String
+    RequireProxyTlsUrl = Trim$(Environ$("VBA_HTTP_TEST_PROXY_TLS_URL"))
+    If Len(RequireProxyTlsUrl) = 0 Then
+        XlflowAssert.AssertInconclusive "VBA_HTTP_TEST_PROXY_TLS_URL is not set; run task test:integration."
+    End If
+End Function
+
+Private Function RequireProxyTlsTargetUrl() As String
+    RequireProxyTlsTargetUrl = Trim$(Environ$("VBA_HTTP_TEST_PROXY_TLS_TARGET_URL"))
+    If Len(RequireProxyTlsTargetUrl) = 0 Then
+        XlflowAssert.AssertInconclusive "VBA_HTTP_TEST_PROXY_TLS_TARGET_URL is not set; run task test:integration."
+    End If
+End Function
+
+Private Function RequireProxyTlsAuthUrl() As String
+    RequireProxyTlsAuthUrl = Trim$(Environ$("VBA_HTTP_TEST_PROXY_TLS_AUTH_URL"))
+    If Len(RequireProxyTlsAuthUrl) = 0 Then
+        XlflowAssert.AssertInconclusive "VBA_HTTP_TEST_PROXY_TLS_AUTH_URL is not set; run task test:integration."
+    End If
+End Function
+
 Private Function RequireHttpsBaseUrl() As String
     RequireHttpsBaseUrl = Trim$(Environ$("VBA_HTTP_TEST_HTTPS_URL"))
     If Len(RequireHttpsBaseUrl) = 0 Then
         XlflowAssert.AssertInconclusive "VBA_HTTP_TEST_HTTPS_URL is not set; run task test:integration."
     End If
+End Function
+
+Private Function ExtractJsonLong(ByVal Text As String, ByVal Name As String) As Long
+    Dim marker As String
+    Dim startIndex As Long
+    Dim endIndex As Long
+
+    marker = Chr$(34) & Name & Chr$(34) & ":"
+    startIndex = InStr(1, Text, marker, vbBinaryCompare)
+    If startIndex = 0 Then Err.Raise HttpErrProtocol, "WinHttpComTransportTests", "JSON field was not found: " & Name
+    startIndex = startIndex + Len(marker)
+    Do While startIndex <= Len(Text) And Mid$(Text, startIndex, 1) = " "
+        startIndex = startIndex + 1
+    Loop
+    endIndex = startIndex
+    Do While endIndex <= Len(Text) And Mid$(Text, endIndex, 1) Like "[0-9]"
+        endIndex = endIndex + 1
+    Loop
+    If endIndex <= startIndex Then Err.Raise HttpErrProtocol, "WinHttpComTransportTests", "JSON field was malformed: " & Name
+    ExtractJsonLong = CLng(Mid$(Text, startIndex, endIndex - startIndex))
 End Function

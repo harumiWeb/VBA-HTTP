@@ -126,8 +126,10 @@ proxy.BypassList = "localhost;127.0.0.1"
 Set client.ProxyOptions = proxy
 ```
 
-Proxy credentials and HTTPS CONNECT authentication are deliberately handled by
-the later authentication policy. See
+Proxy credentials and HTTPS CONNECT authentication are handled by the bounded
+buffered authentication policy. The local fixture proves only CONNECT tunnel
+reachability before normal untrusted-certificate rejection; trusted corporate
+CONNECT remains host-dependent. See
 [`docs/specs/proxy-policy.md`](docs/specs/proxy-policy.md).
 
 Preemptive Basic and Bearer authentication is available through immutable
