@@ -24,7 +24,16 @@ function Invoke-JsonCommand([string]$FilePath, [string[]]$Arguments) {
 }
 
 function Get-Sha256Hex([string]$Path) {
-    return ([string](Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash).ToLowerInvariant()
+    $sha256 = [Security.Cryptography.SHA256]::Create()
+    $stream = $null
+    try {
+        $stream = [IO.File]::OpenRead($Path)
+        return ([BitConverter]::ToString($sha256.ComputeHash($stream))).Replace("-", "").ToLowerInvariant()
+    }
+    finally {
+        if ($null -ne $stream) { $stream.Dispose() }
+        $sha256.Dispose()
+    }
 }
 
 function Publish-JsonAtomically([string]$Path, $Document) {
