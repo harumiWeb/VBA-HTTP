@@ -48,12 +48,25 @@ function Get-ExcelProcessIds {
     return @($processes | ForEach-Object { [int]$_.Id })
 }
 
+function Get-RelativeProjectPath([string]$Path) {
+    $fullPath = [IO.Path]::GetFullPath($Path)
+    $root = $projectRoot.TrimEnd([char[]]@([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar))
+    if ([string]::Equals($fullPath, $root, [StringComparison]::OrdinalIgnoreCase)) {
+        return "."
+    }
+    $rootPrefix = $root + [IO.Path]::DirectorySeparatorChar
+    if (-not $fullPath.StartsWith($rootPrefix, [StringComparison]::OrdinalIgnoreCase)) {
+        throw "Path must remain inside the project root: $Path"
+    }
+    return $fullPath.Substring($rootPrefix.Length).Replace("\", "/")
+}
+
 function Assert-CleanWorktreeExcept([string]$AllowedPath) {
-    $relativeAllowed = [IO.Path]::GetRelativePath($projectRoot, $AllowedPath).Replace("\\", "/")
+    $relativeAllowed = Get-RelativeProjectPath $AllowedPath
     $entries = @(& git status --porcelain 2>$null)
     foreach ($entry in $entries) {
         if ([string]::IsNullOrWhiteSpace($entry)) { continue }
-        $path = $entry.Substring(3).Trim().Replace("\\", "/")
+        $path = $entry.Substring(3).Trim().Replace("\", "/")
         if ($path -ne $relativeAllowed) {
             throw "Protocol host evidence requires a clean source worktree; unexpected change: $path"
         }
