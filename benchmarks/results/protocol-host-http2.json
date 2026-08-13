@@ -2,8 +2,8 @@
     "schema_version":  1,
     "benchmark":  "protocol-host-validation",
     "status":  "passed",
-    "run_utc":  "2026-08-13T06:11:24.5943965Z",
-    "source_revision":  "85d5c2b84b7cd493718c7ed7fcb98aa902d781f3",
+    "run_utc":  "2026-08-13T06:23:01.7584258Z",
+    "source_revision":  "74fedbfc81074b43a0edad75f0873969e3a4d7a1",
     "requested_protocol":  "HTTP/2",
     "observed_protocol":  "HTTP/2",
     "mode":  "required",
@@ -35,7 +35,7 @@
                     },
     "artifact":  {
                      "name":  "VBA-HTTP.xlsm",
-                     "sha256":  "33dbe4adc9937b6ec25cf72cceff6eedb99f99384745c8e680d66c48ebe479c4",
+                     "sha256":  "7c848b23e519672b9e57627162c1d8e7961c152502b818dc5e7dd87743eca638",
                      "manifest_sha256":  "b5f53ea3a6523b5cfdf756984dcfb98d9271d574ca91a28d4a8c22807b7ec7b2"
                  },
     "build":  {
