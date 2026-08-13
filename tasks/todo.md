@@ -513,7 +513,7 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 - [x] source distributionとworkbook distributionの責務を分離する（`docs/specs/distribution.md`）。
 - [x] source vendoring、install、upgrade手順を文書化する。
 - [x] `.xlam` 用base workbookと独立build targetを追加する（追跡`build/VBA-HTTP.xlam`、`task test:xlam`、`task release:xlam:build`、ADR-0021、manifest/checksum/add-in identity/smoke gate）。
-- [x] CHANGELOGとcompatibility documentationを完成させる（x64実測と未完了の32-bit／HTTP/2／HTTP/3 gateを明記）。
+- [x] CHANGELOGとcompatibility documentationを完成させる（x64 HTTP/2実測と未完了の32-bit／HTTP/3 gateを明記）。
 
 ### Exit Criteria
 
