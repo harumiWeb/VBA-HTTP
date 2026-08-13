@@ -18,6 +18,10 @@ external network access into the normal test suite.
 
 - Add an opt-in external consumer runner that targets one caller-supplied
   `https://` origin and requests exactly one protocol in `Required` mode.
+- The external consumer harness creates its request through
+  `VBAHttp.CreateRequest()` and applies finite per-phase timeouts before
+  invoking `HttpClient.Execute`; the proof must fail in bounded time when a
+  host or endpoint cannot complete the required negotiation.
 - Record success only when the response's `HttpResponse.ProtocolUsed` exactly
   matches the requested protocol.  Unsupported capability, TLS failure,
   status failure, or protocol mismatch fails closed and publishes no passing
@@ -47,6 +51,8 @@ external network access into the normal test suite.
 ## Evidence
 
 - Consumer entrypoint: `tools/consumer/ReleaseBatchSmoke.bas`.
+- Referenced-workbook request factory: `src/modules/VBAHttp.bas` and
+  `src/modules/Tests/Unit/VBAHttpTests.bas`.
 - Runner and schema validator: `tools/Run-ProtocolHostValidation.ps1` and
   `tools/Validate-ProtocolHostEvidence.ps1`.
 - Offline validator tests: `tools/Test-ProtocolHostEvidence.ps1`.

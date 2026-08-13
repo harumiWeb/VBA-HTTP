@@ -1,5 +1,10 @@
 ## Unreleased
 
+- Added `VBAHttp.CreateRequest()` so workbook-reference consumers can
+  configure request-level timeouts and transport options without constructing
+  `PublicNotCreatable` classes directly. The protocol-host consumer probe now
+  uses a bounded 15-second per-phase timeout.
+
 - Added best-effort `Abort` cleanup plus a bounded 250 ms teardown drain for
   synchronous failures and asynchronous cancellation before releasing
   `WinHttpRequest` objects. Original timeout/error mapping is preserved;

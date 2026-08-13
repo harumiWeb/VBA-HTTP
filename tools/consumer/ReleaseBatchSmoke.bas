@@ -72,7 +72,9 @@ End Sub
 
 Public Function RunProtocolHostSmoke(ByVal releaseWorkbookName As String, ByVal Url As String, ByVal ExpectedProtocol As String) As String
     Dim client As Object
+    Dim request As Object
     Dim protocols As Object
+    Dim timeouts As Object
     Dim response As Object
     Dim expected As String
 
@@ -82,6 +84,14 @@ Public Function RunProtocolHostSmoke(ByVal releaseWorkbookName As String, ByVal 
     End If
 
     Set client = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateNativeClient")
+    Set request = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateRequest")
+    request.Method = "GET"
+    request.Url = Url
+    Set timeouts = request.Timeouts
+    timeouts.ResolveMilliseconds = 15000
+    timeouts.ConnectMilliseconds = 15000
+    timeouts.SendMilliseconds = 15000
+    timeouts.ReceiveMilliseconds = 15000
     Set protocols = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateProtocolOptions")
     If expected = "HTTP/2" Then
         protocols.AllowHttp2 = True
@@ -89,8 +99,9 @@ Public Function RunProtocolHostSmoke(ByVal releaseWorkbookName As String, ByVal 
         protocols.AllowHttp3 = True
     End If
     protocols.Mode = 1
+    Set request.ProtocolOptions = protocols
     Set client.ProtocolOptions = protocols
-    Set response = client.GetResponse Url
+    Set response = client.Execute(request)
 
     If response.StatusCode < 200 Or response.StatusCode >= 300 Or response.ProtocolUsed <> expected Then
         Err.Raise vbObjectError + 756, "ReleaseBatchSmoke.RunProtocolHostSmoke", "Required protocol was not negotiated."

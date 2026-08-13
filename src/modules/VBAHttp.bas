@@ -17,6 +17,15 @@ Public Function CreateNativeClient() As HttpClient
     Set CreateNativeClient = client
 End Function
 
+''' Creates a caller-owned request snapshot for referenced-workbook consumers.
+'''
+''' PublicNotCreatable domain classes cannot be constructed directly across a
+''' workbook reference; this factory keeps request-level timeout and transport
+''' option configuration available without weakening that boundary.
+Public Function CreateRequest() As HttpRequest
+    Set CreateRequest = New HttpRequest
+End Function
+
 ''' Creates retry policy configuration for referenced-workbook consumers.
 Public Function CreateRetryPolicy() As HttpRetryPolicy
     Set CreateRetryPolicy = New HttpRetryPolicy

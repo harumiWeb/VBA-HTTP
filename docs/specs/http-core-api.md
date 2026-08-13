@@ -6,7 +6,7 @@ The public VBA component names, public procedure names, parameter order, enum va
 
 All public objects are late-bindable from consumers except VBA class interfaces used with `Implements`. The core has no dependency on `Scripting.Dictionary` or another external VBA reference.
 
-Workbook-reference consumers cannot directly instantiate VBA classes marked `PublicNotCreatable`. `VBAHttp.CreateClient()` is the stable default-client factory; `VBAHttp.CreateNativeClient()` selects the synchronous native WinHTTP backend. `CreateRetryPolicy`, `CreateExecutionOptions`, `CreateBatchOptions`, and `CreateCancellationToken` expose reliability configuration across the same boundary. Source-vendored consumers may continue to use `New`.
+Workbook-reference consumers cannot directly instantiate VBA classes marked `PublicNotCreatable`. `VBAHttp.CreateClient()` is the stable default-client factory; `VBAHttp.CreateNativeClient()` selects the synchronous native WinHTTP backend. `VBAHttp.CreateRequest()` creates a caller-owned request so referenced-workbook consumers can configure method, URL, headers, per-phase timeouts, and request-level transport options before calling `HttpClient.Execute`. `CreateRetryPolicy`, `CreateExecutionOptions`, `CreateBatchOptions`, and `CreateCancellationToken` expose reliability configuration across the same boundary. Source-vendored consumers may continue to use `New`.
 
 ## Synchronous API
 
@@ -107,7 +107,7 @@ text.
 
 ## Timeouts
 
-`HttpTimeouts` exposes `ResolveMilliseconds`, `ConnectMilliseconds`, `SendMilliseconds`, and `ReceiveMilliseconds`. Values must be non-negative `Long` values. Zero means the backend-defined infinite timeout, matching WinHTTP. New requests receive independent default values of 5,000; 5,000; 30,000; and 300,000 milliseconds.
+`HttpTimeouts` exposes `ResolveMilliseconds`, `ConnectMilliseconds`, `SendMilliseconds`, and `ReceiveMilliseconds`. Values must be non-negative `Long` values. Zero means the backend-defined infinite timeout, matching WinHTTP. New requests receive independent default values of 5,000; 5,000; 30,000; and 300,000 milliseconds. Referenced-workbook consumers obtain such a request through `VBAHttp.CreateRequest()`; this is also the required boundary for bounded external consumer probes.
 
 ## Error boundary
 

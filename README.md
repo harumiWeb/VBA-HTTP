@@ -234,7 +234,7 @@ Set response = client.PostResponse("https://example.com/jobs", Nothing, options)
 
 `Retry-After` delta-seconds and HTTP-date are supported. Cancellation has priority over the total deadline, which includes every attempt and retry wait.
 
-Use `VBAHttp.CreateClient()` when referencing the distributed workbook from another VBA project because VBA class modules are `PublicNotCreatable`. `CreateRetryPolicy`, `CreateExecutionOptions`, `CreateBatchOptions`, `CreateCancellationToken`, and the protocol/decompression/proxy/authentication/cookie-jar factories expose the same configuration objects across that boundary. Source-vendored consumers may use `New`. The default transport can still be replaced through `HttpClient.Transport` for tests or custom backends.
+Use `VBAHttp.CreateClient()` when referencing the distributed workbook from another VBA project because VBA class modules are `PublicNotCreatable`. `VBAHttp.CreateRequest()` provides the same boundary for request-level timeout and transport-option configuration before `client.Execute`. `CreateRetryPolicy`, `CreateExecutionOptions`, `CreateBatchOptions`, `CreateCancellationToken`, and the protocol/decompression/proxy/authentication/cookie-jar factories expose the same configuration objects across that boundary. Source-vendored consumers may use `New`. The default transport can still be replaced through `HttpClient.Transport` for tests or custom backends.
 
 ## Contributor verification
 
