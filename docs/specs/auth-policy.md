@@ -44,8 +44,10 @@ follow-up request; see `redirect-policy.md`.
 401 and 407 are returned as normal responses for preemptive providers.
 Bounded buffered challenge authentication is an explicit
 `HttpWindowsAuthProvider` capability documented in
-`challenge-authentication.md`. Streaming uploads remain one-shot and must
-never be replayed implicitly.
+`challenge-authentication.md`. COM uses `HttpAuthSchemeAuto`; explicit
+challenge scheme selection is native-only and fails before COM backend
+creation (ADR-0033). Streaming uploads remain one-shot and must never be
+replayed implicitly.
 
 ## Redaction
 
