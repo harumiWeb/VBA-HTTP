@@ -1,5 +1,9 @@
 ## Unreleased
 
+- Fixed native `WinHttpSetOption` DWORD marshalling so protocol, redirect,
+  decompression, and upload options are passed through an explicit 32-bit
+  buffer in both VBA7 and legacy declaration branches.
+
 - Extended the filtered release consumer smoke to exercise ordinary and
   authenticated HTTPS CONNECT boundaries through both COM and native public
   factories. Release validation now proves ownership of every Excel PID it

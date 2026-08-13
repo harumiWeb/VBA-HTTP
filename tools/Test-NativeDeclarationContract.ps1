@@ -33,6 +33,10 @@ try {
     }
 
     $source = [IO.File]::ReadAllText($sourcePath)
+    $optionBufferAssignments = ([regex]::Matches($source, '(?m)^\s*optionBuffer = OptionValue\s*$')).Count
+    if ($optionBufferAssignments -ne 2) {
+        throw "SetOptionLong must copy OptionValue into a Long buffer in both VBA7 and legacy branches."
+    }
     $mutations = @{
         "missing-vba7-guard.bas" = Replace-All $source "#If VBA7 Then" "#If VBA6 Then"
         "legacy-longptr.bas" = Replace-All $source "ByVal pwszUserAgent As Long, ByVal dwAccessType" "ByVal pwszUserAgent As LongPtr, ByVal dwAccessType"

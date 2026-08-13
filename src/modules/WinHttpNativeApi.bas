@@ -208,7 +208,10 @@ Public Function QueryProtocolUsed(ByVal HandleValue As LongPtr, ByRef ProtocolFl
 End Function
 
 Public Function SetOptionLong(ByVal HandleValue As LongPtr, ByVal OptionCode As Long, ByVal OptionValue As Long) As Boolean
-    SetOptionLong = (WinHttpSetOption(HandleValue, OptionCode, OptionValue, 4) <> 0)
+    Dim optionBuffer As Long
+
+    optionBuffer = OptionValue
+    SetOptionLong = (WinHttpSetOption(HandleValue, OptionCode, optionBuffer, 4) <> 0)
 End Function
 
 Public Sub CopyByteRange(ByRef Destination() As Byte, ByVal DestinationOffset As Long, ByRef Source() As Byte, ByVal ByteCount As Long)
@@ -343,7 +346,10 @@ Public Function QueryProtocolUsed(ByVal HandleValue As Long, ByRef ProtocolFlags
 End Function
 
 Public Function SetOptionLong(ByVal HandleValue As Long, ByVal OptionCode As Long, ByVal OptionValue As Long) As Boolean
-    SetOptionLong = (WinHttpSetOption(HandleValue, OptionCode, OptionValue, 4) <> 0)
+    Dim optionBuffer As Long
+
+    optionBuffer = OptionValue
+    SetOptionLong = (WinHttpSetOption(HandleValue, OptionCode, optionBuffer, 4) <> 0)
 End Function
 
 Public Sub CopyByteRange(ByRef Destination() As Byte, ByVal DestinationOffset As Long, ByRef Source() As Byte, ByVal ByteCount As Long)
