@@ -75,7 +75,9 @@ TransportFailure:
     errorNumber = Err.Number
     errorSource = Err.Source
     errorDescription = Err.Description
-    Set backend = Nothing
+    If Not TryReleaseFailedBackend(backend) Then
+        errorDescription = errorDescription & " WinHTTP abort cleanup also failed."
+    End If
 
     If HttpErrors.CategoryFromNumber(errorNumber) <> HttpErrorNone Then
         Err.Raise errorNumber, errorSource, errorDescription
@@ -450,9 +452,24 @@ TransportFailure:
     errorNumber = Err.Number
     errorSource = Err.Source
     errorDescription = Err.Description
-    Set backend = Nothing
+    If Not TryReleaseFailedBackend(backend) Then
+        errorDescription = errorDescription & " WinHTTP abort cleanup also failed."
+    End If
     RaiseCapturedTransportFailure errorNumber, errorSource, errorDescription
     Err.Raise errorNumber, errorSource, errorDescription
+End Function
+
+Private Function TryReleaseFailedBackend(ByRef backend As Object) As Boolean
+    On Error GoTo AbortFailed
+    If Not backend Is Nothing Then backend.Abort
+    Set backend = Nothing
+    TryReleaseFailedBackend = True
+    Exit Function
+
+AbortFailed:
+    Err.Clear
+    Set backend = Nothing
+    TryReleaseFailedBackend = False
 End Function
 
 Private Sub ValidateProtocolOptions(ByVal Request As HttpRequest)

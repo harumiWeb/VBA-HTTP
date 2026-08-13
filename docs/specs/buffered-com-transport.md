@@ -69,6 +69,11 @@ not include the request URL, headers, credentials, response body, or the raw COM
 description. Failures raised by VBA-HTTP before the COM call are propagated
 unchanged.
 
+Before releasing a backend after `Open`, `Send`, timeout, or response failure,
+the transport makes a best-effort `Abort` call. The original mapped error is
+preserved if that cleanup call fails; repeated receive-timeout handle stability
+remains a separate stress/risk gate and is not claimed by this contract.
+
 ## Scope
 
 This transport is buffered and synchronous. Bounded asynchronous scheduling is

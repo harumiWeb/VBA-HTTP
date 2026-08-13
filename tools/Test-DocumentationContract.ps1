@@ -13,6 +13,7 @@ $required = @(
     'docs/specs/distribution.md',
     'docs/specs/development-and-release-workflow.md',
     'docs/adr/ADR-0021-xlam-distribution-target.md',
+    'docs/adr/ADR-0022-com-timeout-failure-cleanup.md',
     'tools/Validate-XlamBuildPlan.ps1',
     'tools/Validate-XlamArtifact.ps1',
     'tools/Test-XlamDistribution.ps1',

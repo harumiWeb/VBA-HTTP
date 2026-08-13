@@ -481,7 +481,7 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 - [x] Unicode、direct binary、malformed UTF-8 response testsを追加する（COM/native loopbackでresponse boundaryを検証）。
 - [x] wire-level malformed response-header fixtureを追加し、COM/nativeの`HttpErrorProtocol` mappingを検証する。
 - [x] 10,000 sequential／scheduled request stress testsを追加する（10,000 warmup後の10,000測定区間）。
-- [x] repeated cancellation／timeout stress testsを追加する（COM active cancellation／request deadline、native download cancellationの3 scenario。`task test:cancellation-stress`で25 iteration、recovery 204、PID-scoped handle gate、destination/temp cleanupの証跡を生成済み。COM receive-timeoutの反復はabort後handle増加を検出したため、既存単発integrationを維持し別hardening課題とする）。
+- [x] repeated cancellation／timeout stress testsを追加する（COM active cancellation／request deadline、native download cancellationの3 scenario。`task test:cancellation-stress`で25 iteration、recovery 204、PID-scoped handle gate、destination/temp cleanupの証跡を生成済み。COM receive-timeoutはADR-0022のbest-effort Abort cleanupを追加したが、反復handle安定性は別hardening課題として継続する）。
 - [x] process memory／native handle leak checksを自動化する（PID scoped、idle handle delta gate、memory peak evidence）。
 - [x] security policyとthreat reviewを文書化する（manifest境界、checksum、残余リスクを`docs/adr/ADR-0017-*`、`docs/specs/release-security.md`、`docs/verification/phase-nine-security-review.md`へ記録）。
 - [x] release manifestのincluded component一覧をsecurity reviewする（`task release:security`のfail-closed検査と証跡レポート）。

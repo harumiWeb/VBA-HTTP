@@ -1,5 +1,10 @@
 ## Unreleased
 
+- Added best-effort `Abort` cleanup for buffered COM request failures before
+  releasing `WinHttpRequest` objects. Original timeout/error mapping is
+  preserved; repeated receive-timeout handle stability remains a tracked
+  future-v1 gate.
+
 - Added a machine-validated Phase 9 security-risk register with an explicit
   zero-current-blocker gate, fail-closed tamper tests, and release-security
   integration. Deferred HTTP/2/HTTP/3 and 32-bit evidence, integrated/proxy

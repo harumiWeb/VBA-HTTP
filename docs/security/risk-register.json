@@ -30,8 +30,8 @@
       "severity": "medium",
       "blocks_current_release": false,
       "blocks_v1": true,
-      "required_evidence": "Repeated receive-timeout stress with stable idle handle count or an upstream WinHTTP workaround",
-      "evidence": "docs/specs/cancellation-stress.md"
+      "required_evidence": "Repeated receive-timeout stress with stable idle handle count or an upstream WinHTTP workaround; best-effort COM Abort cleanup is now applied before release",
+      "evidence": "docs/specs/cancellation-stress.md; docs/adr/ADR-0022-com-timeout-failure-cleanup.md"
     }
   ]
 }

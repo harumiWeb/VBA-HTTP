@@ -15,6 +15,7 @@
 - `cancellation-stress.md`: repeated COM/native cancellation and timeout workloads, cleanup invariants, and PID-scoped evidence
 - `http-core-api.md`: Phase 1 public domain、transport、body、decoding、error contract
 - `buffered-com-transport.md`: default WinHTTP COM request、response、redirect、failure contract
+- `buffered-com-transport.md` also records best-effort COM `Abort` cleanup on failure (ADR-0022)
 - `bounded-concurrency.md`: cooperative COM async scheduling、batch results、deadlines、cancellation、reentrancy contract
 - `reliability-policy.md`: retry classification、backoff／jitter、Retry-After、total deadline、cancellation precedence
 - `streaming-download.md`: native constant-memory download、atomic publication、progress、cancellation、cleanup contract
