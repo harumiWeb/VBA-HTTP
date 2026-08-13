@@ -4,8 +4,11 @@
 
 ```vb
 Set client.AuthProvider = VBAHttp.CreateWindowsAuthProvider( _
-    "user", "pass", HttpAuthSchemeBasic, HttpAuthTargetServer)
+    "user", "pass", HttpAuthSchemeAuto, HttpAuthTargetServer)
 ```
+
+Use `VBAHttp.CreateNativeClient()` when the provider must request a specific
+scheme, for example `HttpAuthSchemeBasic`.
 
 `HttpWindowsAuthProvider` accepts `Auto`, `Basic`, `Digest`, `Ntlm`, or
 `Negotiate`, and a server or proxy target. Its default challenge limit is 3.

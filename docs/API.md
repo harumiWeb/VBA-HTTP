@@ -29,7 +29,7 @@ decompression, proxy, authentication, cookie, and diagnostics options.
 | `CreateProtocolOptions` / `CreateDecompressionOptions` | native capability policy |
 | `CreateProxyOptions` | default, direct, or manual proxy routing |
 | `CreateBasicAuthProvider` / `CreateBearerAuthProvider` | preemptive HTTPS credentials |
-| `CreateWindowsAuthProvider` | bounded buffered Basic/Digest/NTLM/Negotiate challenge credentials |
+| `CreateWindowsAuthProvider` | bounded buffered challenge credentials; COM uses `HttpAuthSchemeAuto`, while explicit Basic/Digest/NTLM/Negotiate selection is native-only |
 | `CreateCookieJar` / `CreateDiagnostics` | explicit session state and redacted events |
 
 ## Response and errors
