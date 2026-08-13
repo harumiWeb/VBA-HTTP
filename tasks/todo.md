@@ -369,7 +369,8 @@ streamingとadvanced protocolの土台となる安全なNative WinHTTP transport
 
 ### Exit Criteria
 
-- [~] 32-bit／64-bit compile evidenceがある（`benchmarks/results/office-bitness-x64.json`でx64の135 unit／71 integration、VBE compile、consumer smokeを実証。32-bit Office実機は同じrunnerの別ホスト実行待ち）。
+- [x] x64 compile evidenceがある（`benchmarks/results/office-bitness-x64.json`で135 unit／71 integration、VBE compile、consumer smokeを実証）。
+- [~] 32-bit Office compile evidenceを取得する（`Run-OfficeBitnessValidation.ps1 -ExpectedArchitecture X86`の実機実行待ち）。
 - [x] repeated request後にpersistent handle growthがない。
 - [x] COM transportと同じpublic response／error contractを満たす。
 - [x] production-only release buildが成功する（`xlflow build` のVBE compileと外部consumer smokeを確認済み）。
@@ -441,19 +442,23 @@ OSが提供するmodern WinHTTP capabilityとcorporate environment対応を安�
 
 - [x] protocol enable／fallback／required modeをADR-0009と`docs/specs/protocol-policy.md`で確定する。
 - [x] native HTTP/2 opt-inと`HttpResponse.ProtocolUsed`によるnegotiated protocol取得を実装する。
-- [~] HTTP/3 opt-inのWinHTTP flagとvalidationを実装する（TLS/QUIC host evidenceはcompatibility matrix待ち）。
+- [x] HTTP/3 opt-inのWinHTTP flagとvalidationを実装する（requested-mask、unsupported fallback、required errorをnative transportで検証済み）。
+- [~] HTTP/3のTLS/QUIC negotiated-host evidenceを取得する（対応Windows/WinHTTP hostとfixture待ち）。
 - [x] unsupported option、plain HTTP、required mismatchのfallback／`HttpErrorProtocol`を実装する。
 - [x] gzip／deflate decompressionをADR-0010と`docs/specs/decompression-policy.md`で確定し、native WinHTTP option 118、COM拒否、loopback／release smokeを実装する。
 - [x] OS default、no-proxy、manual HTTP proxyをADR-0012と`docs/specs/proxy-policy.md`で確定し、COM/native transportとloopback fixtureで検証する。
-- [~] Basic／Bearerのpreemptive authenticationを実装する（COM/native、HTTPS default、loopback opt-in、redirect suppressionまで完了。Windows integrated／Digest／proxy credentialsはchallenge-replay ADRへ分離）。
+- [x] Basic／Bearerのpreemptive authenticationを実装する（COM/native、HTTPS default、loopback opt-in、redirect suppression、release smokeまで検証済み）。
+- [~] Windows integrated／Digest／proxy challenge authenticationを実装する（bounded challenge replay、streaming source reset、credential redactionを別ADRで確定する）。
 - [x] `IHttpAuthProvider` を実装する（execution snapshotでcloneし、401／407の自動replayは行わない）。
 - [x] credential／secret redaction helperを実装し、sensitive headerがdiagnosticsへ出ないunit gateを追加する。
 - [x] `HttpDiagnostics` のbounded structured event schemaをADR-0019／`docs/specs/diagnostics-policy.md`で確定し、HttpClientとrelease consumer smokeへ統合する。
-- [~] OS version／Office bitness compatibility matrixを作成する（protocol host evidenceと32-bit実測は未完了）。
+- [x] OS version／Office bitness compatibility matrixを作成する（`docs/specs/compatibility-matrix.md`）。
+- [~] matrixのprotocol host evidenceと32-bit実測を完了する（対応host／fixture待ち）。
 
 ### Exit Criteria
 
-- [~] HTTP/1.1、HTTP/2、対応環境のHTTP/3を識別できる（HTTP/1.1 fallbackとrequested-mask contractは検証済み、TLS/QUIC実測は未完了）。
+- [x] HTTP/1.1 fallbackとrequested-mask contractを識別できる（plain HTTP、unsupported、required mismatchを検証済み）。
+- [~] TLS上のHTTP/2と対応環境のHTTP/3 negotiated protocolを識別する（TLS/QUIC fixtureとhost evidence待ち）。
 - [x] unsupported環境のfallback／errorがspec通りである。
 - [x] HTTP forwarding proxyのlocal integration testsがCOM/nativeで成功する（proxy authentication/HTTPS CONNECTは後続auth sliceの対象）。
 - [x] secretがdiagnosticsやbenchmark outputへ出ない（diagnostics serializerはquery／user-info／body／descriptionを除外し、sensitive headerを常時redactする。benchmark serializerは既存契約を維持する）。
@@ -531,7 +536,8 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 - [x] 100MB／1GB download benchmarkを公開する。
 - [x] multipart upload benchmarkを公開する。
 - [x] memory／handle stability結果を公開する。
-- [~] 32-bit／64-bit Office validationを完了する（x64 evidenceは完了、実32-bit hostでは`Run-OfficeBitnessValidation.ps1 -ExpectedArchitecture X86`実測待ち）。
+- [x] x64 Office validationを完了する（`benchmarks/results/office-bitness-x64.json`）。
+- [~] 32-bit Office validationを完了する（`Run-OfficeBitnessValidation.ps1 -ExpectedArchitecture X86`の実機実測待ち）。
 - [x] release checklistとartifact checksumsを作成する（`docs/RELEASE_CHECKLIST.md`、checksum sidecar gate）。
 - [x] READMEには実測値だけを掲載する（loopback条件と未達15% targetを明記）。
 - [x] 最終 `xlflow build` とexternal consumer smoke testを実行する（現行x64 release evidence）。
@@ -539,9 +545,11 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 ### Exit Criteria
 
 - [x] concurrency、streaming、resource stabilityの実測証跡がある。
-- [~] 全quality gateが成功する（現行x64 release gateは成功。32-bit／HTTP/3／challenge-auth promotion gateは未完了）。
-- [~] API、security、compatibility documentationが完成している（現行contractとsecurity gateは完了、未実測compatibility項目はrisk registerで追跡）。
-- [~] test、benchmark、xlflow支援コードを含まないv1.0 artifactを生成できる（XLSM/XLAM production-only artifactは生成済み、v1.0 promotion risksは未解消）。
+- [x] 現行x64のquality gateが成功する（unit、integration、lint、analyze、format、VBE、release smokeを検証済み）。
+- [~] v1.0 promotion quality gateを完了する（32-bit／HTTP/3 negotiated／challenge-auth gateは未完了）。
+- [x] API、security、compatibility documentationが完成している（現行contract、matrix、security gate、deferred riskを文書化済み）。
+- [x] test、benchmark、xlflow支援コードを含まないproduction-only artifactを生成できる（XLSM/XLAM build・manifest・checksum・smoke済み）。
+- [~] v1.0 promotion evidenceを完了する（32-bit／HTTP/3 negotiated／challenge-auth riskは未解消）。
 - [x] build manifestからrelease構成を再現・監査できる。
 
 ---
