@@ -56,12 +56,24 @@
         "windows": { "type": "string", "minLength": 1 },
         "winhttp": {
           "type": "object",
-          "required": ["enabled_protocol_option", "used_protocol_option", "required_protocol_option", "observed_protocol"],
+          "required": ["enabled_protocol_option", "used_protocol_option", "required_protocol_option", "observed_protocol", "preflight"],
           "properties": {
             "enabled_protocol_option": { "const": 133 },
             "used_protocol_option": { "const": 134 },
             "required_protocol_option": { "const": 145 },
-            "observed_protocol": { "enum": ["HTTP/2", "HTTP/3"] }
+            "observed_protocol": { "enum": ["HTTP/2", "HTTP/3"] },
+            "preflight": {
+              "type": "object",
+              "required": ["status", "requested_mask", "protocol_used_flag", "required", "stage"],
+              "properties": {
+                "status": { "const": "passed" },
+                "requested_mask": { "enum": [1, 2] },
+                "protocol_used_flag": { "enum": [1, 2] },
+                "required": { "const": true },
+                "stage": { "type": "string", "minLength": 1 }
+              },
+              "additionalProperties": false
+            }
           },
           "additionalProperties": false
         }

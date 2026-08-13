@@ -6,6 +6,14 @@ $ErrorActionPreference = "Stop"
 $root = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
 $testRoot = Join-Path $root ".xlflow\protocol-host-evidence-test"
 $validator = Join-Path $PSScriptRoot "Validate-ProtocolHostEvidence.ps1"
+$schemaPath = Join-Path $root "benchmarks\schema\protocol-host-evidence.schema.json"
+
+$schema = Get-Content -LiteralPath $schemaPath -Raw | ConvertFrom-Json
+$schemaWinHttp = $schema.properties.environment.properties.winhttp
+if ($schemaWinHttp.required -notcontains "preflight" -or
+    $schemaWinHttp.properties.preflight.properties.protocol_used_flag -eq $null) {
+    throw "Protocol host JSON schema does not describe the required capability preflight."
+}
 
 function Write-Record([string]$Path, $Record) {
     $Record | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $Path -Encoding UTF8
