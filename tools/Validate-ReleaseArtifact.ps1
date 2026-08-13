@@ -33,7 +33,7 @@ if ($manifest.validation.source_applied -ne $true -or
     $manifest.validation.excel_cleanup -ne "clean") {
     throw "Release manifest does not prove a clean compiled build."
 }
-if ($manifest.publication.method -ne "atomic_replace") {
+if (@("atomic_create", "atomic_replace") -notcontains [string]$manifest.publication.method) {
     throw "Release publication was not atomic."
 }
 
