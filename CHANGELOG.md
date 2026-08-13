@@ -1,5 +1,11 @@
 ## Unreleased
 
+- Made the buffered challenge-authentication backend boundary explicit: COM
+  now accepts only `HttpAuthSchemeAuto` because
+  `IWinHttpRequest::SetCredentials` has no scheme argument; explicit
+  Basic/Digest/NTLM/Negotiate selection fails before COM backend creation and
+  remains available through the native transport (ADR-0033).
+
 - Added an Excel-free WinHTTP capability preflight to the opt-in protocol-host
   runner. It checks the exact required HTTP/2 or HTTP/3 mask before creating
   Excel, records only redacted preflight metadata, and fails closed without

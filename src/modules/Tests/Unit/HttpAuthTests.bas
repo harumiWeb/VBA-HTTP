@@ -92,6 +92,17 @@ Public Sub Test_Auth_WindowsChallengeProviderSnapshotsWithoutAddingHeader()
     XlflowAssert.AssertNotSame provider, transport.LastRequest.AuthProvider
 End Sub
 
+'@ExpectedError(-2147200503, "Explicit challenge scheme selection requires the native WinHTTP transport; use HttpAuthSchemeAuto for COM.", "WinHttpComTransport.Execute")
+Public Sub Test_Auth_ComRejectsExplicitChallengeSchemeBeforeBackend()
+    Dim client As New HttpClient
+    Dim provider As IHttpAuthProvider
+
+    Set client.Transport = New WinHttpComTransport
+    Set provider = VBAHttp.CreateWindowsAuthProvider("user", "pass", HttpAuthSchemeBasic, HttpAuthTargetServer)
+    Set client.AuthProvider = provider
+    Call client.GetResponse("https://example.test/protected")
+End Sub
+
 '@ExpectedError(-2147200503, "Challenge authentication requires an HTTPS request URL.", "HttpWindowsAuthProvider.Apply")
 Public Sub Test_Auth_WindowsChallengeProviderRequiresHttpsByDefault()
     Dim client As New HttpClient

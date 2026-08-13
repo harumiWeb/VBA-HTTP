@@ -71,6 +71,7 @@ Friend Sub ConfigureCom(ByVal Backend As Object, ByVal Source As String)
     Dim targetBackend As Object
 
     If Not mInitialized Then HttpErrors.RaiseValidation Source, "Windows authentication provider is not initialized."
+    ValidateComCompatibility Source
     Set targetBackend = Backend
     If targetBackend Is Nothing Then
         HttpErrors.RaiseValidation Source, "WinHTTP backend is unavailable."
@@ -82,6 +83,13 @@ Friend Sub ConfigureCom(ByVal Backend As Object, ByVal Source As String)
 
 ConfigureFailed:
     Err.Raise HttpErrIo, Source, "WinHTTP rejected the configured authentication credentials."
+End Sub
+
+Friend Sub ValidateComCompatibility(ByVal Source As String)
+    If Not mInitialized Then HttpErrors.RaiseValidation Source, "Windows authentication provider is not initialized."
+    If mScheme <> HttpAuthSchemeAuto Then
+        HttpErrors.RaiseValidation Source, "Explicit challenge scheme selection requires the native WinHTTP transport; use HttpAuthSchemeAuto for COM."
+    End If
 End Sub
 
 #If VBA7 Then

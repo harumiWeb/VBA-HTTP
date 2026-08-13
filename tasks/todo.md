@@ -454,6 +454,7 @@ OSが提供するmodern WinHTTP capabilityとcorporate environment対応を安�
 - [x] OS default、no-proxy、manual HTTP proxyをADR-0012と`docs/specs/proxy-policy.md`で確定し、COM/native transportとloopback HTTP/HTTPS CONNECT boundary fixtureで検証する（trusted corporate CONNECTはhost-dependent gate）。
 - [x] Basic／Bearerのpreemptive authenticationを実装する（COM/native、HTTPS default、loopback opt-in、redirect suppression、release smokeまで検証済み）。
 - [x] Windows integrated／Digest／proxy challenge authenticationのbounded buffered契約をADR-0023／`docs/specs/challenge-authentication.md`で確定し、COM/nativeのchallenge replay、redaction、release smokeを実装する。streaming sourceはresetなしでpre-network拒否し、loopback proxy CONNECT boundaryはADR-0031で検証、実Windows domain／trusted proxy CONNECTはcompatibility gateとして残す。
+- [x] COMの`SetCredentials`がschemeを選択できないbackend境界をADR-0033で固定し、COMは`Auto`のみ、明示schemeはnative-onlyとしてnetwork前に拒否する。
 - [x] `IHttpAuthProvider` を実装する（execution snapshotでcloneし、401／407の自動replayは行わない）。
 - [x] credential／secret redaction helperを実装し、sensitive headerがdiagnosticsへ出ないunit gateを追加する。
 - [x] `HttpDiagnostics` のbounded structured event schemaをADR-0019／`docs/specs/diagnostics-policy.md`で確定し、HttpClientとrelease consumer smokeへ統合する。

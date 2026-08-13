@@ -166,7 +166,7 @@ Public Sub RunProxySmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As S
     options.Mode = 2
     options.ProxyUrl = proxyAuthUrl
     Set client.ProxyOptions = options
-    Set provider = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateWindowsAuthProvider", "proxy-user", "proxy-pass", 1, 1, True, 3)
+    Set provider = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateWindowsAuthProvider", "proxy-user", "proxy-pass", 0, 1, True, 3)
     Set client.AuthProvider = provider
     client.BaseUrl = baseUrl
     Set response = client.GetResponse("/headers")
@@ -205,6 +205,7 @@ Private Sub AssertProxyTlsBoundary(ByVal releaseWorkbookName As String, ByVal ba
     Dim beforeAuthorized As Long
     Dim observedNumber As Long
     Dim transportName As String
+    Dim challengeScheme As Long
 
     If nativeTransport Then
         transportName = "native"
@@ -213,6 +214,8 @@ Private Sub AssertProxyTlsBoundary(ByVal releaseWorkbookName As String, ByVal ba
         transportName = "COM"
         Set client = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateClient")
     End If
+    challengeScheme = 0
+    If nativeTransport Then challengeScheme = 1
     Set statsClient = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateClient")
     statsClient.BaseUrl = baseUrl
     Set beforeResponse = statsClient.GetResponse("/__admin/proxy-stats")
@@ -225,7 +228,7 @@ Private Sub AssertProxyTlsBoundary(ByVal releaseWorkbookName As String, ByVal ba
     Set client.ProxyOptions = options
     client.BaseUrl = targetUrl
     If authenticated Then
-        Set provider = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateWindowsAuthProvider", "proxy-user", "proxy-pass", 1, 1, True, 3)
+        Set provider = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateWindowsAuthProvider", "proxy-user", "proxy-pass", challengeScheme, 1, True, 3)
         Set client.AuthProvider = provider
     End If
 
@@ -289,7 +292,7 @@ Public Sub RunAuthSmoke(ByVal releaseWorkbookName As String, ByVal baseUrl As St
         Err.Raise vbObjectError + 752, "ReleaseBatchSmoke.RunAuthSmoke", "Release Bearer authentication smoke returned an unexpected response."
     End If
 
-    Set provider = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateWindowsAuthProvider", "user", "pass", 1, 0, True, 3)
+    Set provider = Application.Run("'" & releaseWorkbookName & "'!VBAHttp.CreateWindowsAuthProvider", "user", "pass", 0, 0, True, 3)
     Set client.AuthProvider = provider
     Set response = client.GetResponse("/auth/challenge/basic")
     If response.StatusCode <> 204 Or response.Headers.GetValue("X-Auth-Verified") <> "1" Then

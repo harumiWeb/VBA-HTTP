@@ -149,8 +149,11 @@ Set response = client.GetResponse("https://example.com/protected")
 responses are returned normally for preemptive providers. Buffered requests may
 opt into bounded Windows/Digest/server-or-proxy challenge authentication with
 `VBAHttp.CreateWindowsAuthProvider`; streaming uploads reject that provider
-before opening a one-shot source. OAuth flows and interactive callbacks remain
-outside the current provider contract; see
+before opening a one-shot source. The COM backend uses
+`HttpAuthSchemeAuto` and lets WinHTTP negotiate the advertised challenge
+scheme; explicit Basic/Digest/NTLM/Negotiate selection requires the native
+client and fails before COM backend creation. OAuth flows and interactive
+callbacks remain outside the current provider contract; see
 [`docs/specs/auth-policy.md`](docs/specs/auth-policy.md).
 
 Requests carrying `Authorization`, `Proxy-Authorization`, or `Cookie` headers

@@ -56,6 +56,7 @@ Private Function ExecuteCore(ByVal Request As HttpRequest) As HttpResponse
     HttpUrlValidation.ValidateNoUserInfo Request.Url, TransportSource
     ValidateProtocolOptions Request
     ValidateDecompressionOptions Request
+    ValidateChallengeProvider Request
 
     Set backend = CreateObject("WinHttp.WinHttpRequest.5.1")
     backend.SetTimeouts Request.Timeouts.ResolveMilliseconds, Request.Timeouts.ConnectMilliseconds, Request.Timeouts.SendMilliseconds, Request.Timeouts.ReceiveMilliseconds
@@ -445,6 +446,7 @@ Private Function CreateAsyncOperation(ByVal Request As HttpRequest, ByVal itemIn
     HttpUrlValidation.ValidateNoUserInfo Request.Url, TransportSource
     ValidateProtocolOptions Request
     ValidateDecompressionOptions Request
+    ValidateChallengeProvider Request
     Set backend = CreateObject("WinHttp.WinHttpRequest.5.1")
     backend.SetTimeouts Request.Timeouts.ResolveMilliseconds, Request.Timeouts.ConnectMilliseconds, Request.Timeouts.SendMilliseconds, Request.Timeouts.ReceiveMilliseconds
     backend.Option(WinHttpOptionEnableRedirects) = Request.FollowRedirects And Not HttpSecurity.HasRedirectSensitiveHeaders(Request.Headers)
@@ -534,6 +536,16 @@ Private Sub ApplyChallengeCredentials(ByVal backend As Object, ByVal Request As 
     Provider.Apply Request
     Set challengeProvider = Provider
     challengeProvider.ConfigureCom backend, Source
+End Sub
+
+Private Sub ValidateChallengeProvider(ByVal Request As HttpRequest)
+    Dim challengeProvider As HttpWindowsAuthProvider
+
+    If Request Is Nothing Then Exit Sub
+    If Request.AuthProvider Is Nothing Then Exit Sub
+    If Not TypeOf Request.AuthProvider Is HttpWindowsAuthProvider Then Exit Sub
+    Set challengeProvider = Request.AuthProvider
+    challengeProvider.ValidateComCompatibility TransportSource
 End Sub
 
 Private Function ProxyServerName(ByVal ProxyUrl As String) As String

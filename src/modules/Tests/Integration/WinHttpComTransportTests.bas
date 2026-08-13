@@ -170,7 +170,7 @@ Public Sub Test_ComTransport_BoundedChallengeAuth()
     Dim response As HttpResponse
 
     client.BaseUrl = RequireBaseUrl()
-    Set provider = VBAHttp.CreateWindowsAuthProvider("user", "pass", HttpAuthSchemeBasic, HttpAuthTargetServer, True)
+    Set provider = VBAHttp.CreateWindowsAuthProvider("user", "pass", HttpAuthSchemeAuto, HttpAuthTargetServer, True)
     Set client.AuthProvider = provider
     Set response = client.GetResponse("/auth/challenge/basic")
 
@@ -314,7 +314,7 @@ Public Sub Test_ComTransport_ProxyChallengeAuth()
     options.Mode = HttpProxyManual
     options.ProxyUrl = RequireProxyAuthUrl()
     Set client.ProxyOptions = options
-    Set provider = VBAHttp.CreateWindowsAuthProvider("proxy-user", "proxy-pass", HttpAuthSchemeBasic, HttpAuthTargetProxy, True, 1)
+    Set provider = VBAHttp.CreateWindowsAuthProvider("proxy-user", "proxy-pass", HttpAuthSchemeAuto, HttpAuthTargetProxy, True, 1)
     Set client.AuthProvider = provider
 
     Set response = client.GetResponse("/headers")
@@ -334,7 +334,7 @@ Public Sub Test_ComTransport_ProxyChallengeWrongCredentialsRemain407()
     options.Mode = HttpProxyManual
     options.ProxyUrl = RequireProxyAuthUrl()
     Set client.ProxyOptions = options
-    Set provider = VBAHttp.CreateWindowsAuthProvider("proxy-user", "wrong-pass", HttpAuthSchemeBasic, HttpAuthTargetProxy, True, 1)
+    Set provider = VBAHttp.CreateWindowsAuthProvider("proxy-user", "wrong-pass", HttpAuthSchemeAuto, HttpAuthTargetProxy, True, 1)
     Set client.AuthProvider = provider
 
     Set response = client.GetResponse("/headers")
@@ -395,7 +395,7 @@ Public Sub Test_ComTransport_AuthenticatedHTTPSProxyConnectReachesTLSBoundary()
     options.Mode = HttpProxyManual
     options.ProxyUrl = RequireProxyTlsAuthUrl()
     Set client.ProxyOptions = options
-    Set provider = VBAHttp.CreateWindowsAuthProvider("proxy-user", "proxy-pass", HttpAuthSchemeBasic, HttpAuthTargetProxy, True, 1)
+    Set provider = VBAHttp.CreateWindowsAuthProvider("proxy-user", "proxy-pass", HttpAuthSchemeAuto, HttpAuthTargetProxy, True, 1)
     Set client.AuthProvider = provider
     On Error GoTo ExpectedFailure
     Call client.GetResponse("/status/204")

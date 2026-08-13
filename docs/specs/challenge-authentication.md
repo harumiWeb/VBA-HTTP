@@ -13,12 +13,25 @@ The URL must be HTTPS unless `AllowInsecureHttp:=True` is explicitly supplied
 for a loopback fixture. Username/password values are validated for header
 control characters and are never returned by the public API.
 
+The `Scheme` value is a backend capability boundary:
+
+- Native WinHTTP queries the challenge bitmap and honors an explicit `Basic`,
+  `Digest`, `Ntlm`, or `Negotiate` selection. `Auto` uses the documented native
+  preference order and only selects a scheme advertised by the peer.
+- COM `IWinHttpRequest::SetCredentials` accepts the credential target but has no
+  scheme parameter. The COM transport therefore accepts only `Auto` and lets
+  WinHTTP negotiate the scheme advertised by the server or proxy. An explicit
+  scheme on the COM path fails validation before a backend is created; callers
+  that require deterministic scheme selection must use
+  `VBAHttp.CreateNativeClient()`.
+
 ## Replay boundary
 
 - The provider is cloned into the execution snapshot and applied exactly once.
 - Automatic redirects are disabled for every challenge provider.
 - Buffered COM requests configure credentials before `Send`; WinHTTP performs
-  its own bounded challenge exchange.
+  its own bounded challenge exchange using the server/proxy's advertised
+  scheme. COM does not silently ignore an explicit scheme request.
 - Native buffered requests query `WWW-Authenticate`/`Proxy-Authenticate`, set
   credentials on the existing handle, and resend the retained request body at
   most three times (or the provider's lower limit).

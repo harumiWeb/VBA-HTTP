@@ -49,8 +49,10 @@ redirects on the execution snapshot so a credential-bearing header is never
 forwarded implicitly. `auth-policy.md` defines the explicit loopback-only
 insecure opt-in, secret redaction, and the preemptive-provider boundary.
 `VBAHttp.CreateWindowsAuthProvider` adds a bounded buffered challenge policy for
-server or proxy targets; COM configures WinHTTP before send and native buffered
-requests replay the retained body on the same handle. Native file/multipart
+server or proxy targets. COM supports `HttpAuthSchemeAuto` and lets WinHTTP
+negotiate the advertised scheme; explicit scheme selection is native-only and
+fails before COM backend creation. Native buffered requests replay the retained
+body on the same handle and honor the explicit scheme. Native file/multipart
 uploads reject that provider before opening a one-shot source. The complete
 contract is in `challenge-authentication.md`.
 
