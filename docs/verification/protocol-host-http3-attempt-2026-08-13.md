@@ -2,7 +2,7 @@
 
 ## Scope
 
-This record documents five operator-invoked attempts to obtain the pending
+This record documents six operator-invoked attempts to obtain the pending
 HTTP/3/QUIC negotiated-host evidence. It is a failure/inconclusive record,
 not a compatibility claim. No `protocol-host-http3.json` passing artifact was
 created.
@@ -16,6 +16,7 @@ created.
 | `cloudflare-quic.com:443` | HTTPS, `HTTP/3`, `required`, 90-second outer deadline | WinHTTP consumer terminated with RPC failure `0x800706BE`; no `ProtocolUsed` was observed |
 | `quic.aiortc.org:443` | HTTPS, `HTTP/3`, `required`, 90-second outer deadline | WinHTTP consumer terminated with RPC failure `0x800706BE`; no `ProtocolUsed` was observed |
 | `cloudflare-quic.com:443` | HTTPS, `HTTP/3`, `required`, 60-second outer deadline after the native DWORD-option marshalling fix | WinHTTP consumer terminated with RPC failure `0x800706BE`; no `ProtocolUsed` was observed |
+| `cloudflare-quic.com:443` | HTTPS, `HTTP/3`, `required`, 45-second outer deadline after explicit pointer-sized `WinHttpSetOption` marshalling | WinHTTP consumer terminated with RPC failure `0x800706BE`; Windows Application Error 1000 recorded an `EXCEL.EXE` access violation in `combase.dll` (`0xc0000005`); no `ProtocolUsed` was observed |
 
 These endpoints are public HTTP/3 test-server candidates, but endpoint
 availability alone is not evidence that this Windows/WinHTTP host negotiated
@@ -39,6 +40,11 @@ row pending.
   32-bit `WinHttpSetOption` buffer fix. The RPC failure remained; the
   runner-owned Excel process exited during teardown and no unrelated Excel
   process was stopped.
+- The sixth run exercised the subsequent explicit `VarPtr(optionBuffer)` ABI
+  fix. It reproduced the same RPC failure before a response was returned.
+  Windows Error Reporting identified the faulting module as `combase.dll`
+  (`EXCEL.EXE` exception `0xc0000005`). The ownership guard still targeted
+  only the runner-owned Excel PID; no unrelated Excel process was stopped.
 
 ## Excel-free capability diagnosis
 
@@ -49,12 +55,14 @@ WinHTTP capability from Excel automation:
 | --- | --- |
 | `cloudflare-quic.com:443`, mask `HTTP/3`, option 133 | `ERROR_NOT_SUPPORTED` (50) before send; no request was issued |
 | `nghttp2.org:443`, mask `HTTP/2`, option 133 | option accepted and option 134 returned HTTP/2 |
+| `nghttp2.org:443`, option 184 feature probe for options 133/145/118 | `ERROR_INVALID_PARAMETER` (87) for each query; no reliable preflight result |
 
 This confirms that the current WinHTTP runtime exposes HTTP/2 but rejects an
 HTTP/3-enabled mask. The native transport now treats error 50 as an explicit
 capability miss: allow-fallback skips the option, while required mode raises
-`HttpErrorProtocol`. The probe is diagnostic evidence only and does not promote
-HTTP/3.
+`HttpErrorProtocol`. The option-184 query did not provide a usable capability
+signal on this host, so it is not used as a production preflight. The probe is
+diagnostic evidence only and does not promote HTTP/3.
 
 ## Follow-up
 
