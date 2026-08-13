@@ -2,7 +2,7 @@
 
 ## Scope
 
-This record documents four operator-invoked attempts to obtain the pending
+This record documents five operator-invoked attempts to obtain the pending
 HTTP/3/QUIC negotiated-host evidence. It is a failure/inconclusive record,
 not a compatibility claim. No `protocol-host-http3.json` passing artifact was
 created.
@@ -15,6 +15,7 @@ created.
 | `quic.rocks:4433` | HTTPS, `HTTP/3`, `required`, 90-second outer deadline | WinHTTP consumer terminated with RPC failure `0x800706BE`; no `ProtocolUsed` was observed |
 | `cloudflare-quic.com:443` | HTTPS, `HTTP/3`, `required`, 90-second outer deadline | WinHTTP consumer terminated with RPC failure `0x800706BE`; no `ProtocolUsed` was observed |
 | `quic.aiortc.org:443` | HTTPS, `HTTP/3`, `required`, 90-second outer deadline | WinHTTP consumer terminated with RPC failure `0x800706BE`; no `ProtocolUsed` was observed |
+| `cloudflare-quic.com:443` | HTTPS, `HTTP/3`, `required`, 60-second outer deadline after the native DWORD-option marshalling fix | WinHTTP consumer terminated with RPC failure `0x800706BE`; no `ProtocolUsed` was observed |
 
 These endpoints are public HTTP/3 test-server candidates, but endpoint
 availability alone is not evidence that this Windows/WinHTTP host negotiated
@@ -34,6 +35,10 @@ row pending.
   PID was `77108` and the watchdog PID was `57040`.
 - The fourth run used the HWND-to-PID ownership guard; the watchdog targeted
   only its runner-owned Excel PID and the run ended without a passing artifact.
+- The fifth run exercised the release artifact containing the explicit
+  32-bit `WinHttpSetOption` buffer fix. The RPC failure remained; the
+  runner-owned Excel process exited during teardown and no unrelated Excel
+  process was stopped.
 
 ## Follow-up
 
