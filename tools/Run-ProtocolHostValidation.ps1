@@ -12,6 +12,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 $projectRoot = [IO.Path]::GetFullPath((Split-Path -Parent $PSScriptRoot))
+. (Join-Path $PSScriptRoot "OfficeProcessOwnership.ps1")
 
 function Resolve-ProjectPath([string]$Path) {
     if ([string]::IsNullOrWhiteSpace($Path)) { throw "A path cannot be empty." }
@@ -52,11 +53,6 @@ function Publish-JsonAtomically([string]$Path, $Document) {
     finally {
         if (Test-Path -LiteralPath $staging -PathType Leaf) { Remove-Item -LiteralPath $staging -Force }
     }
-}
-
-function Get-ExcelProcessIds {
-    $processes = @(Get-Process -Name EXCEL -ErrorAction SilentlyContinue)
-    return @($processes | ForEach-Object { [int]$_.Id })
 }
 
 function Get-RelativeProjectPath([string]$Path) {
@@ -148,11 +144,7 @@ $watchdog = $null
 try {
     Write-Verbose "Starting an owned Excel automation instance."
     $excel = New-Object -ComObject Excel.Application
-    $afterExcelIds = @(Get-ExcelProcessIds)
-    $ownedExcelIds = @($afterExcelIds | Where-Object { $baselineExcelIds -notcontains $_ })
-    if ($ownedExcelIds.Count -eq 0) {
-        throw "Could not prove ownership of a new Excel process; refusing to touch an existing instance."
-    }
+    $ownedExcelIds = @(Get-OwnedExcelProcessId $excel $baselineExcelIds "protocol host validation")
     $ownsExcel = $true
     $excel.Visible = $false
     $excel.DisplayAlerts = $false
@@ -214,12 +206,7 @@ finally {
         if ($ownsExcel) { try { $excel.Quit() } catch { Write-Warning "Could not quit owned protocol validation Excel: $_" } }
         [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($excel)
     }
-    foreach ($processId in $ownedExcelIds) {
-        $process = Get-Process -Id $processId -ErrorAction SilentlyContinue
-        if ($null -ne $process -and -not $process.HasExited) {
-            Stop-Process -Id $processId -Force
-        }
-    }
+    Stop-OwnedExcelProcesses $ownedExcelIds "protocol host validation"
 }
 
 $record = [ordered]@{

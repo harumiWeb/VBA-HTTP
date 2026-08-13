@@ -9,6 +9,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 $projectRoot = [IO.Path]::GetFullPath((Split-Path -Parent $PSScriptRoot))
+. (Join-Path $PSScriptRoot "OfficeProcessOwnership.ps1")
 $validationRoot = [IO.Path]::GetFullPath((Join-Path $projectRoot ".xlflow\bitness-validation"))
 $buildRoot = Join-Path $validationRoot "build"
 $artifactPath = Join-Path $buildRoot "VBA-HTTP.xlsm"
@@ -38,26 +39,13 @@ function Publish-Json([string]$Path, $Document) {
     }
 }
 
-function Get-ExcelProcessIds {
-    @(Get-Process -Name EXCEL -ErrorAction SilentlyContinue | ForEach-Object { [int]$_.Id })
-}
-
 function Get-OfficeInfo {
     $excel = $null
     $baselineIds = @(Get-ExcelProcessIds)
     $ownedIds = @()
     try {
         $excel = New-Object -ComObject Excel.Application
-        $deadline = [DateTime]::UtcNow.AddSeconds(5)
-        do {
-            $afterIds = @(Get-ExcelProcessIds)
-            $ownedIds = @($afterIds | Where-Object { $baselineIds -notcontains $_ })
-            if ($ownedIds.Count -gt 0) { break }
-            Start-Sleep -Milliseconds 50
-        } while ([DateTime]::UtcNow -lt $deadline)
-        if ($ownedIds.Count -eq 0) {
-            throw "Could not prove ownership of a new Excel process; refusing to quit a pre-existing Excel instance."
-        }
+        $ownedIds = @(Get-OwnedExcelProcessId $excel $baselineIds "Office metadata validation")
         return [ordered]@{
             version = [string]$excel.Version
             build = [string]$excel.Build
@@ -71,6 +59,7 @@ function Get-OfficeInfo {
             }
             [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($excel)
         }
+        Stop-OwnedExcelProcesses $ownedIds "Office metadata validation"
     }
 }
 
