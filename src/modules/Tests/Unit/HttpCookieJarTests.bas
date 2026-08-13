@@ -123,3 +123,10 @@ Public Sub Test_CookieJar_IgnoresNonAsciiCookieName()
     XlflowAssert.AssertEquals 0, jar.Count
     XlflowAssert.AssertEquals "", jar.GetCookieHeader("http://example.test/")
 End Sub
+
+'@ExpectedError(-2147200502, "URL user-info is not permitted.", "HttpCookieParsing.ParseUrl")
+Public Sub Test_CookieJar_RejectsUserInfoUrl()
+    Dim jar As New HttpCookieJar
+
+    Call jar.GetCookieHeader("https://user:pass@example.test/")
+End Sub

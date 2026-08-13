@@ -191,6 +191,32 @@ Public Sub Test_Client_RejectsNonHttpScheme()
     Call client.GetResponse("ftp://example.test/file")
 End Sub
 
+'@ExpectedError(-2147200502, "URL user-info is not permitted.", "HttpClient.BaseUrl")
+Public Sub Test_Client_RejectsUserInfoInBaseUrl()
+    Dim client As New HttpClient
+
+    client.BaseUrl = "https://user:pass@example.test"
+End Sub
+
+'@ExpectedError(-2147200502, "URL user-info is not permitted.", "HttpClient.Execute")
+Public Sub Test_Client_RejectsUserInfoInAbsoluteRequest()
+    Dim client As New HttpClient
+    Dim transport As New MockHttpTransport
+
+    Set client.Transport = transport
+    Call client.GetResponse("https://user:pass@example.test/items")
+End Sub
+
+'@ExpectedError(-2147200502, "URL cannot contain whitespace or control characters.", "HttpClient.Execute")
+Public Sub Test_Client_ValidatesResolvedRelativeUrlBeforeTransport()
+    Dim client As New HttpClient
+    Dim transport As New MockHttpTransport
+
+    client.BaseUrl = "https://example.test"
+    Set client.Transport = transport
+    Call client.GetResponse("/items with-space")
+End Sub
+
 Public Sub Test_Client_DefaultsToComTransport()
     Dim client As New HttpClient
 

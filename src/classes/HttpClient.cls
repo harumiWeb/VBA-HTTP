@@ -632,6 +632,7 @@ Private Function ResolveUrl(ByVal value As String) As String
         HttpErrors.RaiseInvalidUrl "HttpClient.Execute", "Relative request URL requires BaseUrl."
     End If
     ResolveUrl = RTrimSlash(mBaseUrl) & "/" & LTrimSlash(value)
+    ValidateAbsoluteUrl ResolveUrl, "HttpClient.Execute"
 End Function
 
 Private Sub ValidateAbsoluteUrl(ByVal value As String, ByVal Source As String)
@@ -663,6 +664,7 @@ Private Sub ValidateAbsoluteUrl(ByVal value As String, ByVal Source As String)
     If Len(authority) = 0 Then
         HttpErrors.RaiseInvalidUrl Source, "URL must contain a host."
     End If
+    HttpUrlValidation.ValidateNoUserInfo value, Source
 End Sub
 
 Private Sub ApplyQuery(ByVal Request As HttpRequest)

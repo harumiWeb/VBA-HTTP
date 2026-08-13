@@ -58,6 +58,7 @@ Friend Sub Initialize(ByVal Url As String)
     authorityStart = schemeSeparator + 3
     authorityEnd = FindAuthorityEnd(Url, authorityStart)
     authority = Mid$(Url, authorityStart, authorityEnd - authorityStart)
+    HttpUrlValidation.ValidateNoUserInfo Url, "WinHttpNativeUrl.Initialize"
     If Len(authority) = 0 Or InStr(1, authority, "@", vbBinaryCompare) > 0 Then
         HttpErrors.RaiseInvalidUrl "WinHttpNativeUrl.Initialize", "URL authority is invalid."
     End If

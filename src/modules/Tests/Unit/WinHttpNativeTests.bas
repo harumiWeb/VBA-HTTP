@@ -29,3 +29,19 @@ Public Sub Test_NativeUploadLengthEncodingPreservesDwordBits()
     XlflowAssert.AssertEquals - 1, WinHttpNativeApi.EncodeUploadTotalLength(CCur(4294967295#))
     XlflowAssert.AssertEquals WinHttpNativeApi.WinHttpIgnoreRequestTotalLength, WinHttpNativeApi.EncodeUploadTotalLength(CCur(4294967296#))
 End Sub
+
+'@ExpectedError(-2147200502, "URL user-info is not permitted.", "WinHttpNativeUrl.Initialize")
+Public Sub Test_NativeUrl_RejectsUserInfo()
+    Dim Url As New WinHttpNativeUrl
+
+    Url.Initialize "https://user:pass@example.test/"
+End Sub
+
+'@ExpectedError(-2147200502, "URL user-info is not permitted.", "WinHttpComTransport.Execute")
+Public Sub Test_ComTransport_RejectsUserInfoBeforeNetwork()
+    Dim transport As New WinHttpComTransport
+    Dim Request As New HttpRequest
+
+    Request.Url = "https://user:pass@example.test/"
+    Call transport.Execute(Request)
+End Sub

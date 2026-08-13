@@ -144,3 +144,5 @@
 
 - Corrected native upload `dwTotalLength` encoding across the unsigned DWORD range, including the `WINHTTP_IGNORE_REQUEST_TOTAL_LENGTH = 0` sentinel for payloads at or above 4 GiB.
 - Made exported class sources clean-importable during `xlflow build` and added a preflight check for the required CRLF representation.
+- Hardened URL validation so authority user-info is rejected consistently by
+  `HttpClient`, COM/native transport boundaries, and the explicit cookie jar.

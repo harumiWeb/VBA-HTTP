@@ -52,6 +52,7 @@ Private Function ExecuteCore(ByVal Request As HttpRequest) As HttpResponse
     If Request Is Nothing Then
         HttpErrors.RaiseValidation TransportSource, "Request cannot be Nothing."
     End If
+    HttpUrlValidation.ValidateNoUserInfo Request.Url, TransportSource
     ValidateProtocolOptions Request
     ValidateDecompressionOptions Request
 
@@ -438,6 +439,7 @@ Private Function CreateAsyncOperation(ByVal Request As HttpRequest, ByVal itemIn
     Dim errorDescription As String
 
     On Error GoTo TransportFailure
+    HttpUrlValidation.ValidateNoUserInfo Request.Url, TransportSource
     ValidateProtocolOptions Request
     ValidateDecompressionOptions Request
     Set backend = CreateObject("WinHttp.WinHttpRequest.5.1")

@@ -60,7 +60,7 @@ with query-free targets, stable error categories, and redacted sensitive
 headers; bodies and localized error descriptions are excluded. The schema and
 retention contract are defined by `diagnostics-policy.md`.
 
-`HttpClient.BaseUrl` resolves a relative request URL. An absolute request URL is used as-is. Base and relative URL joining must not discard path segments accidentally and is covered by URL unit tests before network transports are enabled.
+`HttpClient.BaseUrl` resolves a relative request URL. An absolute request URL is used as-is. Base and relative URL joining must not discard path segments accidentally and is covered by URL unit tests before network transports are enabled. HTTP(S) authority user-info (`user:password@host`) is rejected at the client and transport boundary; callers must use an explicit authentication provider instead of embedding credentials in a URL. The same rule applies when a public cookie jar parses a URL.
 
 `HttpClient.DefaultHeaders` are copied into an execution request. Request headers override the same case-insensitive default name. Execution snapshots isolate in-flight behavior from later mutations of the client or original request.
 

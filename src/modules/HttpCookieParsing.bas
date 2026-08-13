@@ -17,7 +17,7 @@ Public Function ParseUrl(ByVal Url As String) As HttpCookieUrl
     authorityStart = schemeEnd + 3
     authorityEnd = FirstUrlDelimiter(Url, authorityStart)
     authority = Mid$(Url, authorityStart, authorityEnd - authorityStart)
-    authority = StripUserInfo(authority)
+    HttpUrlValidation.ValidateNoUserInfo Url, "HttpCookieParsing.ParseUrl"
     authority = HostWithoutPort(authority)
     If Len(authority) = 0 Then HttpErrors.RaiseInvalidUrl "HttpCookieParsing.ParseUrl", "Cookie URL must contain a host."
     output.Host = authority
@@ -145,11 +145,6 @@ Private Function FirstUrlDelimiter(ByVal value As String, ByVal startAt As Long)
         If InStr(1, "/?#", Mid$(value, index, 1), vbBinaryCompare) > 0 Then FirstUrlDelimiter = index: Exit Function
     Next index
     FirstUrlDelimiter = Len(value) + 1
-End Function
-
-Private Function StripUserInfo(ByVal authority As String) As String
-    If InStrRev(authority, "@") > 0 Then authority = Mid$(authority, InStrRev(authority, "@") + 1)
-    StripUserInfo = authority
 End Function
 
 Private Function HostWithoutPort(ByVal authority As String) As String

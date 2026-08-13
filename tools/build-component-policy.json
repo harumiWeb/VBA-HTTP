@@ -39,6 +39,7 @@
     "HttpRetryPolicy",
     "HttpSystemReliabilityRuntime",
     "HttpUploadResult",
+    "HttpUrlValidation",
     "HttpWindowsAuthProvider",
     "HttpTiming",
     "HttpTimeouts",
