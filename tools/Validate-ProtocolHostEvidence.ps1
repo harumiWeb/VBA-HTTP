@@ -106,7 +106,7 @@ if ($port -lt 1 -or $port -gt 65535) { throw "Protocol host target port is inval
 
 $bridge = Require-Property $result "bridge"
 Assert-OnlyProperties $bridge @("name", "version", "runtime", "architecture") "bridge"
-if ([string](Require-Property $bridge "architecture") -notin @("X86", "X64") -or
+if ([string](Require-Property $bridge "architecture") -ne "X64" -or
     [string]::IsNullOrWhiteSpace([string](Require-Property $bridge "name")) -or
     [string]::IsNullOrWhiteSpace([string](Require-Property $bridge "version")) -or
     [string]::IsNullOrWhiteSpace([string](Require-Property $bridge "runtime"))) {

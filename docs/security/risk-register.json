@@ -4,14 +4,14 @@
   "current_release_blockers": [],
   "issues": [
     {
-      "id": "compat-http2-http3-32bit",
-      "title": "HTTP/2 and HTTP/3 negotiation plus 32-bit Office evidence",
+      "id": "compat-http3-negotiation",
+      "title": "HTTP/3 negotiation evidence",
       "status": "deferred",
       "severity": "high",
       "blocks_current_release": false,
       "blocks_v1": true,
-      "required_evidence": "HTTP/3 on a trusted QUIC endpoint plus real 32-bit Office compile/integration/release smoke; x64 HTTP/2 is already recorded separately",
-      "evidence": "benchmarks/results/protocol-host-http2.json; docs/specs/protocol-host-validation.md; docs/specs/compatibility-matrix.md; docs/specs/office-bitness-validation.md"
+      "required_evidence": "HTTP/3 on a trusted QUIC endpoint with exact ProtocolUsed evidence on the supported x64 Office host; x64 HTTP/2 is already recorded separately",
+      "evidence": "benchmarks/results/protocol-host-http2.json; docs/specs/protocol-host-validation.md; docs/specs/compatibility-matrix.md; docs/adr/ADR-0025-protocol-host-evidence-boundary.md"
     },
     {
       "id": "integrated-proxy-challenge-auth",
@@ -20,7 +20,7 @@
       "severity": "medium",
       "blocks_current_release": false,
       "blocks_v1": true,
-      "required_evidence": "Real Windows-domain Negotiate/NTLM and manual-proxy CONNECT challenge fixtures, plus 32/64-bit release smoke",
+      "required_evidence": "Real Windows-domain Negotiate/NTLM and manual-proxy CONNECT challenge fixtures, plus x64 release smoke",
       "evidence": "docs/specs/challenge-authentication.md; docs/specs/compatibility-matrix.md"
     },
     {

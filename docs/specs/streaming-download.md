@@ -73,9 +73,11 @@ per-attempt temporary-file semantics.
    are closed and the temporary file is removed. The destination is unchanged.
 
 The same-directory temporary path is required so publication does not become a
-cross-volume copy. `Currency` byte counters are integral values and are valid
-on both 32-bit and 64-bit Office; they support the Phase 6 2 GiB-plus tests
-without a platform-specific `LongLong` public type.
+cross-volume copy. `Currency` byte counters are integral values and keep the
+public declaration portable across the retained VBA ABI branches; they support
+the Phase 6 2 GiB-plus tests without a platform-specific `LongLong` public
+type. This source-level portability does not make 32-bit Office a supported
+runtime; the current support boundary is x64 Office (ADR-0030).
 
 ## Verification
 

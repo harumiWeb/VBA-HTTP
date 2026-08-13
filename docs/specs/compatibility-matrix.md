@@ -16,7 +16,7 @@ the focused compile, integration, and release-consumer smoke checks.
 | WinHTTP default/direct/manual HTTP proxy routing | `integration-tested` | x64 COM/native loopback proxy tests; WinHTTP access-type mapping and release smoke; HTTPS CONNECT remains pending |
 | Preemptive Basic/Bearer auth providers | `integration-tested` | x64 COM/native loopback success, HTTPS-by-default validation, redirect suppression, and release consumer smoke |
 | Buffered Windows/Digest/server-or-proxy challenge provider | `integration-tested` | x64 COM/native bounded server Basic and proxy Basic challenge, release smoke, wrong-credential 407, and upload pre-network rejection; real Windows-domain and HTTPS CONNECT fixtures remain pending |
-| Windows 32-bit Office, native declarations | `pending` | Run `tools/Run-OfficeBitnessValidation.ps1 -ExpectedArchitecture X86` on a real 32-bit host; record compile, loopback integration, isolated tests, and release build evidence |
+| Windows 32-bit Office, native declarations | `unsupported-by-policy` | No promotion evidence is required. A future support claim needs a superseding ADR and a complete real-host compile, loopback integration, release build, and consumer-smoke bundle |
 | COM transport with advanced protocol options | `rejected-by-contract` | Public contract test must reject non-empty options without network I/O |
 
 `HttpProtocolOptions.EnabledProtocols = 0` means no native override. Modern
@@ -37,7 +37,9 @@ Each future host run should record:
 
 The current loopback server is intentionally plain HTTP/1.1, so it cannot
 prove negotiated HTTP/2 or HTTP/3 support. The recorded HTTP/2 result is
-host-specific and does not promote HTTP/3 or the 32-bit Office row.
+host-specific and does not promote HTTP/3. The x64 row is the only supported
+Office runtime row; the legacy declaration branch is a static ABI guard, not
+runtime support for 32-bit Office.
 
 The host-evidence runner and schema are defined in
 `docs/specs/protocol-host-validation.md`. A passing record is required before

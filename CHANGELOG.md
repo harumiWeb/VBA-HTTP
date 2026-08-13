@@ -19,10 +19,16 @@
 - Rejected cookie `Domain` attributes that broaden a cookie to a single-label
   public-suffix-like scope, while preserving exact `localhost` fixtures.
 
+- Established ADR-0030: Windows x64 Office is the supported runtime target;
+  32-bit Office is unsupported by policy until a later decision supplies real
+  host evidence. Normal bitness and protocol-host promotion runners reject X86
+  before opening a new Excel instance, while the legacy declaration scan
+  remains an Excel-free ABI regression guard.
+
 - Added an Excel-free native declaration ABI gate that verifies the VBA7
   `PtrSafe`/`LongPtr` and legacy `Long` WinHTTP branches, including the
-  upload DWORD sentinel. This guards source regressions while keeping real
-  32-bit Office evidence host-specific.
+  upload DWORD sentinel. This guards source regressions without claiming
+  unsupported 32-bit Office runtime compatibility.
 
 - Added `VBAHttp.CreateRequest()` so workbook-reference consumers can
   configure request-level timeouts and transport options without constructing
@@ -39,8 +45,9 @@
 
 - Added a machine-validated Phase 9 security-risk register with an explicit
   zero-current-blocker gate, fail-closed tamper tests, and release-security
-  integration. Deferred HTTP/3/QUIC and 32-bit evidence plus host-specific
-  integrated/proxy challenge fixtures remain visible as future-v1 obligations;
+  integration. Deferred HTTP/3/QUIC and host-specific integrated/proxy
+  challenge fixtures remain visible as future-v1 obligations; 32-bit Office is
+  explicitly outside the supported boundary;
   repeated
   COM receive-timeout growth is mitigated by the canonical x64 stress result.
 
@@ -59,15 +66,16 @@
 
 - Added a host-specific Office bitness validation runner and result schema. It
   records bridge architecture, isolated tests, loopback integration, VBE compile, and consumer smoke;
-  the current evidence remains X64 until the same runner is executed on a real
-  32-bit Office host.
+  the supported evidence path is X64 and normal promotion rejects an X86
+  bridge before opening a new Excel instance. Explicit diagnostic-only X86
+  runs are labeled unsupported and cannot promote a release.
 
 - Added an opt-in fail-closed protocol-host evidence runner for required
   HTTPS HTTP/2/HTTP/3 negotiation. It records only path-free target metadata,
   artifact hashes, Office/Windows/WinHTTP metadata, bridge/bitness, and exact `ProtocolUsed`; the normal
   loopback suite remains offline. The current x64 HTTP/2 host record is
-  archived in `benchmarks/results/protocol-host-http2.json`; HTTP/3/QUIC and
-  x86 evidence remain pending.
+  archived in `benchmarks/results/protocol-host-http2.json`; HTTP/3/QUIC
+  evidence remains pending and the runner is x64-only.
 
 - Added opt-in structured `HttpDiagnostics` operation events with bounded
   retention, query/user-info target sanitization, stable error categories, and
@@ -77,10 +85,10 @@
 - Added a fail-closed release manifest security gate and deterministic report:
   canonical base/output paths, VBE/atomic-publication evidence, exact
   included/excluded component policy, development-only source boundaries, and
-  checksum verification are checked before release smoke. HTTP/3/QUIC and
-  32-bit TLS negotiation evidence plus host-specific integrated/proxy
-  challenge fixtures remain explicitly deferred; x64 HTTP/2 evidence is
-  archived separately.
+  checksum verification are checked before release smoke. HTTP/3/QUIC
+  negotiation and host-specific integrated/proxy challenge fixtures remain
+  explicitly deferred; 32-bit Office is outside the supported boundary and
+  x64 HTTP/2 evidence is archived separately.
 
 - Added a Phase 9 cancellation/timeout stress gate with repeated COM active
   cancellation and request-deadline scenarios, native streaming download

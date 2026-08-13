@@ -23,7 +23,7 @@ The current blocker assertion is separately recorded in
 | Caller credentials and redirect headers | Auth provider, sensitive-header redaction, and redirect suppression specs/tests | covered by existing auth/redirect gates |
 | TLS trust and certificate rejection | Self-signed loopback fixture is rejected by both COM/native transports and maps to `HttpErrorTls`; no ignore-certificate option exists | covered |
 | Repeated COM receive-timeout cleanup | ADR-0022 `Abort`/bounded drain plus canonical 25-iteration loopback stress with idle handle budget | mitigated on current x64 host |
-| HTTP/2/HTTP/3 TLS and Office bitness | x64 HTTP/2 is recorded at benchmarks/results/protocol-host-http2.json; HTTP/3/QUIC and x86 Office remain environment-dependent | partial / deferred |
+| HTTP/2/HTTP/3 TLS | x64 HTTP/2 is recorded at benchmarks/results/protocol-host-http2.json; HTTP/3/QUIC remains environment-dependent | partial / deferred |
 | Buffered challenge auth | Bounded server Basic and proxy Basic challenges are covered by COM/native tests, release smoke, redaction, and streaming pre-network rejection | covered for loopback; host-specific domain/CONNECT evidence deferred |
 | Current release blockers | Versioned risk register and fail-closed validator | covered (0) |
 
@@ -53,9 +53,9 @@ mitigated on the current x64 host. The x64 HTTP/2 host record is evidence for
 that host only; it is not silently treated as HTTP/3 or cross-bitness
 compatibility evidence.
 This record does not declare the broader protocol/auth compatibility matrix
-complete; HTTP/3 negotiation evidence, 32-bit Office evidence, and
-host-specific integrated/proxy challenge authentication remain explicit
-follow-up gates. The
+complete; HTTP/3 negotiation evidence and host-specific integrated/proxy
+challenge authentication remain explicit follow-up gates. 32-bit Office is
+outside the supported boundary under ADR-0030. The
 certificate-negative test is covered by the deterministic HTTPS fixture and
 both transport integration tests. The explicit cookie jar policy is covered by
 ADR-0018 and its unit/integration/release smoke tests.

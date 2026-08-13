@@ -34,6 +34,11 @@ Recorded: 2026-08-12
 
 Release artifacts and manifests are generated evidence and remain ignored. This document records the baseline result; future release milestones must retain their generated manifest and checksum as release evidence.
 
-## 32-bit validation route
+## Office support boundary
 
-32-bit Office evidence cannot be produced by the current X64 environment. Before a milestone that requires 32-bit support, run the same `task verify`, source push/test, and release build sequence on a dedicated Windows host with 32-bit Excel. Record Office version, Windows version, xlflow version, command results, manifest component sets, and artifact checksum under `docs/verification/`.
+The supported runtime target is Windows x64 Office. 32-bit Office is
+`unsupported-by-policy` under ADR-0030, so no x86 compile, integration, or
+release artifact is required for the current release gate. The Excel-free
+VBA7/legacy declaration check remains a source ABI regression guard. A future
+support proposal must supersede ADR-0030 and include a dedicated real-host
+evidence bundle; it must not be inferred from this x64 baseline.

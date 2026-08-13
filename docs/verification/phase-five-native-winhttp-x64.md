@@ -27,9 +27,11 @@ Recorded: 2026-08-13 (refreshed against the current source revision)
 - `task release:build`: production-only artifact compiled, published atomically,
   passed component inspection, and passed external COM/native consumer smoke.
 
-## Bitness limitation
+## Bitness boundary
 
-This host cannot produce 32-bit Office evidence. Before the Phase 5 exit gate is
-marked complete, repeat the same source push, VBE compile, focused integration
-suite, full verification, and production release build on a dedicated 32-bit
-Office host and record its Office/Windows/xlflow versions and artifact checksum.
+The supported runtime target is Windows x64 Office. 32-bit Office is outside
+the support matrix under ADR-0030; no x86 execution evidence is required for
+the Phase 5 release gate. The VBA7/legacy declaration contract remains an
+Excel-free ABI regression guard only. A future x86 support proposal would need
+to supersede ADR-0030 and provide a dedicated compile, integration, release,
+and consumer-smoke evidence bundle.

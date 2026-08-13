@@ -11,7 +11,7 @@
       "type": "object",
       "required": ["office_bitness", "excel_version", "platform"],
       "properties": {
-        "office_bitness": { "enum": ["x86", "x64"] },
+        "office_bitness": { "const": "x64" },
         "excel_version": { "type": "string", "minLength": 1 },
         "platform": { "const": "Windows" }
       },

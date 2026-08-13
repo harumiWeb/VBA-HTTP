@@ -12,8 +12,13 @@ if ([int]$result.schema_version -ne 1 -or [string]$result.benchmark -ne "office-
     throw "Office bitness result schema identity is invalid."
 }
 if ([string]$result.architecture -notin @("X86", "X64") -or [string]$result.status -ne "passed" -or
-    [string]$result.consumer_smoke -ne "passed" -or [bool]$result.external_network) {
+    [string]$result.consumer_smoke -ne "passed" -or [bool]$result.external_network -or
+    [string]$result.support_status -notin @("supported", "unsupported-by-policy")) {
     throw "Office bitness result status or architecture is invalid."
+}
+if (([string]$result.architecture -eq "X64" -and [string]$result.support_status -ne "supported") -or
+    ([string]$result.architecture -eq "X86" -and [string]$result.support_status -ne "unsupported-by-policy")) {
+    throw "Office bitness support_status does not match the architecture policy."
 }
 if ([string]$result.build.vbe_compile -ne "passed" -or
     [bool]$result.build.source_applied -ne $true -or

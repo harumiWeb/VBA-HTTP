@@ -61,7 +61,7 @@ Required fields:
 - `mode`: `required`;
 - `external_network`: `true`;
 - `target`: `scheme=https`, non-empty `host`, and numeric `port`;
-- `bridge`: xlflow bridge name/version/runtime and `X86` or `X64` architecture;
+- `bridge`: xlflow bridge name/version/runtime and `X64` architecture;
 - `office`: Excel version, build, and operating-system strings;
 - `environment`: Windows version plus WinHTTP option IDs 133 (enable), 134
   (used), and 145 (required), with the observed protocol;
@@ -77,15 +77,15 @@ field whose name could contain a secret or request payload.
 ## Promotion rules
 
 - Archive the JSON beside the exact release artifact, manifest, and checksum.
-- Run separately on x64 and x86 Office; include the Office version/build and
-  WinHTTP/Windows capability supplied by the runner.
-- A passing HTTP/2 result promotes only the selected host/bitness HTTP/2 row.
+- Run only on the supported x64 Office target; the runner rejects an X86 bridge
+  before opening a new Excel instance. The Office version/build and
+  WinHTTP/Windows capability are still recorded by the runner.
+- A passing HTTP/2 result promotes only the selected x64 host HTTP/2 row.
 - A passing HTTP/3 result requires a QUIC-capable host and promotes only the
-  selected host/bitness HTTP/3 row.
+  selected x64 host HTTP/3 row.
 - The current x64 HTTP/2 record is
   `benchmarks/results/protocol-host-http2.json` (trusted `nghttp2.org:443`,
-  required mode, exact `ProtocolUsed=HTTP/2`). It does not promote HTTP/3 or
-  any x86 Office row.
+  required mode, exact `ProtocolUsed=HTTP/2`). It does not promote HTTP/3.
 - A 2026-08-13 attempt against `nghttp2.org:4433` and `quic.rocks:4433`
   ended in bounded RPC failures without an observed protocol; the attempt is
   recorded in

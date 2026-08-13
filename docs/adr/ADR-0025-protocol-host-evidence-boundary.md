@@ -4,6 +4,10 @@
 
 `accepted`
 
+The x86-specific promotion clauses in this historical record are superseded by
+ADR-0030.  The protocol evidence, trusted-endpoint, and ownership rules remain
+applicable to the supported x64 Office target.
+
 ## Context
 
 The deterministic loopback server intentionally speaks HTTP/1.1.  Its
@@ -71,7 +75,8 @@ external network access into the normal test suite.
 
 ## Superseded by
 
-- None
+- ADR-0030, only the x86 support/promotion clauses; the remaining protocol
+  evidence boundary continues to apply to supported x64 Office.
 
 The ownership watchdog is implemented by
 tools/Watch-ProtocolHostExcel.ps1.

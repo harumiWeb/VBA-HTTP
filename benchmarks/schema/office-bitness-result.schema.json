@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
-  "required": ["schema_version", "benchmark", "architecture", "bridge", "office", "tests", "integration", "build", "consumer_smoke", "external_network", "status"],
+  "required": ["schema_version", "benchmark", "architecture", "bridge", "office", "tests", "integration", "build", "consumer_smoke", "external_network", "support_status", "status"],
   "properties": {
     "schema_version": { "const": 1 },
     "benchmark": { "const": "office-bitness-validation" },
@@ -13,6 +13,7 @@
     "build": { "type": "object", "required": ["vbe_compile", "source_applied", "workbook_saved", "workbook_closed", "excel_cleanup"] },
     "consumer_smoke": { "const": "passed" },
     "external_network": { "const": false },
+    "support_status": { "enum": ["supported", "unsupported-by-policy"] },
     "status": { "const": "passed" }
   }
 }

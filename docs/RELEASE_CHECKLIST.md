@@ -70,5 +70,9 @@ validator must prove `Workbook.IsAddin=True` and must not reuse the XLSM base.
 
 The current XLSM/XLAM release is not evidence that every v1.0 compatibility target
 is complete. Promotion of the v1.0 line additionally requires the risk-register
-items for HTTP/3/QUIC and 32-bit Office, plus integrated/proxy challenge
-authentication, to be resolved with dedicated fixtures and evidence. The
+items for HTTP/3/QUIC and integrated/proxy challenge authentication, plus any
+other supported-target compatibility obligations, to be resolved with dedicated
+fixtures and evidence. 32-bit Office is outside the supported distribution
+boundary under ADR-0030 and is not a v1 promotion gate. The remaining deferred
+items are recorded in `docs/security/risk-register.json` and must be re-evaluated
+before a v1 promotion.

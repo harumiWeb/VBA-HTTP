@@ -48,8 +48,10 @@ Time is measured with Windows `QueryPerformanceCounter`. Process working set, pe
 - Phase 7 evidence: `benchmarks/results/phase7-upload-stress.json`, described by `benchmarks/schema/streaming-upload-result.schema.json`
 - Human summary: `docs/BENCHMARKS_BASELINE.md`
 - Office bitness evidence: `benchmarks/schema/office-bitness-result.schema.json`
-  and `benchmarks/results/office-bitness-x64.json`; the runner requires both
-  isolated and loopback integration tests to pass.
+  and `benchmarks/results/office-bitness-x64.json`; the supported runner
+  requires both isolated and loopback integration tests to pass on x64 Office.
+  The retained legacy declaration branch is static ABI evidence only; 32-bit
+  Office is unsupported by policy under ADR-0030.
 
 ## Phase 3 bounded-concurrency scenario
 

@@ -36,6 +36,11 @@ tasks:
     cmds:
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-NativeDeclarationContract.ps1
 
+  test:office-policy:
+    desc: Verify that unsupported 32-bit Office promotion is rejected before Excel work
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-OfficeBitnessPolicy.ps1
+
   check:
     desc: Run all pre-commit quality gates
     cmds:
@@ -44,6 +49,7 @@ tasks:
       - task: format
       - task: class-source:check
       - task: test:native-declarations
+      - task: test:office-policy
 
   test:
     desc: Run the complete xlflow test suite
@@ -127,7 +133,7 @@ tasks:
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-CleanCheckout.ps1
 
   test:office-bitness:
-    desc: Run the host-specific Office bitness compile, test, and consumer smoke evidence
+    desc: Run the supported x64 Office compile, test, and consumer smoke evidence
     cmds:
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Run-OfficeBitnessValidation.ps1
 

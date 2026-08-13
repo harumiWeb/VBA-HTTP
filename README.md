@@ -6,6 +6,12 @@ VBA-HTTP is a Windows Excel/VBA HTTP client designed for deterministic testing, 
 
 Phase 6 adds constant-memory downloads and Phase 7 adds file/multipart uploads on the synchronous native WinHTTP backend. Phase 8 adds explicit native-only HTTP/2/HTTP/3 negotiation, gzip/deflate response decompression, and shared OS/direct/manual HTTP proxy routing. The default remains the late-bound `WinHttp.WinHttpRequest.5.1` transport; the native backend provides pointer-safe handles, negotiated protocol reporting, bounded file streaming, and OS-owned response decoding without a WinHTTP type-library reference.
 
+The supported runtime target is Windows x64 Office. 32-bit Office is
+unsupported by policy because no real 32-bit Office compile, integration, and
+release-consumer evidence exists; the retained legacy VBA declaration branch
+is a source-level ABI guard only. See
+[`docs/adr/ADR-0030-32-bit-office-support-boundary.md`](docs/adr/ADR-0030-32-bit-office-support-boundary.md).
+
 ```vb
 Dim client As HttpClient
 Dim request As New HttpRequest
@@ -82,8 +88,8 @@ for the compatibility and evidence rules.
 The offline loopback server intentionally speaks HTTP/1.1, so negotiated
 HTTP/2/HTTP/3 promotion requires the separate fail-closed host runner. The
 current x64 HTTP/2 record is archived at
-`benchmarks/results/protocol-host-http2.json`; it does not promote HTTP/3 or
-32-bit Office. After a release build, set `VBA_HTTP_PROTOCOL_HOST_URL` and
+`benchmarks/results/protocol-host-http2.json`; it does not promote HTTP/3.
+The host runner is x64-only under the support boundary. After a release build, set `VBA_HTTP_PROTOCOL_HOST_URL` and
 `VBA_HTTP_PROTOCOL_EXPECTED`, then run `task protocol:host`; it records only
 path-free target metadata and the exact `ProtocolUsed` result.
 

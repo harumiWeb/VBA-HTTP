@@ -156,7 +156,7 @@ fresh cloneから同じ開発・test・release buildを再現できるclean base
 - [x] VBA benchmark moduleを `src/modules/Benchmarks/` に配置する規約を定義する。
 - [x] deterministic testで使用するclock、random、transportの差し替え方針をspec化する。
 - [x] x64 Officeのsmoke test証跡を取得する。
-- [x] 32-bit Officeのcompile／smoke testを行う環境と証跡保存方法を文書化する。
+- [x] 32-bit OfficeはADR-0030で現行support matrix外（`unsupported-by-policy`）とし、実機証跡をrelease gateから除外する方針を文書化する。VBA7／legacy ABI static gateは継続する。
 - [x] Office validation runnerが既存Excel PIDを所有済みと誤認せず、owned PIDだけを終了する境界をADR-0028で固定する。
 
 ### Release build foundation
@@ -193,7 +193,7 @@ fresh cloneから同じ開発・test・release buildを再現できるclean base
 - [x] release buildがVBE compileに成功する。
 - [x] release artifactにexcluded componentが存在しない。
 - [x] 外部consumer smoke harnessがrelease artifactに対して成功する。
-- [x] x64の実行証跡と32-bitの検証経路が存在する。
+- [x] x64の実行証跡と、32-bitをsupport対象外として扱う検証経路が存在する。
 
 ---
 
@@ -372,7 +372,7 @@ streamingとadvanced protocolの土台となる安全なNative WinHTTP transport
 ### Exit Criteria
 
 - [x] x64 compile evidenceがある（`benchmarks/results/office-bitness-x64.json`で154 passing／78 integration、VBE compile、consumer smokeを実証）。
-- [~] 32-bit Office compile evidenceを取得する（`Run-OfficeBitnessValidation.ps1 -ExpectedArchitecture X86`の実機実行待ち）。
+- [x] 32-bit OfficeはADR-0030により現行support matrix外とする（通常のbitness runnerはX86 bridgeを拒否し、`-DiagnosticOnly`の結果はpromotion evidenceにしない）。
 - [x] repeated request後にpersistent handle growthがない。
 - [x] COM transportと同じpublic response／error contractを満たす。
 - [x] production-only release buildが成功する（`xlflow build` のVBE compileと外部consumer smokeを確認済み）。
@@ -457,12 +457,12 @@ OSが提供するmodern WinHTTP capabilityとcorporate environment対応を安�
 - [x] credential／secret redaction helperを実装し、sensitive headerがdiagnosticsへ出ないunit gateを追加する。
 - [x] `HttpDiagnostics` のbounded structured event schemaをADR-0019／`docs/specs/diagnostics-policy.md`で確定し、HttpClientとrelease consumer smokeへ統合する。
 - [x] OS version／Office bitness compatibility matrixを作成する（`docs/specs/compatibility-matrix.md`）。
-- [~] matrixのprotocol host evidenceと32-bit実測を完了する（x64 HTTP/2は実測済み、HTTP/3とx86 Officeは実機証跡待ち）。
+- [x] matrixのOffice bitness境界をADR-0030で確定する（x64 HTTP/2は実測済み、32-bit Officeはsupport対象外）。HTTP/3 host evidenceは別のpending gateとして残す。
 
 ### Exit Criteria
 
 - [x] HTTP/1.1 fallbackとrequested-mask contractを識別できる（plain HTTP、unsupported、required mismatchを検証済み）。
-- [~] TLS上のHTTP/2と対応環境のHTTP/3 negotiated protocolを識別する（x64 HTTP/2は`benchmarks/results/protocol-host-http2.json`で実測済み、HTTP/3はTLS/QUIC host evidence待ち）。
+- [~] TLS上のHTTP/2と対応環境のHTTP/3 negotiated protocolを識別する（x64 HTTP/2は`benchmarks/results/protocol-host-http2.json`で実測済み、HTTP/3はTLS/QUIC host evidence待ち。32-bit OfficeはADR-0030で対象外）。
 - [x] unsupported環境のfallback／errorがspec通りである。
 - [x] HTTP forwarding proxyとfixed Basic proxy-challengeのlocal integration testsがCOM/nativeで成功する（HTTPS CONNECTと実Windows domain authはcompatibility gateとして継続）。
 - [x] secretがdiagnosticsやbenchmark outputへ出ない（diagnostics serializerはquery／user-info／body／descriptionを除外し、sensitive headerを常時redactする。benchmark serializerは既存契約を維持する）。
@@ -497,7 +497,7 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 
 - [x] known critical bugとcurrent release blocker bugが0件である（`docs/security/risk-register.json`を`task test:security-risks`とrelease security gateで検証。将来v1.0 gateは別途明示）。
 - [x] 10,000 request測定区間後にpersistent resource growthがない（x64実測、native delta <=8／COM delta <=32）。
-- [x] redirect、credential、certificate security testsが成功する（redirect／credential／untrusted TLS certificateのCOM/native loopback検証済み。HTTP/2/3 negotiated evidenceと32-bit証跡はcompatibility gateとして継続）。
+- [x] redirect、credential、certificate security testsが成功する（redirect／credential／untrusted TLS certificateのCOM/native loopback検証済み。HTTP/3 negotiated evidenceはcompatibility gateとして継続し、32-bit OfficeはADR-0030で対象外）。
 - [x] release artifactのcomponent構成がreview済みである（`task release:security`と`task release:smoke`でproduction allowlist／development denylistのmanifest・実Workbook構成を検証）。
 
 ---
@@ -518,11 +518,11 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 - [x] source distributionとworkbook distributionの責務を分離する（`docs/specs/distribution.md`）。
 - [x] source vendoring、install、upgrade手順を文書化する。
 - [x] `.xlam` 用base workbookと独立build targetを追加する（追跡`build/VBA-HTTP.xlam`、`task test:xlam`、`task release:xlam:build`、ADR-0021、manifest/checksum/add-in identity/smoke gate）。
-- [x] CHANGELOGとcompatibility documentationを完成させる（x64 HTTP/2実測と未完了の32-bit／HTTP/3 gateを明記）。
+- [x] CHANGELOGとcompatibility documentationを完成させる（x64 HTTP/2実測、ADR-0030の32-bit Office support外方針、未完了のHTTP/3 gateを明記）。
 
 ### Exit Criteria
 
-- [x] clean environmentでtest、build、smoke、packageを再現できる（`tools/Test-CleanCheckout.ps1 -FullRelease`でgit archiveからXLSM/XLAM build・checksum・smokeを実証。32-bitはcompatibility gateとして継続）。
+- [x] clean environmentでtest、build、smoke、packageを再現できる（`tools/Test-CleanCheckout.ps1 -FullRelease`でgit archiveからXLSM/XLAM build・checksum・smokeを実証。32-bit Officeはsupport対象外）。
 - [x] 全public APIに例とerror behaviorの説明がある（`docs/API.md`、README、spec、examples）。
 - [x] development-only codeを含まない配布workbookを生成できる。
 - [x] build失敗時に既存release artifactが破壊されない（atomic publication／checksum／tamper tests）。
@@ -544,7 +544,7 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 - [x] multipart upload benchmarkを公開する。
 - [x] memory／handle stability結果を公開する。
 - [x] x64 Office validationを完了する（`benchmarks/results/office-bitness-x64.json`）。
-- [~] 32-bit Office validationを完了する（`Run-OfficeBitnessValidation.ps1 -ExpectedArchitecture X86`の実機実測待ち）。
+- [x] 32-bit OfficeはADR-0030でsupport対象外とし、通常のvalidation／promotion gateから除外する（必要時のみ`-DiagnosticOnly`で非promotionalな調査を行う）。
 - [x] release checklistとartifact checksumsを作成する（`docs/RELEASE_CHECKLIST.md`、checksum sidecar gate）。
 - [x] READMEには実測値だけを掲載する（loopback条件と未達15% targetを明記）。
 - [x] 最終 `xlflow build` とexternal consumer smoke testを実行する（現行x64 release evidence）。
@@ -553,10 +553,10 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 
 - [x] concurrency、streaming、resource stabilityの実測証跡がある。
 - [x] 現行x64のquality gateが成功する（unit、integration、lint、analyze、format、VBE、release smokeを検証済み）。
-- [~] v1.0 promotion quality gateを完了する（x64 HTTP/2は実測済み、32-bit／HTTP/3 negotiated／host-specific challenge-auth evidenceは未完了）。
+- [~] v1.0 promotion quality gateを完了する（x64 HTTP/2は実測済み、HTTP/3 negotiated／host-specific challenge-auth evidenceは未完了。32-bit OfficeはADR-0030で対象外）。
 - [x] API、security、compatibility documentationが完成している（現行contract、matrix、security gate、deferred riskを文書化済み）。
 - [x] test、benchmark、xlflow支援コードを含まないproduction-only artifactを生成できる（XLSM/XLAM build・manifest・checksum・smoke済み）。
-- [~] v1.0 promotion evidenceを完了する（x64 HTTP/2は`benchmarks/results/protocol-host-http2.json`、32-bit／HTTP/3 negotiated／host-specific challenge-auth riskは未解消）。
+- [~] v1.0 promotion evidenceを完了する（x64 HTTP/2は`benchmarks/results/protocol-host-http2.json`、HTTP/3 negotiated／host-specific challenge-auth riskは未解消。32-bit OfficeはADR-0030で対象外）。
 - [x] build manifestからrelease構成を再現・監査できる。
 
 ---
@@ -575,7 +575,7 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 - [x] native handle lifecycleとnative callback禁止
 - [x] protocol fallback policy（ADR-0009、`docs/specs/protocol-policy.md`）
 - [x] response decompression ownership、fallback／required、streaming length contract（ADR-0010、`docs/specs/decompression-policy.md`）
-- [~] OS compatibility evidence（x64 HTTP/2 host evidenceを追加、HTTP/3と32-bit実測は未完了）
+- [~] OS compatibility evidence（x64 HTTP/2 host evidenceを追加、HTTP/3実測は未完了。32-bit OfficeはADR-0030でsupport対象外）
 - [x] diagnostics schemaとsecret redaction（ADR-0019／`docs/specs/diagnostics-policy.md`、unit、client、release smokeで検証済み）。
 - [x] development-only componentへのproduction依存禁止
 - [x] development workbook、release workbook、source distributionの責務

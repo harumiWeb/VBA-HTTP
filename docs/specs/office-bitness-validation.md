@@ -1,11 +1,13 @@
 # Office bitness validation
 
-The declarations in `WinHttpNativeApi.bas` support both VBA7 pointer-sized
-handles and legacy 32-bit `Long` handles, but an x64 compile cannot prove that
-32-bit Office loads every declaration and workbook component. Bitness is
-therefore an evidence property, not a source-only claim.
+The declarations in `WinHttpNativeApi.bas` retain both VBA7 pointer-sized
+handles and legacy 32-bit `Long` branches for source-level ABI protection. The
+supported runtime target is Windows x64 Office only. A conditional branch or
+an x64 compile cannot prove that 32-bit Office loads every declaration and
+workbook component, so 32-bit Office is `unsupported-by-policy` under
+ADR-0030.
 
-Run the same runner on each Office host:
+Run the supported runner on the x64 Office host:
 
 ```powershell
 task test:office-bitness
@@ -20,15 +22,22 @@ loopback-free JSON result under `benchmarks/results/` and removes the temporary
 artifact. Before reading Office metadata, the runner snapshots existing Excel
 PIDs and proves that its COM instance created a new PID. It calls `Quit` only
 for that owned instance; if ownership cannot be proven, validation fails closed
-without touching a pre-existing user Excel process. On a 32-bit Office host use:
+without touching a pre-existing user Excel process. A normal promotion run
+rejects an X86 bridge before opening a new Excel instance:
 
 ```powershell
-powershell -File tools/Run-OfficeBitnessValidation.ps1 -ExpectedArchitecture X86
+powershell -File tools/Run-OfficeBitnessValidation.ps1 -ExpectedArchitecture X64
 ```
 
-The current repository evidence is X64 only. The X86 result must be generated
-on a real 32-bit Office host; changing the expected flag on an x64 host is
-designed to fail rather than fabricate compatibility evidence.
+The current repository evidence is X64 only and is the supported release path.
+An explicitly requested exploratory run on a future x86 host must use
+`-DiagnosticOnly`; its result is labeled `unsupported-by-policy` and cannot
+promote a compatibility or release row:
+
+```powershell
+powershell -File tools/Run-OfficeBitnessValidation.ps1 `
+  -ExpectedArchitecture X86 -DiagnosticOnly
+```
 
 ## Source-level ABI guard
 
@@ -37,6 +46,6 @@ The host-specific runner is complemented by the Excel-free
 declaration has a `VBA7` `PtrSafe`/`LongPtr` branch and a legacy `Long` branch,
 and that the upload DWORD sentinel remains
 `WINHTTP_IGNORE_REQUEST_TOTAL_LENGTH = 0`. The gate catches accidental
-pointer-size regressions but does not promote the real x86 Office row; only
-`Run-OfficeBitnessValidation.ps1 -ExpectedArchitecture X86` on a 32-bit host
-can provide that evidence.
+pointer-size regressions but does not promote or support the x86 Office row.
+Changing this boundary requires a superseding ADR and a new real-host evidence
+bundle; the diagnostic switch is not a release gate.

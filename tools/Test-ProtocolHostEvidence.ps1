@@ -43,7 +43,8 @@ try {
         @{ Name = "mismatch"; Change = { param($r) $r.observed_protocol = "HTTP/3" } },
         @{ Name = "http"; Change = { param($r) $r.target.scheme = "http" } },
         @{ Name = "secret"; Change = { param($r) $r.authorization = "Basic hidden" } },
-        @{ Name = "bad-hash"; Change = { param($r) $r.artifact.sha256 = "bad" } }
+        @{ Name = "bad-hash"; Change = { param($r) $r.artifact.sha256 = "bad" } },
+        @{ Name = "x86"; Change = { param($r) $r.bridge.architecture = "X86" } },
         @{ Name = "unknown"; Change = { param($r) $r.unexpected = "not allowed" } }
     )
     foreach ($case in $cases) {

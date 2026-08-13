@@ -43,11 +43,11 @@ public HTTP API.
 ## 32/64-bit declarations
 
 All declarations use `PtrSafe` and `LongPtr` under `VBA7`; the `#Else` branch
-uses the 32-bit `Long` ABI. Pointer arguments are passed as `StrPtr`/`VarPtr`.
-The project must record a real 32-bit Office compile on a dedicated host before
-claiming the Phase 5 32-bit exit criterion. The current development evidence
-is x64 only; static conditional compilation is not substituted for that
-evidence.
+retains the 32-bit `Long` ABI for source-level regression checking. Pointer
+arguments are passed as `StrPtr`/`VarPtr`. The supported runtime is x64 Office;
+the current evidence is x64 only, and the Excel-free declaration gate is not a
+32-bit compatibility claim. Any future x86 support change requires ADR-0030 to
+be superseded with a real host evidence bundle.
 
 ## Request and response contract
 

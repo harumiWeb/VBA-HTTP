@@ -54,9 +54,11 @@ boundary.
   size, at the cost of temporary disk space and one bounded chunk buffer.
 - Atomic replacement avoids corrupting an existing destination, but a failed
   replacement can leave the destination unchanged and raises an I/O error.
-- `Currency` is used for byte counts because it is available in both 32-bit and
-  64-bit VBA and exactly represents integral byte values through the supported
-  file-size range without exposing a platform-specific `LongLong` type.
+- `Currency` is used for byte counts because it is available across the retained
+  32-bit and 64-bit VBA declaration branches and exactly represents integral
+  byte values through the supported file-size range without exposing a
+  platform-specific `LongLong` type. This ABI portability does not expand the
+  supported Office runtime beyond x64 (ADR-0030).
 - Progress callbacks are easy to implement from VBA and deterministic in tests,
   but they must not perform reentrant calls on the same `HttpClient`.
 - HTTP error bodies are not buffered by `DownloadFile`; callers that need them

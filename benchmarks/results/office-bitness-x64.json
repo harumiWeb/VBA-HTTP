@@ -32,5 +32,6 @@
               },
     "consumer_smoke":  "passed",
     "external_network":  false,
+    "support_status":  "supported",
     "status":  "passed"
 }

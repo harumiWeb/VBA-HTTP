@@ -35,7 +35,7 @@
         "name": { "type": "string", "minLength": 1 },
         "version": { "type": "string", "minLength": 1 },
         "runtime": { "type": "string", "minLength": 1 },
-        "architecture": { "enum": ["X86", "X64"] }
+        "architecture": { "const": "X64" }
       },
       "additionalProperties": false
     },

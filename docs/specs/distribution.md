@@ -94,8 +94,9 @@ Release evidence consists of the exact workbook, `.build.json` manifest,
 `.checksum.json` sidecar, `release-security.json` report, and smoke output.
 Evidence is path-stable and secret-free. Record the source revision and host
 compatibility (Office bitness, Windows version, protocol fixture) beside the
-bundle; x64 is the currently verified path, and the x64 HTTP/2 host record is
-archived separately, while 32-bit and HTTP/3/QUIC negotiation remain explicit
-compatibility gates. Keep the XLSM and XLAM
+bundle; x64 is the supported and currently verified path, and the x64 HTTP/2
+host record is archived separately, while HTTP/3/QUIC negotiation remains an
+explicit capability gate. 32-bit Office is outside the supported distribution
+boundary under ADR-0030. Keep the XLSM and XLAM
 manifest/checksum pairs separate so an artifact cannot be validated against
 the wrong base or extension.
