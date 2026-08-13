@@ -5,6 +5,8 @@
   injection before COM/native transport serialization.
 - Corrected signed `AscW` handling so non-ASCII header names cannot bypass the
   ASCII token validation boundary.
+- Corrected signed `AscW` handling in Bearer token validation so non-ASCII
+  code points cannot bypass its ASCII-only contract.
 
 - Added an Excel-free native declaration ABI gate that verifies the VBA7
   `PtrSafe`/`LongPtr` and legacy `Long` WinHTTP branches, including the

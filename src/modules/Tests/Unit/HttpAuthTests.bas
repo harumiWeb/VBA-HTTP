@@ -189,6 +189,11 @@ Public Sub Test_Auth_BearerRejectsNonAscii()
     Call VBAHttp.CreateBearerAuthProvider("トークン")
 End Sub
 
+'@ExpectedError(-2147200503, "Bearer token must contain ASCII characters only.", "HttpBearerAuthProvider.Initialize")
+Public Sub Test_Auth_BearerRejectsSignedNonAscii()
+    Call VBAHttp.CreateBearerAuthProvider("token" & ChrW$(-223))
+End Sub
+
 Public Sub Test_Security_RedactsSensitiveHeaderValues()
     XlflowAssert.AssertEquals "[REDACTED]", HttpSecurity.RedactHeaderValue("Authorization", "secret")
     XlflowAssert.AssertEquals "[REDACTED]", HttpSecurity.RedactHeaderValue("proxy-authorization", "secret")

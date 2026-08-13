@@ -70,6 +70,7 @@ Private Sub ValidateToken(ByVal value As String)
     End If
     For index = 1 To Len(value)
         characterCode = AscW(Mid$(value, index, 1))
+        If characterCode < 0 Then characterCode = characterCode + 65536
         If characterCode <= 32 Or characterCode = 127 Then
             HttpErrors.RaiseValidation "HttpBearerAuthProvider.Initialize", "Bearer token cannot contain whitespace or control characters."
         End If
