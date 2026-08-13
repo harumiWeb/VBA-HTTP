@@ -1,5 +1,9 @@
 ## Unreleased
 
+- Hardened `HttpHeaders` value validation to reject NUL, DEL, and C0 control
+  characters (while preserving HTAB and Unicode), preventing control-byte
+  injection before COM/native transport serialization.
+
 - Added an Excel-free native declaration ABI gate that verifies the VBA7
   `PtrSafe`/`LongPtr` and legacy `Long` WinHTTP branches, including the
   upload DWORD sentinel. This guards source regressions while keeping real

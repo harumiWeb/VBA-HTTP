@@ -132,9 +132,20 @@ Private Sub ValidateName(ByVal Name As String)
 End Sub
 
 Private Sub ValidateValue(ByVal value As String)
-    If InStr(1, value, vbCr, vbBinaryCompare) > 0 Or InStr(1, value, vbLf, vbBinaryCompare) > 0 Then
-        HttpErrors.RaiseValidation "HttpHeaders", "Header value cannot contain CR or LF."
-    End If
+    Dim index As Long
+    Dim code As Long
+
+    For index = 1 To Len(value)
+        code = AscW(Mid$(value, index, 1))
+        If code < 0 Then code = code + 65536
+
+        If code = 10 Or code = 13 Then
+            HttpErrors.RaiseValidation "HttpHeaders", "Header value cannot contain CR or LF."
+        End If
+        If (code < 32 And code <> 9) Or code = 127 Then
+            HttpErrors.RaiseValidation "HttpHeaders", "Header value cannot contain control characters."
+        End If
+    Next index
 End Sub
 
 Private Function NamesEqual(ByVal first As String, ByVal second As String) As Boolean

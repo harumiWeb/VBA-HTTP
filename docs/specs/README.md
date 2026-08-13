@@ -14,6 +14,7 @@
 - `resource-stress.md`: 10,000-request scenarios, PID-scoped sampling, idle handle gates, and result evidence
 - `cancellation-stress.md`: repeated COM/native cancellation and timeout workloads, cleanup invariants, and PID-scoped evidence
 - `http-core-api.md`: Phase 1 public domain、transport、body、decoding、error contract
+- `http-core-api.md` also defines the shared header name/value control-character contract enforced before either transport.
 - `buffered-com-transport.md`: default WinHTTP COM request、response、redirect、failure contract
 - `buffered-com-transport.md` also records best-effort COM `Abort` cleanup on failure (ADR-0022)
 - `bounded-concurrency.md`: cooperative COM async scheduling、batch results、deadlines、cancellation、reentrancy contract

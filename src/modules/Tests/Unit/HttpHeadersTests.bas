@@ -54,3 +54,17 @@ Public Sub Test_Headers_RejectsLineBreakInValue()
     Dim headers As New HttpHeaders
     headers.Add "X-Test", "safe" & vbCrLf & "Injected: true"
 End Sub
+
+'@ExpectedError(-2147200503, "Header value cannot contain control characters.", "HttpHeaders")
+Public Sub Test_Headers_RejectsControlCharactersInValue()
+    Dim headers As New HttpHeaders
+
+    headers.Add "X-Test", "safe" & ChrW$(0) & "invalid"
+End Sub
+
+Public Sub Test_Headers_AllowsHorizontalTabAndUnicodeInValue()
+    Dim headers As New HttpHeaders
+
+    headers.Add "X-Test", "値" & ChrW$(9) & "ok"
+    XlflowAssert.AssertEquals "値" & ChrW$(9) & "ok", headers.GetValue("X-Test")
+End Sub
