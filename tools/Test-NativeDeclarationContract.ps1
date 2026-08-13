@@ -37,6 +37,10 @@ try {
     if ($optionBufferAssignments -ne 2) {
         throw "SetOptionLong must copy OptionValue into a Long buffer in both VBA7 and legacy branches."
     }
+    $optionBufferPointers = ([regex]::Matches($source, '(?m)^\s*SetOptionLong = \(WinHttpSetOption\(HandleValue, OptionCode, VarPtr\(optionBuffer\), 4\) <> 0\)\s*$')).Count
+    if ($optionBufferPointers -ne 2) {
+        throw "SetOptionLong must pass the explicit DWORD buffer address in both VBA7 and legacy branches."
+    }
     $mutations = @{
         "missing-vba7-guard.bas" = Replace-All $source "#If VBA7 Then" "#If VBA6 Then"
         "legacy-longptr.bas" = Replace-All $source "ByVal pwszUserAgent As Long, ByVal dwAccessType" "ByVal pwszUserAgent As LongPtr, ByVal dwAccessType"

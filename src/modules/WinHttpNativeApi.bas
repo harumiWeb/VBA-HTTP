@@ -53,7 +53,7 @@ Private Declare PtrSafe Function WinHttpQueryHeaders Lib "winhttp.dll" (ByVal hR
 Private Declare PtrSafe Function WinHttpQueryDataAvailable Lib "winhttp.dll" (ByVal hRequest As LongPtr, ByRef lpdwNumberOfBytesAvailable As Long) As Long
 Private Declare PtrSafe Function WinHttpReadData Lib "winhttp.dll" (ByVal hRequest As LongPtr, ByRef lpBuffer As Any, ByVal dwNumberOfBytesToRead As Long, ByRef lpdwNumberOfBytesRead As Long) As Long
 Private Declare PtrSafe Function WinHttpQueryOption Lib "winhttp.dll" (ByVal hInternet As LongPtr, ByVal dwOption As Long, ByVal lpBuffer As LongPtr, ByRef lpdwBufferLength As Long) As Long
-Private Declare PtrSafe Function WinHttpSetOption Lib "winhttp.dll" (ByVal hInternet As LongPtr, ByVal dwOption As Long, ByRef lpBuffer As Any, ByVal dwBufferLength As Long) As Long
+Private Declare PtrSafe Function WinHttpSetOption Lib "winhttp.dll" (ByVal hInternet As LongPtr, ByVal dwOption As Long, ByVal lpBuffer As LongPtr, ByVal dwBufferLength As Long) As Long
 Private Declare PtrSafe Function GetLastError Lib "kernel32" () As Long
 Private Declare PtrSafe Function GetCurrentProcess Lib "kernel32" () As LongPtr
 Private Declare PtrSafe Function GetProcessHandleCount Lib "kernel32" (ByVal hProcess As LongPtr, ByRef pdwHandleCount As Long) As Long
@@ -74,7 +74,7 @@ Private Declare Function WinHttpQueryHeaders Lib "winhttp.dll" (ByVal hRequest A
 Private Declare Function WinHttpQueryDataAvailable Lib "winhttp.dll" (ByVal hRequest As Long, ByRef lpdwNumberOfBytesAvailable As Long) As Long
 Private Declare Function WinHttpReadData Lib "winhttp.dll" (ByVal hRequest As Long, ByRef lpBuffer As Any, ByVal dwNumberOfBytesToRead As Long, ByRef lpdwNumberOfBytesRead As Long) As Long
 Private Declare Function WinHttpQueryOption Lib "winhttp.dll" (ByVal hInternet As Long, ByVal dwOption As Long, ByVal lpBuffer As Long, ByRef lpdwBufferLength As Long) As Long
-Private Declare Function WinHttpSetOption Lib "winhttp.dll" (ByVal hInternet As Long, ByVal dwOption As Long, ByRef lpBuffer As Any, ByVal dwBufferLength As Long) As Long
+Private Declare Function WinHttpSetOption Lib "winhttp.dll" (ByVal hInternet As Long, ByVal dwOption As Long, ByVal lpBuffer As Long, ByVal dwBufferLength As Long) As Long
 Private Declare Function GetLastError Lib "kernel32" () As Long
 Private Declare Function GetCurrentProcess Lib "kernel32" () As Long
 Private Declare Function GetProcessHandleCount Lib "kernel32" (ByVal hProcess As Long, ByRef pdwHandleCount As Long) As Long
@@ -212,7 +212,7 @@ Public Function SetOptionLong(ByVal HandleValue As LongPtr, ByVal OptionCode As 
     Dim optionBuffer As Long
 
     optionBuffer = OptionValue
-    SetOptionLong = (WinHttpSetOption(HandleValue, OptionCode, optionBuffer, 4) <> 0)
+    SetOptionLong = (WinHttpSetOption(HandleValue, OptionCode, VarPtr(optionBuffer), 4) <> 0)
 End Function
 
 Public Sub CopyByteRange(ByRef Destination() As Byte, ByVal DestinationOffset As Long, ByRef Source() As Byte, ByVal ByteCount As Long)
@@ -350,7 +350,7 @@ Public Function SetOptionLong(ByVal HandleValue As Long, ByVal OptionCode As Lon
     Dim optionBuffer As Long
 
     optionBuffer = OptionValue
-    SetOptionLong = (WinHttpSetOption(HandleValue, OptionCode, optionBuffer, 4) <> 0)
+    SetOptionLong = (WinHttpSetOption(HandleValue, OptionCode, VarPtr(optionBuffer), 4) <> 0)
 End Function
 
 Public Sub CopyByteRange(ByRef Destination() As Byte, ByVal DestinationOffset As Long, ByRef Source() As Byte, ByVal ByteCount As Long)

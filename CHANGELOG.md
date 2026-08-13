@@ -5,6 +5,10 @@
   fail or fall back through the documented `HttpErrorProtocol` contract rather
   than leaking an unmapped native I/O error.
 
+- Passed native `WinHttpSetOption` DWORD buffers as explicit pointer-sized
+  addresses, matching the WinHTTP `LPVOID` ABI and avoiding VBA `Any`
+  marshalling at unsupported protocol boundaries.
+
 - Fixed native `WinHttpSetOption` DWORD marshalling so protocol, redirect,
   decompression, and upload options are passed through an explicit 32-bit
   buffer in both VBA7 and legacy declaration branches.
