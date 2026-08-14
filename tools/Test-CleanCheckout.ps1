@@ -1,10 +1,16 @@
 [CmdletBinding()]
 param(
-    [switch]$FullRelease
+    [switch]$FullRelease,
+    [switch]$ExcelFree
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+if ($FullRelease -and $ExcelFree) {
+    throw '-FullRelease cannot be combined with -ExcelFree because release builds require Excel/VBIDE.'
+}
+
 $projectRoot = [IO.Path]::GetFullPath((Split-Path -Parent $PSScriptRoot))
 $tempRoot = Join-Path ([IO.Path]::GetTempPath()) ("vba-http-clean-" + [guid]::NewGuid().ToString("N"))
 $archivePath = Join-Path ([IO.Path]::GetTempPath()) ("vba-http-clean-" + [guid]::NewGuid().ToString("N") + ".zip")
@@ -34,7 +40,9 @@ try {
     try {
         Invoke-Checked "task" @("check")
         Invoke-Checked "task" @("test:docs")
-        Invoke-Checked "task" @("test:xlam")
+        if (-not $ExcelFree) {
+            Invoke-Checked "task" @("test:xlam")
+        }
         Invoke-Checked "task" @("build:plan")
         Invoke-Checked "task" @("build:plan:xlam")
         if ($FullRelease) {
@@ -54,6 +62,9 @@ try {
 
     if ($FullRelease) {
         Write-Output "Clean checkout contract and both release build targets passed."
+    }
+    elseif ($ExcelFree) {
+        Write-Output "Excel-free clean checkout contract, source gates, and both dry-run build plans passed."
     }
     else {
         Write-Output "Clean checkout contract, source gates, and both dry-run build plans passed."

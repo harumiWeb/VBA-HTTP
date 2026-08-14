@@ -49,3 +49,9 @@
   command under PowerShell's fail-fast error policy.
 - Wrap every required Task invocation and check `$LASTEXITCODE`; otherwise a
   failed source gate can be masked while later packaging steps continue.
+
+## Hosted CI boundaries
+
+- GitHub-hosted Windows runners do not provide Excel COM. Keep Excel/VBE gates
+  such as `task test:xlam` out of Excel-free workflows and use an explicit
+  `task test:clean-checkout:excel-free` target for archive validation.

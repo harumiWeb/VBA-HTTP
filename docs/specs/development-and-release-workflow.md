@@ -84,9 +84,10 @@ manual dispatches use [`github-ci.md`](github-ci.md) and
 `.github/workflows/ci.yml`. The workflow is read-only, installs the locked
 toolchain, and runs the Excel-free source and release-plan gates. It never
 starts Excel or claims VBE compilation evidence. The scheduled/manual path
-also runs `task test:clean-checkout`; that contract propagates the archived
-commit through `VBA_HTTP_SOURCE_REVISION` because a `git archive` has no
-`.git` directory.
+also runs `task test:clean-checkout:excel-free`; that contract propagates the
+archived commit through `VBA_HTTP_SOURCE_REVISION` because a `git archive` has
+no `.git` directory. The local `task test:clean-checkout` additionally
+verifies the tracked XLAM identity and therefore requires an Excel host.
 
 ## GitHub tag release
 

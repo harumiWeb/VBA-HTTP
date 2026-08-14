@@ -2,7 +2,7 @@
 
 ## Status
 
-`accepted`
+`superseded`
 
 ## Background
 
@@ -57,4 +57,4 @@ local x64 VBE proof loop recorded by ADR-0038.
 
 ## Superseded by
 
-- None
+- ADR-0041-hosted-excel-free-ci-boundary.md

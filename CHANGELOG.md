@@ -2,8 +2,9 @@
 
 - Added a read-only Excel-free GitHub CI workflow for pull requests, `main`
   pushes, weekly maintenance runs, and manual validation. It installs the
-  locked toolchain, runs source/release-plan contracts, and keeps clean-checkout
-  verification separate from the local Excel/VBE proof boundary (ADR-0040).
+  locked toolchain, runs source/release-plan contracts, and uses a dedicated
+  Excel-free clean-checkout path; XLAM identity and other Excel/VBE checks
+  remain on the local/Excel-host proof boundary (ADR-0041).
 
 - Reclassified 32-bit Office from `unsupported-by-policy` to `unverified` under
   ADR-0039. The x64 runtime remains the official release target; contributors

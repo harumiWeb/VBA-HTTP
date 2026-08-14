@@ -198,9 +198,14 @@ tasks:
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-XlamDistribution.ps1
 
   test:clean-checkout:
-    desc: Verify source gates and both build plans from a fresh git archive
+    desc: Verify source gates, both build plans, and tracked workbook identities from a fresh git archive
     cmds:
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-CleanCheckout.ps1
+
+  test:clean-checkout:excel-free:
+    desc: Verify source gates and both build plans from a fresh git archive without Excel
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-CleanCheckout.ps1 -ExcelFree
 
   test:office-bitness:
     desc: Run the supported x64 Office compile, test, and consumer smoke evidence

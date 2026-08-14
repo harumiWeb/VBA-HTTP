@@ -53,10 +53,9 @@ foreach ($token in @(
         'test:release-security',
         'build:plan',
         'build:plan:xlam',
-        'test:xlam',
         'test:pack-release',
         'test:github-release',
-        'task test:clean-checkout',
+        'task test:clean-checkout:excel-free',
         "github.event_name == 'schedule'",
         "github.event_name == 'workflow_dispatch'"
     )) {
@@ -72,6 +71,7 @@ foreach ($forbidden in @(
         'gh release create',
         'xlflow build',
         'precommit:compile',
+        'test:xlam',
         'runs-on: self-hosted'
     )) {
     if ($workflow.IndexOf($forbidden, [StringComparison]::OrdinalIgnoreCase) -ge 0) {

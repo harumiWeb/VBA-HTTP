@@ -83,7 +83,6 @@ jobs:
               'test:release-security',
               'build:plan',
               'build:plan:xlam',
-              'test:xlam',
               'test:pack-release',
               'test:github-release'
           )) {
@@ -95,10 +94,10 @@ jobs:
             throw 'Excel-free CI gates modified tracked or untracked repository files.'
           }
 
-      - name: Run clean-checkout contract
+      - name: Run Excel-free clean-checkout contract
         if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          & task test:clean-checkout
-          if ($LASTEXITCODE -ne 0) { throw "task test:clean-checkout failed with exit code $LASTEXITCODE." }
+          & task test:clean-checkout:excel-free
+          if ($LASTEXITCODE -ne 0) { throw "task test:clean-checkout:excel-free failed with exit code $LASTEXITCODE." }

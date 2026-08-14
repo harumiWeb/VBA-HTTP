@@ -45,9 +45,12 @@ task release:security
 
 `task test:clean-checkout` creates a temporary `git archive` of `HEAD` and
 re-runs source checks, documentation checks, both dry-run build plans, and the
-tracked XLSM/XLAM base identity checks without relying on ignored local files.
-Use `tools/Test-CleanCheckout.ps1 -FullRelease` when a clean-environment
-release build and both consumer artifacts are required as evidence.
+tracked XLSM/XLAM base identity checks without relying on ignored local files;
+the XLAM identity check requires Excel. Use
+`task test:clean-checkout:excel-free` for the hosted/no-Excel contract, which
+skips the Excel-backed identity check. Use
+`tools/Test-CleanCheckout.ps1 -FullRelease` when a clean-environment release
+build and both consumer artifacts are required as evidence.
 
 `task release:build` performs the following in order:
 

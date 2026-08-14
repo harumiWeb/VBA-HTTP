@@ -39,6 +39,7 @@ $required = @(
     'docs/adr/ADR-0037-vba-web-style-source-package.md',
     'docs/adr/ADR-0038-github-tag-release-and-pack-provenance.md',
     'docs/adr/ADR-0040-pull-request-and-scheduled-excel-free-ci.md',
+    'docs/adr/ADR-0041-hosted-excel-free-ci-boundary.md',
     'tools/Test-LicenseContract.ps1',
     'tools/Invoke-PSScriptAnalyzer.ps1',
     'tools/New-SourcePackage.ps1',

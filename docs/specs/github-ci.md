@@ -29,21 +29,24 @@ Every run executes these Excel-free gates:
 - `task test:release-security`
 - `task build:plan`
 - `task build:plan:xlam`
-- `task test:xlam`
 - `task test:pack-release`
 - `task test:github-release`
 
 The workflow fails if any gate changes tracked or untracked repository files.
-The `task test:clean-checkout` contract runs only for scheduled and manually
-dispatched executions because it repeats the source gates in a fresh archive.
+The `task test:clean-checkout:excel-free` contract runs only for scheduled and
+manually dispatched executions because it repeats the source gates and both
+dry-run build plans in a fresh archive.
 
 ## Excel boundary
 
 The hosted workflow never starts Excel, imports source into VBIDE, runs the
 VBA test suite, or claims VBE compilation evidence. Local `task precommit`,
-`task release:build`, and the documented real-host validation paths remain the
-authoritative Excel/VBE proof boundaries. Tag publication remains the separate
-contract in `github-release.md` and `.github/workflows/release.yml`.
+`task test:xlam`, `task release:build`, and the documented real-host
+validation paths remain the authoritative Excel/VBE proof boundaries. The
+hosted workflow checks the XLAM dry-run plan through `task build:plan:xlam`,
+but does not open the tracked add-in to verify `Workbook.IsAddin`. Tag
+publication remains the separate contract in `github-release.md` and
+`.github/workflows/release.yml`.
 
 `tools/Test-CIWorkflow.ps1` is the executable contract for the workflow shape,
 permissions, toolchain pins, gate list, and Excel/release exclusions.
