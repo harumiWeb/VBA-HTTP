@@ -2,6 +2,10 @@
 
 `docs/specs/` は現在有効なcontract、invariant、compatibility rule、validation requirementだけを保持する。判断理由と却下案はADRへ、作業予定は `tasks/todo.md` へ置く。
 
+利用者向けのAPI説明・導入手順・例・細かい操作ガイドは
+[`docs/guides/`](../guides/README.md) に集約する。ここにあるspecはガイドの
+背景ではなく、実装・テストが守る規範契約である。
+
 - 仕様変更と実装・testは同じchange setで更新する。
 - 過去仕様を本文へ蓄積せず、user-visibleな変更履歴はCHANGELOGへ移す。
 - public API、error behavior、security boundary、release validationにはauthoritativeなtestまたは検査scriptへの参照を含める。

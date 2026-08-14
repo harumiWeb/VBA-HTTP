@@ -11,6 +11,17 @@ $required = @(
     'THIRD_PARTY_NOTICES.md',
     'CONTRIBUTING.md',
     'docs/API.md',
+    'docs/guides/README.md',
+    'docs/guides/getting-started.md',
+    'docs/guides/api-reference.md',
+    'docs/guides/requests-and-responses.md',
+    'docs/guides/reliability-and-batches.md',
+    'docs/guides/streaming.md',
+    'docs/guides/transport-capabilities.md',
+    'docs/guides/security-and-state.md',
+    'docs/guides/distribution.md',
+    'docs/guides/examples.md',
+    'docs/guides/compatibility.md',
     'docs/RELEASE_CHECKLIST.md',
     'docs/specs/distribution.md',
     'docs/specs/github-release.md',
@@ -78,9 +89,13 @@ foreach ($relativePath in $required) {
 }
 
 $tokens = @{
-    'README.md' = @('docs/API.md', 'CONTRIBUTING.md', 'docs/specs/distribution.md', 'docs/specs/github-release.md', 'LICENSE', 'MIT', 'task verify', 'VBE validation not performed')
+    'README.md' = @('docs/API.md', 'docs/guides/README.md', 'CONTRIBUTING.md', 'docs/specs/distribution.md', 'docs/specs/github-release.md', 'LICENSE', 'MIT', 'task verify', 'VBE validation not performed')
     'CONTRIBUTING.md' = @('task check', 'task precommit', 'xlflow push', 'task release:build', 'github-hosted', 'LICENSE')
     'docs/API.md' = @('CreateClient', 'HttpResponse', 'HttpError')
+    'docs/guides/README.md' = @('api-reference.md', 'distribution.md', 'compatibility.md', '../specs/')
+    'docs/guides/api-reference.md' = @('CreateClient', 'HttpClient', 'HttpResponse', 'HttpErrorCategory', 'IHttpTransport', 'HttpCookieJar', 'HttpDiagnostics')
+    'docs/guides/getting-started.md' = @('Install-VBAHttp.ps1', 'CreateClient', 'CreateNativeClient', 'x64')
+    'docs/guides/distribution.md' = @('source package', 'vbe_validation=not_performed', 'SHA-256', 'LICENSE', 'THIRD_PARTY_NOTICES')
     'docs/specs/distribution.md' = @('xlflow build', 'source package', 'Install-VBAHttp.ps1', 'checksum', 'rollback', 'xlam', 'release:xlam:build', 'Workbook.IsAddin', 'LICENSE', 'THIRD_PARTY_NOTICES', 'github-release.md', 'not performed')
     'docs/RELEASE_CHECKLIST.md' = @('task release:build', 'task release:security', 'task release:xlam:build', 'task test:github-release', 'risk-register', 'task test:license', 'THIRD_PARTY_NOTICES', 'not VBE-validated')
 }

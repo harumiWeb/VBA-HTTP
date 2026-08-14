@@ -1,5 +1,10 @@
 ## Unreleased
 
+- Consolidated the consumer-facing API reference, usage recipes, reliability,
+  streaming, security, transport, compatibility, and distribution guidance
+  under `docs/guides/`; the README and legacy `docs/API.md` now act as concise
+  public entry points while `docs/specs/` remains the normative contract layer.
+
 - Optimized the native buffered and streaming read paths to reuse a fixed
   64 KiB buffer, read directly with `WinHttpReadData`, pre-size known-length
   buffered bodies (with a bounded initial allocation), and avoid VBA per-byte
