@@ -40,8 +40,10 @@ cancellation is observed.
   native write remains bounded by the request send timeout.
 - `UploadFile` reads an existing source file through a bounded reader. The
   source path is normalized and opened read-only; the source is never replaced,
-  truncated, or deleted. If its size changes during the call, the operation
-  fails rather than silently publishing a mismatched content length.
+  truncated, or deleted. The reader reuses one 64 KiB VBA buffer for full-size
+  chunks and resizes it only for the final short chunk. If its size changes
+  during the call, the operation fails rather than silently publishing a
+  mismatched content length.
 - `HttpMultipartForm` owns ordered field and file parts. Field text is UTF-8
   encoded in bounded chunks. File bytes are read in bounded chunks. Part
   headers and the final boundary are emitted incrementally; the complete
@@ -68,6 +70,10 @@ cancellation is observed.
   opt into an unknown-length body in Phase 7.
 - Cancellation is cooperative and cannot undo bytes already accepted by a
   remote server. The local source and native handles remain safe to reuse.
+- Reusing the bounded reader buffer reduces allocator churn without retaining
+  payload data after the operation or changing the source-ownership contract.
+  It is an implementation optimization, not a new public memory guarantee;
+  x64 before/after evidence is required before claiming a throughput gain.
 - Multipart field values remain caller-owned VBA strings, but the encoder does
   not create a second payload-sized representation. Large file parts are never
   loaded into a `Byte()` or `String`.

@@ -770,20 +770,20 @@ Public Sub Test_NativeTransport_UploadsFileAndMatchesServerHash()
 
     sourcePath = NewUploadSource("file")
     On Error GoTo Cleanup
-    WriteUploadPattern sourcePath, 1048576
+    WriteUploadPattern sourcePath, 1048577
     client.BaseUrl = RequireBaseUrl()
     Set client.Transport = New WinHttpNativeTransport
-    Set expectedResponse = client.GetResponse("/sha256/1048576")
+    Set expectedResponse = client.GetResponse("/sha256/1048577")
     expectedDigest = ExtractJsonString(expectedResponse.Text, "digest")
     Set result = client.UploadFile("/upload/hash", sourcePath, "application/octet-stream", options)
 
     XlflowAssert.AssertEquals 200, result.StatusCode
     XlflowAssert.AssertTrue result.IsSuccess
     XlflowAssert.AssertFalse result.AuthenticationChallenged
-    XlflowAssert.AssertEquals CCur(1048576), result.BytesWritten
-    XlflowAssert.AssertEquals CCur(1048576), result.ContentLength
+    XlflowAssert.AssertEquals CCur(1048577), result.BytesWritten
+    XlflowAssert.AssertEquals CCur(1048577), result.ContentLength
     XlflowAssert.AssertEquals expectedDigest, result.Headers.GetValue("X-Upload-Digest")
-    XlflowAssert.AssertEquals "1048576", result.Headers.GetValue("X-Upload-Bytes")
+    XlflowAssert.AssertEquals "1048577", result.Headers.GetValue("X-Upload-Bytes")
     DeleteUploadFile sourcePath
     Exit Sub
 

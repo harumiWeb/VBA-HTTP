@@ -6,6 +6,17 @@ tasks:
     cmds:
       - task: check
 
+  precommit:
+    desc: Run source gates followed by the safe x64 VBE compile gate
+    cmds:
+      - task: check
+      - task: precommit:compile
+
+  precommit:compile:
+    desc: Compile an atomic temporary workbook without touching existing Excel processes
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Run-PreCommitCompile.ps1
+
   lint:
     desc: Lint VBA source with xlflow
     cmds:
@@ -41,6 +52,16 @@ tasks:
     cmds:
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-NativeDeclarationContract.ps1
 
+  test:native-performance-contract:
+    desc: Verify the Excel-free native hot-path optimization source contract
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-NativePerformanceContract.ps1
+
+  test:benchmark-safety:
+    desc: Verify that Excel benchmarks fail closed around pre-existing processes
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-BenchmarkSafetyContract.ps1
+
   test:office-policy:
     desc: Verify that unsupported 32-bit Office promotion is rejected before Excel work
     cmds:
@@ -55,6 +76,8 @@ tasks:
       - task: format
       - task: class-source:check
       - task: test:native-declarations
+      - task: test:native-performance-contract
+      - task: test:benchmark-safety
       - task: test:office-policy
       - task: test:license
       - task: test:source-package
@@ -139,6 +162,29 @@ tasks:
     desc: Verify the VBA-Web-style source package manifest and installer payload
     cmds:
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-SourcePackage.ps1
+
+  test:pack-release:
+    desc: Verify production-only xlflow pack staging and provenance without Excel
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-PackArtifact.ps1
+
+  test:release-tag:
+    desc: Verify strict release tag SemVer and tag commit validation without Excel
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-ReleaseTag.ps1
+
+  test:github-release:
+    desc: Verify the Excel-free GitHub release bundle and workflow contract
+    cmds:
+      - task: test:precommit-safety
+      - task: test:release-tag
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-GitHubReleaseBundle.ps1
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-GitHubReleaseWorkflow.ps1
+
+  test:precommit-safety:
+    desc: Verify the pre-commit VBE compile safety contract without starting Excel
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-PreCommitSafetyContract.ps1
 
   test:xlam:
     desc: Verify the tracked XLAM base identity and independent dry-run build plan
@@ -278,6 +324,16 @@ tasks:
     cmds:
       - task: check
       - task: package:source
+
+  release:github:bundle:
+    desc: Build a tagged GitHub release bundle (TAG and SOURCE_REVISION are required)
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/New-GitHubReleaseBundle.ps1 -Tag "{{.TAG}}" -SourceRevision "{{.SOURCE_REVISION}}"
+
+  release:github:validate:
+    desc: Validate a tagged GitHub release bundle (TAG and BUNDLE_DIRECTORY are required)
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Validate-GitHubReleaseBundle.ps1 -Tag "{{.TAG}}" -ExpectedCommit "{{.SOURCE_REVISION}}" -BundleDirectory "{{.BUNDLE_DIRECTORY}}"
 
   verify:
     desc: Run source, test, and release-plan verification

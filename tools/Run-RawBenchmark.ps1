@@ -33,8 +33,39 @@ $backupOutput = Join-Path $resultsDirectory (".{0}.{1}.bak" -f [System.IO.Path]:
 $process = $null
 $client = $null
 $ready = $null
+$baselineExcelProcessIds = @()
+
+function Get-ExcelProcessId {
+    @(Get-Process -Name EXCEL -ErrorAction SilentlyContinue | ForEach-Object { [int]$_.Id })
+}
+
+function Wait-ForBenchmarkExcelCleanup {
+    param(
+        [Parameter(Mandatory)][AllowEmptyCollection()][int[]]$BaselineProcessIds
+    )
+
+    $deadline = [DateTime]::UtcNow.AddSeconds(30)
+    while ([DateTime]::UtcNow -lt $deadline) {
+        $remaining = @(Get-Process -Name EXCEL -ErrorAction SilentlyContinue |
+                Where-Object { $BaselineProcessIds -notcontains $_.Id })
+        if ($remaining.Count -eq 0) { return }
+        Start-Sleep -Milliseconds 250
+    }
+
+    $remainingIds = @(Get-Process -Name EXCEL -ErrorAction SilentlyContinue |
+            Where-Object { $BaselineProcessIds -notcontains $_.Id } |
+            ForEach-Object { [int]$_.Id })
+    if ($remainingIds.Count -gt 0) {
+        throw "Benchmark left runner-created Excel process(es) running: $($remainingIds -join ','). No Excel process was terminated."
+    }
+}
 
 try {
+    $baselineExcelProcessIds = @(Get-ExcelProcessId)
+    if ($baselineExcelProcessIds.Count -gt 0) {
+        throw "Benchmark requires an Excel-exclusive window. Existing Excel PID(s): $($baselineExcelProcessIds -join ','). No Excel process was touched."
+    }
+
     [void](New-Item -ItemType Directory -Path $artifactDirectory -Force)
     [void](New-Item -ItemType Directory -Path (Split-Path -Parent $resolvedOutput) -Force)
     $statusJson = & xlflow status --json
@@ -98,7 +129,6 @@ try {
 
     $runJson = & xlflow run $macroName `
         --input $benchmarkWorkbook `
-        --headless `
         --no-save `
         --json `
         --arg "string:$($ready.url)" `
@@ -106,6 +136,7 @@ try {
     if ($LASTEXITCODE -ne 0) {
         throw "$Implementation benchmark macro failed with exit code $LASTEXITCODE`: $($runJson | Out-String)"
     }
+    Wait-ForBenchmarkExcelCleanup -BaselineProcessIds $baselineExcelProcessIds
     $runResult = $runJson | Out-String | ConvertFrom-Json
     if ($runResult.status -ne "ok") {
         throw "$Implementation benchmark macro returned status '$($runResult.status)'."
@@ -141,6 +172,14 @@ try {
     Write-Output "$Implementation benchmark completed: $resolvedOutput"
 }
 finally {
+    try {
+        if ($null -ne $baselineExcelProcessIds) {
+            Wait-ForBenchmarkExcelCleanup -BaselineProcessIds $baselineExcelProcessIds
+        }
+    }
+    catch {
+        Write-Warning $_.Exception.Message
+    }
     if ($null -ne $client -and $null -ne $ready -and $ready.url) {
         try {
             $shutdownContent = New-Object System.Net.Http.StringContent("")

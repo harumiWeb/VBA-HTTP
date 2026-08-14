@@ -13,6 +13,9 @@ build/Staging/
 
 # Generated source distribution
 dist/
+.release/
+.release-tools/
+.xlflow/precommit-compile/
 *.vba-http.bak
 *.vba-http-uninstall.bak
 

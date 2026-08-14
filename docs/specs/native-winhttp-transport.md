@@ -23,7 +23,7 @@ For every request the transport performs this sequence on the VBA thread:
 5. add validated request headers, then send the buffered or streaming body with
    its exact byte count;
 6. receive the response, query status and raw CRLF headers, and read all body
-   chunks using `WinHttpQueryDataAvailable`/`WinHttpReadData`;
+   chunks directly into a reusable bounded buffer with `WinHttpReadData`;
 7. query `WINHTTP_OPTION_HTTP_PROTOCOL_USED` when supported and close all
    handles in reverse hierarchy order.
 
@@ -56,6 +56,10 @@ be superseded with a real host evidence bundle.
 - Request headers retain insertion order and repeated names.
 - Response status, reason phrase, repeated headers, exact binary body, and
   elapsed time match `WinHttpComTransport`.
+- Buffered response bodies use one reusable 64 KiB read buffer. A valid
+  `Content-Length` may provide an initial capacity up to the transport's
+  bounded pre-allocation limit; larger or absent lengths use safe geometric
+  growth instead.
 - Loopback integration verifies direct binary GET byte ownership, supplementary
   Unicode text decoding, stable rejection of malformed UTF-8 text, and
   `HttpErrorProtocol` mapping for a raw malformed response-header exchange.

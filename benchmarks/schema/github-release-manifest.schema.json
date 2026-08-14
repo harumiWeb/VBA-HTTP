@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/harumiWeb/VBA-HTTP/blob/main/benchmarks/schema/github-release-manifest.schema.json",
+  "title": "VBA-HTTP GitHub release manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "package_id",
+    "release_tag",
+    "version",
+    "source_revision",
+    "target",
+    "toolchain",
+    "support",
+    "pack",
+    "assets",
+    "checksum_file"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "package_id": { "const": "VBA-HTTP" },
+    "release_tag": {
+      "type": "string",
+      "pattern": "^v(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?$"
+    },
+    "source_revision": { "type": "string", "pattern": "^[0-9a-f]{40,64}$" },
+    "target": { "const": "windows-x64-office" },
+    "toolchain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["xlflow", "task", "go", "psscriptanalyzer"],
+      "properties": {
+        "xlflow": { "type": "string", "minLength": 1 },
+        "task": { "type": "string", "minLength": 1 },
+        "go": { "type": "string", "minLength": 1 },
+        "psscriptanalyzer": { "type": "string", "minLength": 1 }
+      }
+    },
+    "support": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["office_bitness", "office_32_bit", "http3_quic"],
+      "properties": {
+        "office_bitness": { "const": "x64" },
+        "office_32_bit": { "const": "unsupported-by-policy" },
+        "http3_quic": { "const": "unsupported-by-policy" }
+      }
+    },
+    "pack": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["backend", "experimental", "vbe_validation", "manifest"],
+      "properties": {
+        "backend": { "const": "pure-go" },
+        "experimental": { "const": true },
+        "vbe_validation": { "const": "not_performed" },
+        "manifest": { "type": "string", "pattern": "^VBA-HTTP-v[^/]+\\.pack\\.json$" }
+      }
+    },
+    "assets": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "sha256", "bytes"],
+        "properties": {
+          "name": { "type": "string", "pattern": "^[A-Za-z0-9._-]+$" },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "bytes": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "checksum_file": { "type": "string", "pattern": "^VBA-HTTP-v[^/]+\\.SHA256SUMS\\.txt$" }
+  }
+}

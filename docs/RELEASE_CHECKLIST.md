@@ -5,6 +5,10 @@ artifacts. It is intentionally separate
 from `tasks/todo.md`: the roadmap tracks implementation progress, while this
 document records the repeatable handoff gate.
 
+For an automated GitHub tag release, also use the exact asset and provenance
+contract in [`docs/specs/github-release.md`](specs/github-release.md). The
+GitHub pack XLSM is production-only but explicitly **not VBE-validated**.
+
 ## Before building
 
 - [ ] The source revision and intended version are recorded.
@@ -25,6 +29,22 @@ document records the repeatable handoff gate.
       unsupported by policy under ADR-0035 and has no release evidence gate.
 - [ ] `task test:clean-checkout` passes; for a clean-environment release
       evidence bundle, `tools/Test-CleanCheckout.ps1 -FullRelease` also passes.
+
+## GitHub tag release (Excel-free)
+
+- [ ] `task precommit` has passed locally on the supported x64 bridge.
+- [ ] The tag matches the strict `vX.Y.Z`/prerelease expression and points to
+      the intended commit.
+- [ ] `task test:github-release` passes without starting Excel.
+- [ ] The workflow uses `windows-2022`, `contents: write`, and the pinned
+      `tools/release-toolchain.json`.
+- [ ] Production-only pack staging and module counts match the allowlist.
+- [ ] Pack provenance says `pure-go`, `experimental=true`, and
+      `vbe_validation=not_performed`.
+- [ ] The exact seven release assets are present and SHA-256 verified.
+- [ ] Release notes explicitly state that VBE validation was not performed.
+- [ ] `gh release view` confirms the tag, stable/prerelease state, and asset
+      set; an existing Release was not overwritten.
 
 ## Source package handoff
 

@@ -92,7 +92,7 @@ Release buildの原則：
 - release workbookにtest、benchmark、xlflow helper、dev moduleが存在しないことをinspectする。
 - VBE compile、save、close、atomic publicationの成功を必須とする。
 - runtimeはrelease workbook内へtest codeを戻さず、外部consumer smoke harnessからpublic APIを呼び出して検証する。
-- `pack` はexperimentalでVBE compileを検証しないため、正式なrelease pipelineでは使用しない。
+- GitHub tag releaseではproduction-only stagingに対する`xlflow pack --experimental`を使用する。ただしpack manifestは常に`vbe_validation=not_performed`とし、VBE検証済みとは表示しない。
 - 将来の `.xlam` は同じ拡張子のbaseを用意し、独立したbuild targetとして生成する。
 
 ### Release Build Gate
@@ -567,6 +567,68 @@ security、malformed input、長時間実行、resource stabilityをrelease品�
 
 ---
 
+## Phase 12 — GitHub Tag Release Automation
+
+### Goal
+
+タグpushから、Excelを起動せずに検証済みsource／production-only pack bundleを生成し、provenanceを明示してGitHub Releaseへ公開できる状態にする。
+
+### Todo
+
+- [x] strict SemVer tag、tag commit、stable／prerelease判定を`tools/Validate-ReleaseTag.ps1`で検証する。
+- [x] `tools/release-toolchain.json`でxlflow、Task、Go、PSScriptAnalyzerのversionとxlflow archive SHA-256を固定する。
+- [x] production allowlistだけを一時stagingへコピーする`tools/New-PackArtifact.ps1`を実装する。
+- [x] pack manifestへ`pure-go`、`experimental=true`、`vbe_validation=not_performed`、module counts、source hashesを記録する。
+- [x] source ZIPのtag version／commit対応とpack／release manifest／SHA256SUMSを`tools/New-GitHubReleaseBundle.ps1`で生成する。
+- [x] exact asset set、allowlist、source hash、pack provenance、license/notices、tamperを`tools/Validate-GitHubReleaseBundle.ps1`でfail closedに検証する。
+- [x] `windows-2022`、`contents: write`、`gh release create --verify-tag`、既存Release拒否、stable／prerelease分岐をworkflowへ実装する。
+- [x] Lefthookを単一の`task precommit`へ変更し、`Run-PreCommitCompile.ps1`でx64 bridge、open/recovery、PID安全、temporary atomic VBE compileを検証する。
+- [x] `test:pack-release`、`test:github-release`、bundle／validate Taskfile targetとworkflow contract testを追加する。
+- [x] GitHub releaseのasset、provenance、x64-only／32-bit・HTTP/3 unsupported境界をADR/spec/README/CHANGELOGへ反映する。
+- [ ] GitHub上で`v1.2.3-rc.1`を実際に公開し、prereleaseとexact asset setを`gh release view`で確認する（repository credentials／tag pushが必要）。
+- [ ] GitHub上でstable tagを公開し、既存Release拒否と再実行手順を確認する（管理者操作が必要）。
+
+### Exit Criteria
+
+- [x] Excel-free tag、pack、bundle、manifest、checksum、workflow contract testsが実装されている。
+- [x] pack manifestとrelease notesがVBE validation not performedを明示する。
+- [x] source ZIPがprimary distributionで、production-only XLSMが別assetとして再現可能である。
+- [ ] 実GitHub-hosted runが成功し、Release asset集合、stable/prerelease state、tag commitを確認できる。
+- [ ] ローカル`task precommit:compile`を、他ユーザーExcel PIDを変更せずにx64 bridgeで実行・証跡化する（本changeでは既存Excel作業保護のため未実行）。
+
+---
+
+## Phase 13 — Safe Native Hot-Path Optimization
+
+### Goal
+
+Improve native buffered and streaming throughput while preserving the existing
+ownership, cancellation, atomic-publication, x64-only, and security boundaries.
+
+### Todo
+
+- [x] native buffered responseを固定64 KiB bufferとdirect `WinHttpReadData`へ変更し、known `Content-Length`の初期容量を利用する。
+- [x] native streaming downloadから`WinHttpQueryDataAvailable`のhot-path呼び出しを除去する。
+- [x] streaming downloadのshort chunk copyをVBA per-byte loopから`RtlMoveMemory`へ変更する。
+- [x] file upload readerがfull-size chunkのByte配列をoperation内で再利用する。
+- [x] 64 KiB未満のdownload/upload tailを含むloopback regression caseを追加する。
+- [x] benchmark runnerが既存Excel PIDを検出したらfail closedし、Excelを強制終了しない。
+- [x] x64 loopbackで候補実装のPhase 2 benchmarkを取得し、candidate JSONを保存する（性能改善の完了判定は保留）。
+- [ ] PID-scoped x64 before／after benchmarkでthroughput、CPU、memory、handle、hash、cancellation latencyを比較する。
+- [ ] 64／256／1024 KiBのchunk sweepを同一条件で実行し、採用値をspecへ反映する。
+- [ ] direct `ReadFile`／`WriteFile` pathを既存VBA file I/Oと比較し、効果が確認できた場合だけ導入する。
+- [ ] session／connection reuseはproxy、auth、cookie、stale connection、teardownを含む独立ADRとbenchmarkの後に判断する。
+- [x] memory mapping、SAFEARRAY descriptor改変、executable memory、runtime machine code、native callback trampolineはAV／EDR安全境界に反するため採用しないと決定した。
+
+### Exit Criteria
+
+- [x] `xlflow lint --json` と `xlflow analyze --json` がcleanである。
+- [x] 既存のresponse、download、upload ownership／cleanup contractがコードとspecで維持されている。
+- [ ] PID-scoped x64 before／after evidenceが同一条件で保存され、性能改善を数値で説明できる。
+- [ ] direct-read変更後のx64 integration、stress、release consumer smokeが成功する。
+
+---
+
 ## Architecture Decision Gates
 
 実装前に、少なくとも次の判断をADRまたはspecとして確定する。
@@ -610,6 +672,6 @@ ADRは判断理由とtrade-offを保持し、現行のinterface、validation、c
 - `build/VBA-HTTP.xlsm` は追跡するが、VBEでproduction VBAを直接編集しない。
 - 開発用workbookには全sourceとtest infrastructureを含める。
 - 配布用workbookは常に `xlflow build` から生成し、手作業でmoduleを削除しない。
-- `pack` は正式release生成に使用しない。
+- GitHub Releaseのpack XLSMは`tools/New-PackArtifact.ps1`のproduction-only stagingから生成し、VBE検証済みartifactとは別境界で扱う。
 - VBA-Webはversion固定setupで取得し、製品dependencyにはしない。
 - v0.1／v0.2は内部checkpoint、最初の利用可能releaseはv0.3とする。

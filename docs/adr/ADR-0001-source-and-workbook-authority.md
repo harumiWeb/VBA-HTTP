@@ -22,7 +22,10 @@ VBA-HTTP needs a workbook for Excel execution, but embedded VBA is difficult to 
   They are separate, generated artifacts.
 - `[build].exclude` removes development-only components. Production components must not depend on excluded components.
 - A release build plan is checked against an explicit component policy before Excel creates an artifact.
-- `xlflow pack` is not part of the release pipeline because it does not provide the Excel/VBE compile validation required by this project.
+- The GitHub tag-release pipeline uses `xlflow pack --experimental` only after
+  production-only staging. Its manifest always says `vbe_validation` is
+  `not_performed`; it is not a substitute for the local `xlflow build` VBE
+  gate. The source ZIP remains the primary distribution.
 
 If the workbook is changed directly during exceptional recovery, contributors must pull and reconcile it before resuming source edits. A release workbook is never used as an editable source.
 

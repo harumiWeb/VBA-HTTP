@@ -35,6 +35,7 @@
 - `security-risk-register.md`: machine-readable residual risks and zero-current-blocker release gate
 - `compatibility-matrix.md`: observed Windows/Office/protocol evidence and promotion requirements
 - `distribution.md`: development/release workbook separation, build, checksum, install, and upgrade contract
+- `github-release.md`: strict tag trigger, Excel-free production-only pack, exact GitHub asset set, and provenance
 - `source-package.md`: VBA-Web-style manifest, module package, installer, backup, and upgrade contract
 - `licensing.md`: MIT license scope, package files, third-party notices, and release verification
 - `powershell-quality.md`: PSScriptAnalyzer settings, tools scope, warning gate, and setup

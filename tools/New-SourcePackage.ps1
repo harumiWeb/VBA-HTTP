@@ -2,7 +2,8 @@
 param(
     [string]$OutputPath = "dist/VBA-HTTP-source.zip",
     [string]$PackageVersion = "source",
-    [string]$RootPath = ""
+    [string]$RootPath = "",
+    [string]$SourceRevision = ""
 )
 
 Set-StrictMode -Version Latest
@@ -40,7 +41,10 @@ function Get-Sha256Hex([string]$Path) {
     }
 }
 
-function Get-SourceRevision {
+function Get-SourceRevision([string]$RequestedRevision) {
+    if (-not [string]::IsNullOrWhiteSpace($RequestedRevision)) {
+        return $RequestedRevision.Trim()
+    }
     $revision = & git -C $projectRoot rev-parse HEAD 2>$null
     if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace(($revision | Out-String))) {
         $revisionText = ([string]($revision | Select-Object -First 1)).Trim()
@@ -177,7 +181,7 @@ try {
         schema_version = 1
         package_id = 'VBA-HTTP'
         package_version = $PackageVersion
-        source_revision = Get-SourceRevision
+        source_revision = Get-SourceRevision $SourceRevision
         target = 'windows-x64-office'
         install = [ordered]@{
             script = 'Install-VBAHttp.ps1'

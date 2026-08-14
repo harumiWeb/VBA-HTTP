@@ -18,6 +18,7 @@ Private Const DownloadSource As String = "WinHttpNativeTransport.DownloadFile"
 Private Const UploadSource As String = "WinHttpNativeTransport.Upload"
 Private Const UserAgent As String = "VBA-HTTP/0.5"
 Private Const ReadChunkBytes As Long = 65536
+Private Const MaxInitialBodyCapacity As Long = 134217728
 
 Public Function Execute(ByVal Request As HttpRequest) As HttpResponse
     Set Execute = ExecuteCore(Request)
@@ -208,12 +209,9 @@ Private Function DownloadCore(ByVal Request As HttpRequest, ByVal DestinationPat
     Dim contentLengthKnown As Boolean
     Dim bytesWritten As Currency
     Dim started As Currency
-    Dim available As Long
-    Dim requested As Long
     Dim readBytes As Long
     Dim chunk() As Byte
     Dim finalChunk() As Byte
-    Dim copyIndex As Long
     Dim cleanupSucceeded As Boolean
     Dim challengeProvider As HttpWindowsAuthProvider
     Dim challengeCount As Long
@@ -292,18 +290,12 @@ Private Function DownloadCore(ByVal Request As HttpRequest, ByVal DestinationPat
     NotifyProgress Progress, bytesWritten, ProgressTotal(contentLength, contentLengthKnown)
     Do
         CheckDownloadControls Options, started
-        If Not WinHttpNativeApi.QueryDataAvailable(nativeRequest.Value, available) Then RaiseNativeFailure "QueryDataAvailable", DownloadSource
-        If available < 0 Then HttpErrors.RaiseTransport HttpErrorIo, DownloadSource, "Native response chunk size exceeded the VBA Long range."
-        If available = 0 Then Exit Do
-        requested = available
-        If requested > ReadChunkBytes Then requested = ReadChunkBytes
-        If Not WinHttpNativeApi.ReadData(nativeRequest.Value, chunk, requested, readBytes) Then RaiseNativeFailure "ReadData", DownloadSource
+        If Not WinHttpNativeApi.ReadData(nativeRequest.Value, chunk, ReadChunkBytes, readBytes) Then RaiseNativeFailure "ReadData", DownloadSource
         If readBytes = 0 Then Exit Do
+        If readBytes < 0 Or readBytes > ReadChunkBytes Then HttpErrors.RaiseTransport HttpErrorIo, DownloadSource, "Native response chunk size was outside the requested buffer range."
         If readBytes < ReadChunkBytes Then
             ReDim finalChunk(0 To readBytes - 1)
-            For copyIndex = 0 To readBytes - 1
-                finalChunk(copyIndex) = chunk(copyIndex)
-            Next copyIndex
+            WinHttpNativeApi.CopyByteRange finalChunk, 0, chunk, readBytes
             writer.WriteChunk finalChunk
             Erase finalChunk
         Else
@@ -653,7 +645,7 @@ Private Function BuildResponse(ByVal nativeRequest As WinHttpRequestHandle, ByVa
     Dim response As New HttpResponse
 
     ReadResponseMetadata nativeRequest, statusCode, reasonPhrase, responseHeaders, protocolUsed, TransportSource
-    Set Body = ReadBufferedBody(nativeRequest)
+    Set Body = ReadBufferedBody(nativeRequest, responseHeaders)
 
     response.Initialize statusCode, reasonPhrase, responseHeaders, Body, elapsedMilliseconds, protocolUsed
     Set BuildResponse = response
@@ -680,24 +672,22 @@ InvalidStatus:
     Err.Raise HttpErrProtocol, Source, "WinHTTP returned an invalid response status."
 End Sub
 
-Private Function ReadBufferedBody(ByVal nativeRequest As WinHttpRequestHandle) As HttpBody
+Private Function ReadBufferedBody(ByVal nativeRequest As WinHttpRequestHandle, Optional ByVal responseHeaders As HttpHeaders = Nothing) As HttpBody
     Dim Body As New HttpBody
     Dim output() As Byte
     Dim chunk() As Byte
     Dim capacity As Long
     Dim total As Long
-    Dim available As Long
-    Dim requested As Long
     Dim readBytes As Long
 
+    If TryGetInitialBodyCapacity(responseHeaders, capacity) Then
+        If capacity > 0 Then ReDim output(0 To capacity - 1)
+    End If
+    ReDim chunk(0 To ReadChunkBytes - 1)
     Do
-        If Not WinHttpNativeApi.QueryDataAvailable(nativeRequest.Value, available) Then RaiseNativeFailure "QueryDataAvailable"
-        If available = 0 Then Exit Do
-        requested = available
-        If requested > ReadChunkBytes Then requested = ReadChunkBytes
-        ReDim chunk(0 To requested - 1)
-        If Not WinHttpNativeApi.ReadData(nativeRequest.Value, chunk, requested, readBytes) Then RaiseNativeFailure "ReadData"
+        If Not WinHttpNativeApi.ReadData(nativeRequest.Value, chunk, ReadChunkBytes, readBytes) Then RaiseNativeFailure "ReadData"
         If readBytes = 0 Then Exit Do
+        If readBytes < 0 Or readBytes > ReadChunkBytes Then HttpErrors.RaiseTransport HttpErrorIo, TransportSource, "Native response chunk size was outside the requested buffer range."
         If total > 2147483647 - readBytes Then HttpErrors.RaiseTransport HttpErrorIo, TransportSource, "Native buffered response exceeds the VBA byte-array limit."
         EnsureCapacity output, capacity, total + readBytes
         WinHttpNativeApi.CopyByteRange output, total, chunk, readBytes
@@ -705,10 +695,20 @@ Private Function ReadBufferedBody(ByVal nativeRequest As WinHttpRequestHandle) A
     Loop
 
     If total > 0 Then
-        ReDim Preserve output(0 To total - 1)
+        If capacity <> total Then ReDim Preserve output(0 To total - 1)
         Body.SetBytes output
     End If
     Set ReadBufferedBody = Body
+End Function
+
+Private Function TryGetInitialBodyCapacity(ByVal responseHeaders As HttpHeaders, ByRef capacity As Long) As Boolean
+    Dim contentLength As Currency
+
+    capacity = 0
+    If Not TryParseContentLength(responseHeaders, contentLength) Then Exit Function
+    If contentLength <= 0 Or contentLength > MaxInitialBodyCapacity Then Exit Function
+    capacity = CLng(contentLength)
+    TryGetInitialBodyCapacity = True
 End Function
 
 Private Sub EnsureCapacity(ByRef buffer() As Byte, ByRef capacity As Long, ByVal required As Long)

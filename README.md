@@ -278,6 +278,8 @@ may use `New`. The default transport can still be replaced through
 task verify
 task release:source
 task release:build
+task test:github-release
+task precommit
 ```
 
 Tests and benchmarks use only the deterministic loopback server. The primary
@@ -293,6 +295,19 @@ The primary XLSM release is built with `task release:build`. An Excel add-in is
 built independently from the tracked same-extension base with `task
 release:xlam:build`; it never renames or mutates the XLSM artifact. See
 [`docs/specs/distribution.md`](docs/specs/distribution.md) and ADR-0021.
+
+### GitHub tag releases
+
+Pushing a strict `vX.Y.Z` or prerelease SemVer tag runs the Excel-free
+`.github/workflows/release.yml` workflow on a GitHub-hosted Windows x64 runner.
+It publishes the source ZIP as the primary distribution and a production-only
+`xlflow pack --experimental` XLSM together with pack/release manifests,
+SHA-256 sums, `LICENSE`, and `THIRD_PARTY_NOTICES.md`. The release notes state
+**VBE validation not performed**; local `task precommit` and optional
+`task release:build` are the Excel-backed compile boundaries. Existing
+Releases are never overwritten. See
+[`docs/specs/github-release.md`](docs/specs/github-release.md) for tag,
+provenance, checksum, rerun, and asset verification rules.
 
 Public API quick reference: [`docs/API.md`](docs/API.md). Contributor workflow:
 [`CONTRIBUTING.md`](CONTRIBUTING.md). Distribution, install, and rollback rules:

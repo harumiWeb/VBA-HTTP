@@ -38,7 +38,9 @@ Authoritative machine-readable values are in `benchmarks/results/raw-winhttp-bas
 
 ## Phase 2 buffered VBA-HTTP evidence
 
-The Phase 2 matched run used the same 5 warmups, 50 measured `GET /status/204` requests, timeouts, and 100 MiB payload for Raw WinHttpRequest and VBA-HTTP.
+The historical pre-optimization Phase 2 matched run used the same 5 warmups,
+50 measured `GET /status/204` requests, timeouts, and 100 MiB payload for Raw
+WinHttpRequest and VBA-HTTP.
 
 | Implementation | Sequential mean | Requests/s | 100 MiB download | Throughput |
 | --- | ---: | ---: | ---: | ---: |
@@ -49,7 +51,28 @@ VBA-HTTP's sequential mean was 66.934% above Raw, so it does not meet the 15% re
 
 Before the final implementation, a VBA per-byte defensive-copy loop limited the 100 MiB path to 12.845 MiB/s. Replacing only Byte-array copying with VBA's defensive SAFEARRAY assignment retained the ownership regression test and raised the measured result to 125.353 MiB/s. Buffered bodies still require multiple in-memory copies by contract; constant-memory transfer belongs to the native streaming phases.
 
-The machine-readable comparison is `benchmarks/results/phase2-buffered-overhead.json`; its referenced raw results are the authoritative values for this run.
+### 2026-08-14 safe native-read candidate run
+
+The current candidate replaces the native availability-query loop with direct
+`WinHttpReadData`, reuses a 64 KiB buffer, bounds known-length pre-allocation,
+and reuses full-size upload buffers. The runner rejected pre-existing Excel
+processes and completed on x64 Office with a loopback-only server.
+
+| Implementation | Sequential mean | Requests/s | 100 MiB download | Throughput |
+| --- | ---: | ---: | ---: | ---: |
+| Raw WinHttpRequest 5.1 | 0.591 ms | 1,692.529 | 447.463 ms | 223.482 MiB/s |
+| VBA-HTTP 0.2-dev | 1.007 ms | 993.366 | 883.432 ms | 113.195 MiB/s |
+
+This candidate run measured 70.389% relative sequential overhead. Two additional
+same-code repetitions varied from 0.455–0.591 ms for Raw and 0.889–1.154 ms for
+VBA-HTTP; therefore these results are engineering observations, not proof that
+the optimization improved throughput. The PID-scoped before/after gate remains
+open until repeated runs of both implementations are collected under a stable
+host condition. The authoritative candidate JSON is
+`benchmarks/results/phase2-buffered-overhead.json` and its two referenced files.
+
+The historical values above are retained as a reference only; they are not the
+current contents of the machine-readable Phase 2 files.
 
 ## Phase 3 bounded-concurrency evidence
 

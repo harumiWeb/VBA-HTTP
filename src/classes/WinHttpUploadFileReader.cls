@@ -9,11 +9,13 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
+Private Const UploadChunkBytes As Long = 65536
 Private mFileNumber As Integer
 Private mPath As String
 Private mSize As Currency
 Private mPosition As Currency
 Private mIsOpen As Boolean
+Private mBufferCapacity As Long
 
 Friend Sub OpenExisting(ByVal FilePath As String)
     If Len(FilePath) = 0 Then HttpErrors.RaiseValidation "WinHttpUploadFileReader.OpenExisting", "Source file path cannot be empty."
@@ -22,6 +24,7 @@ Friend Sub OpenExisting(ByVal FilePath As String)
     mPath = FilePath
     mSize = WinHttpUploadFileSystem.FileSize(mPath)
     mPosition = 0
+    mBufferCapacity = 0
     mFileNumber = FreeFile
     Open mPath For Binary Access Read Lock Read Write As #mFileNumber
     mIsOpen = True
@@ -34,12 +37,15 @@ Friend Function ReadChunk(ByRef Buffer() As Byte, ByRef BytesRead As Long) As Bo
     If Not mIsOpen Then HttpErrors.RaiseValidation "WinHttpUploadFileReader.ReadChunk", "Reader is not open."
     remaining = mSize - mPosition
     If remaining <= 0 Then Exit Function
-    If remaining > 65536 Then
-        requested = 65536
+    If remaining > UploadChunkBytes Then
+        requested = UploadChunkBytes
     Else
         requested = CLng(remaining)
     End If
-    ReDim Buffer(0 To requested - 1)
+    If requested <> mBufferCapacity Then
+        ReDim Buffer(0 To requested - 1)
+        mBufferCapacity = requested
+    End If
     Get #mFileNumber, , Buffer
     mPosition = mPosition + CCur(requested)
     BytesRead = requested

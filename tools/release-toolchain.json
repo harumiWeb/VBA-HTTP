@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "xlflow": {
+    "version": "v0.29.0",
+    "asset": "xlflow_windows_x86_64.zip",
+    "sha256": "e8218f029151d177a1c0a6c180470a7b200c6df9f8fdce57898e522fc9d48533",
+    "repository": "harumiWeb/xlflow"
+  },
+  "task": {
+    "version": "v3.50.0"
+  },
+  "go": {
+    "version": "1.24.0"
+  },
+  "psscriptanalyzer": {
+    "version": "1.25.0"
+  }
+}

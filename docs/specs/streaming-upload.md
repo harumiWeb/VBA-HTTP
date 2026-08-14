@@ -31,6 +31,9 @@ exception-style handling.
 
 The source path is normalized, verified as a regular file, and measured before
 the request starts. `WinHttpWriteData` receives no more than 64 KiB at a time.
+The file reader reuses its 64 KiB array for full-size chunks and resizes it only
+for the final short tail, so the source-size and read-only ownership contract
+does not require one VBA array allocation per chunk.
 The source is opened read-only and remains caller-owned. A source size change
 causes an I/O failure rather than a silently truncated or overlong request.
 The caller may set a content type; the default is `application/octet-stream`.
@@ -88,6 +91,11 @@ CONNECT evidence remain separate compatibility work.
   SHA-256, and records elapsed time, memory, and native handle observations.
 - The release consumer smoke calls both file and multipart APIs against the
   filtered workbook without injecting test code into it.
+
+The upload buffer-reuse path is an internal optimization. A new PID-scoped x64
+stress run must compare throughput, CPU, memory, handle count, and source hash
+against the existing 64 KiB baseline before the result is published as a
+performance claim.
 
 For files at or above 4 GiB, the native transport sends the full decimal
 `Content-Length` header and passes WinHTTP's zero-valued

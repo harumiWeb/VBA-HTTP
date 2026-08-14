@@ -1,0 +1,160 @@
+name: GitHub Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: vba-http-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-2022
+    env:
+      RELEASE_TAG: ${{ github.ref_name }}
+      RELEASE_SHA: ${{ github.sha }}
+    steps:
+      - name: Checkout the tagged revision
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pinned Go toolchain
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24.0"
+          cache-dependency-path: tools/testserver/go.mod
+
+      - name: Install pinned release tools
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $toolRoot = Join-Path $env:GITHUB_WORKSPACE '.release-tools'
+          & (Join-Path $env:GITHUB_WORKSPACE 'tools/Install-ReleaseToolchain.ps1') -InstallPath $toolRoot
+          if ($LASTEXITCODE -ne 0) { throw "xlflow installation failed with exit code $LASTEXITCODE." }
+          $taskRoot = Join-Path $env:RUNNER_TEMP 'vba-http-task'
+          New-Item -ItemType Directory -Path $taskRoot -Force | Out-Null
+          $env:GOBIN = $taskRoot
+          go install github.com/go-task/task/v3/cmd/task@v3.50.0
+          if ($LASTEXITCODE -ne 0) { throw "Task installation failed with exit code $LASTEXITCODE." }
+          Install-Module PSScriptAnalyzer -RequiredVersion 1.25.0 -Scope CurrentUser -Force -AllowClobber
+          $env:PATH = "$taskRoot;$toolRoot;$env:PATH"
+          Add-Content -LiteralPath $env:GITHUB_PATH -Value $toolRoot
+          Add-Content -LiteralPath $env:GITHUB_PATH -Value $taskRoot
+          & (Join-Path $toolRoot 'xlflow.exe') version --json
+          task --version
+          Get-Module PSScriptAnalyzer -ListAvailable | Where-Object Version -eq ([version]'1.25.0') | Select-Object -First 1
+
+      - name: Validate tag and clean checkout
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & (Join-Path $env:GITHUB_WORKSPACE 'tools/Validate-ReleaseTag.ps1') -Tag $env:RELEASE_TAG -ExpectedCommit $env:RELEASE_SHA
+          if ($LASTEXITCODE -ne 0) { throw "Tag validation failed with exit code $LASTEXITCODE." }
+          $status = git status --porcelain
+          if (-not [string]::IsNullOrWhiteSpace(($status | Out-String))) {
+            throw 'The tagged checkout is not clean.'
+          }
+
+      - name: Run Excel-free source gates
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          task check
+          task test:docs
+          task test:security-risks
+          task testserver:unit
+          task build:plan
+          task test:pack-release
+          task test:github-release
+          $status = git status --porcelain --untracked-files=all
+          if (-not [string]::IsNullOrWhiteSpace(($status | Out-String))) {
+            throw 'Excel-free release gates modified tracked or untracked repository files.'
+          }
+
+      - name: Build and validate release bundle
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $bundle = Join-Path $env:GITHUB_WORKSPACE (Join-Path '.release' ("vba-http-release-" + $env:RELEASE_TAG))
+          & (Join-Path $env:GITHUB_WORKSPACE 'tools/New-GitHubReleaseBundle.ps1') -Tag $env:RELEASE_TAG -SourceRevision $env:RELEASE_SHA -OutputDirectory $bundle
+          if ($LASTEXITCODE -ne 0) { throw "Release bundle creation failed with exit code $LASTEXITCODE." }
+          & (Join-Path $env:GITHUB_WORKSPACE 'tools/Validate-GitHubReleaseBundle.ps1') -Tag $env:RELEASE_TAG -ExpectedCommit $env:RELEASE_SHA -BundleDirectory $bundle
+          if ($LASTEXITCODE -ne 0) { throw "Release bundle validation failed with exit code $LASTEXITCODE." }
+          $notes = Join-Path $env:RUNNER_TEMP ("vba-http-release-notes-" + $env:RELEASE_TAG + '.md')
+          @(
+            "# VBA-HTTP $($env:RELEASE_TAG)",
+            '',
+            'The primary distribution is the VBA-Web-style source ZIP.',
+            'The XLSM asset was produced by xlflow pack --experimental from production-only staging.',
+            '**VBE validation not performed in GitHub Actions.** Local pre-commit VBE evidence is a separate boundary.',
+            '',
+            'Support boundary: Windows x64 Office only. 32-bit Office and HTTP/3/QUIC are unsupported by policy.',
+            '',
+            'Verify downloaded assets with the included SHA256SUMS.txt file.'
+          ) | Set-Content -LiteralPath $notes -Encoding utf8
+          Add-Content -LiteralPath $env:GITHUB_ENV -Value "RELEASE_BUNDLE=$bundle"
+          Add-Content -LiteralPath $env:GITHUB_ENV -Value "RELEASE_NOTES=$notes"
+
+      - name: Refuse an existing Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          gh release view $env:RELEASE_TAG *> $null
+          if ($LASTEXITCODE -eq 0) {
+            throw "GitHub Release $($env:RELEASE_TAG) already exists; refusing to overwrite it."
+          }
+
+      - name: Publish verified Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $assets = @(
+            (Join-Path $env:RELEASE_BUNDLE "VBA-HTTP-$($env:RELEASE_TAG)-source.zip"),
+            (Join-Path $env:RELEASE_BUNDLE "VBA-HTTP-$($env:RELEASE_TAG).xlsm"),
+            (Join-Path $env:RELEASE_BUNDLE "VBA-HTTP-$($env:RELEASE_TAG).pack.json"),
+            (Join-Path $env:RELEASE_BUNDLE "VBA-HTTP-$($env:RELEASE_TAG).release.json"),
+            (Join-Path $env:RELEASE_BUNDLE "VBA-HTTP-$($env:RELEASE_TAG).SHA256SUMS.txt"),
+            (Join-Path $env:RELEASE_BUNDLE 'LICENSE'),
+            (Join-Path $env:RELEASE_BUNDLE 'THIRD_PARTY_NOTICES.md')
+          )
+          $arguments = @('release', 'create', $env:RELEASE_TAG, '--verify-tag', '--title', "VBA-HTTP $($env:RELEASE_TAG)", '--notes-file', $env:RELEASE_NOTES)
+          if ($env:RELEASE_TAG -match '-') { $arguments += '--prerelease'; $arguments += '--latest=false' } else { $arguments += '--latest' }
+          $arguments += $assets
+          & gh @arguments
+          if ($LASTEXITCODE -ne 0) { throw "gh release create failed with exit code $LASTEXITCODE." }
+
+      - name: Verify published asset set
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $json = gh release view $env:RELEASE_TAG --json tagName,isDraft,isPrerelease,assets
+          if ($LASTEXITCODE -ne 0) { throw "gh release view failed with exit code $LASTEXITCODE." }
+          $release = ($json | Out-String | ConvertFrom-Json)
+          $expectedPrerelease = $env:RELEASE_TAG -match '-'
+          if ($release.tagName -ne $env:RELEASE_TAG -or $release.isDraft -or [bool]$release.isPrerelease -ne $expectedPrerelease) {
+            throw 'Published Release identity, draft state, or prerelease state is invalid.'
+          }
+          $expected = @(
+            "VBA-HTTP-$($env:RELEASE_TAG)-source.zip",
+            "VBA-HTTP-$($env:RELEASE_TAG).xlsm",
+            "VBA-HTTP-$($env:RELEASE_TAG).pack.json",
+            "VBA-HTTP-$($env:RELEASE_TAG).release.json",
+            "VBA-HTTP-$($env:RELEASE_TAG).SHA256SUMS.txt",
+            'LICENSE',
+            'THIRD_PARTY_NOTICES.md'
+          ) | Sort-Object
+          $actual = @($release.assets.name | Sort-Object)
+          if ($null -ne (Compare-Object $expected $actual)) { throw 'Published Release asset set does not match the contract.' }
+          gh release view $env:RELEASE_TAG

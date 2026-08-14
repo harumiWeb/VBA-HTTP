@@ -35,6 +35,10 @@ previously valid sidecar or touch the tracked development workbook.
 
 - Release archives can be audited and verified without Excel, and a changed
   workbook or manifest fails closed before consumer smoke.
+- The GitHub tag-release bundle uses the same SHA-256 discipline for the source
+  ZIP, production-only pack XLSM, pack/release manifests, license, and notices.
+  Its `SHA256SUMS` file also covers the release manifest and is validated before
+  `gh release create`; this does not imply VBE validation for the pack.
 - The checksum sidecar is supplementary evidence, not a replacement for
   xlflow's VBE compile, manifest validation, or atomic workbook publication.
   Because the two files are published by separate commands, a failed sidecar

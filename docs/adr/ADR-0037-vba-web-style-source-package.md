@@ -38,6 +38,9 @@ of files would either remove public types or require a fragile generated parser.
 - Keep XLSM/XLAM `xlflow build` artifacts as optional compiled release targets
   for demonstrations, smoke tests, and consumers who prefer a referenced
   workbook. They are not the primary module distribution.
+- A GitHub tag release attaches this source ZIP as the primary asset and may
+  attach a separately provenance-labeled production-only `xlflow pack` XLSM;
+  the latter is not presented as VBE-validated.
 - Remove the empty xlflow scaffold entry modules `App`, `Main`, and `Ui`; the
   external consumer harness calls the public `VBAHttp` factories directly.
 

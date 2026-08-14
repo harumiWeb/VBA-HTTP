@@ -69,14 +69,19 @@ package installer targets a closed workbook and owns only the Excel instance
 it starts. Use `-Force` for component replacement and retain the generated
 backup. See [`docs/specs/source-package.md`](docs/specs/source-package.md).
 
-Compiled workbooks remain optional release artifacts.
+Compiled workbooks remain optional release artifacts. For a tag push, the
+GitHub-hosted workflow creates the source ZIP and a production-only
+`xlflow pack --experimental` XLSM without starting Excel; its release notes
+explicitly say VBE validation was not performed. Run `task precommit` locally
+for the ownership-safe x64 VBE compile gate.
 
 The development workbook contains tests and tooling. A distributable workbook
 is generated separately with `task release:build`, which runs `xlflow build`
 with the configured exclusions, VBE compile/save/close, checksum generation,
 manifest security validation, component inspection, and an external consumer
-smoke harness. Do not remove modules manually and do not use `xlflow pack` for
-the formal release path.
+smoke harness. Do not remove modules manually. The GitHub tag path uses
+`xlflow pack` only through production-only staging and has a separate
+not-VBE-validated provenance contract.
 
 See [`docs/specs/distribution.md`](docs/specs/distribution.md) and
 [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md) for the artifact and

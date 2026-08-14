@@ -77,6 +77,22 @@ The manifest security boundary and deterministic report are defined in
 component inspection, so direct smoke invocation cannot bypass the lexical
 source/exclusion checks.
 
+## GitHub tag release
+
+`vX.Y.Z` and prerelease SemVer tag pushes use the Excel-free workflow described
+in [`github-release.md`](github-release.md). It runs on `windows-2022`, uses
+the pinned `tools/release-toolchain.json`, and has only `contents: write`
+permission. The workflow stages the production allowlist before
+`xlflow pack --experimental`; it never starts Excel and never presents the
+pack as VBE-verified. Existing Releases are refused and no asset clobbering is
+performed. The exact source/pack/manifest/checksum/license/notices asset set is
+validated before and after `gh release create --verify-tag`.
+
+For local commits Lefthook calls `task precommit`, which runs `task check` and
+the ownership-safe temporary VBE compile in `tools/Run-PreCommitCompile.ps1`.
+Existing Excel PIDs are baseline-only and are never terminated. A new
+unowned/uncleaned PID causes a fail-closed result rather than a forced cleanup.
+
 ## Documentation gates
 
 - Public API changes update the relevant spec, README, examples, and CHANGELOG.

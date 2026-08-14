@@ -1,4 +1,4 @@
 pre-commit:
   commands:
-    xlflow-check:
-      run: task check
+    repository-gates:
+      run: task precommit

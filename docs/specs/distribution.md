@@ -1,8 +1,8 @@
 # Distribution specification
 
-## Three artifacts, three responsibilities
+## Distribution artifacts and responsibilities
 
-The repository maintains three distinct deliverables:
+The repository maintains five distinct artifact responsibilities:
 
 1. `dist/VBA-HTTP-source.zip` is the primary library distribution. It is a
    manifest-verified source package with an installer for existing consumer
@@ -14,7 +14,11 @@ The repository maintains three distinct deliverables:
    from the development workbook with `xlflow build` and contains only the
    production allowlist. Tests, benchmarks, Xlflow helpers, and Dev modules are
    excluded by `xlflow.toml`.
-4. `build/VBA-HTTP.xlam` is the tracked same-extension add-in base. Its
+4. A GitHub tag release bundles the source package, a production-only
+   `xlflow pack --experimental` XLSM, pack/release manifests, SHA-256 sums,
+   `LICENSE`, and `THIRD_PARTY_NOTICES.md`. The pack manifest explicitly says
+   `vbe_validation=not_performed`; GitHub Actions never starts Excel.
+5. `build/VBA-HTTP.xlam` is the tracked same-extension add-in base. Its
    independent `build/Release/VBA-HTTP.xlam` target uses the same production
    allowlist but has a separate manifest, checksum, add-in identity check, and
    smoke command.
@@ -149,3 +153,13 @@ ADR-0035 and is not a release gate. 32-bit Office is outside the supported
 distribution boundary under ADR-0030. Keep the XLSM and XLAM
 manifest/checksum pairs separate so an artifact cannot be validated against
 the wrong base or extension.
+
+## GitHub tag release
+
+The authoritative tag-release contract is [`docs/specs/github-release.md`](github-release.md).
+For a strict `vX.Y.Z` or prerelease tag, the GitHub-hosted Windows x64 workflow
+validates the tag commit, runs Excel-free gates, stages only the production
+allowlist for `xlflow pack`, and publishes the exact seven-asset set with
+`gh release create --verify-tag`. The release notes state that VBE validation
+was not performed. The local `task precommit` VBE gate and optional
+`task release:build` artifact remain separate, Excel-backed evidence.

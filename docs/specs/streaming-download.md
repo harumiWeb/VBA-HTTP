@@ -65,8 +65,11 @@ per-attempt temporary-file semantics.
 1. The destination path is normalized and its existing file is not opened for
    writing.
 2. A unique temporary path is created in the destination's parent directory.
-3. WinHTTP data is read into at most a 64 KiB byte array and written to the
-   temporary file in bounded chunks.
+3. WinHTTP data is read directly into one reusable byte array of at most 64 KiB
+   per operation. The transport calls `WinHttpReadData` directly and treats a
+   zero-byte read as end-of-response; it does not add a separate
+   `WinHttpQueryDataAvailable` round trip to the hot path. File writes remain
+   bounded chunks.
 4. The temporary file is closed before atomic replace with
    `MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH`.
 5. On transport, callback, cancellation, deadline, or write failure, handles
@@ -95,6 +98,10 @@ runtime; the current support boundary is x64 Office (ADR-0030).
   Working-set peak delta was 6,836,224 bytes and private-bytes peak delta was
   19,017,728 bytes. The machine-readable result is
   `benchmarks/results/phase6-download-stress.json`.
+
+The direct-read path and its throughput improvement are not promoted until a
+new PID-scoped x64 benchmark run compares the old and new implementations. The
+existing result above is the pre-optimization baseline.
 
 ## Evidence
 

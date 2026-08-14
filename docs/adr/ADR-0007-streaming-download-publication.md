@@ -24,10 +24,11 @@ boundary.
   temporary file with replace-existing and write-through flags. The destination
   is never opened for writing and remains unchanged when a download fails or is
   cancelled before publication.
-- The transport reads bounded chunks with `WinHttpQueryDataAvailable` and
-  `WinHttpReadData`. It never constructs an `HttpBody` or a payload-sized
-  `Byte()` array. A 64 KiB chunk is the default upper bound for both network and
-  file writes.
+- The transport reads bounded chunks directly with `WinHttpReadData`. It does
+  not call `WinHttpQueryDataAvailable` in the hot path because the synchronous
+  read already reports the number of bytes returned and zero is the end marker.
+  It never constructs an `HttpBody` or a payload-sized `Byte()` array. A 64 KiB
+  chunk is the default upper bound for both network and file writes.
 - `IHttpProgressSink.OnProgress` is a synchronous, same-thread VBA interface.
   It is called after each successfully written chunk with byte counts expressed
   as integral `Currency` values; `TotalBytes = -1` means that the response did
@@ -61,6 +62,10 @@ boundary.
   supported Office runtime beyond x64 (ADR-0030).
 - Progress callbacks are easy to implement from VBA and deterministic in tests,
   but they must not perform reentrant calls on the same `HttpClient`.
+- Direct reads reduce one WinHTTP availability query per chunk and preserve the
+  same cooperative cancellation boundary: a read already in progress remains
+  bounded by the receive timeout. The optimization is not a claim of improved
+  throughput until a PID-scoped x64 before/after benchmark is recorded.
 - HTTP error bodies are not buffered by `DownloadFile`; callers that need them
   can use `Execute` and inspect the returned `HttpResponse` instead.
 

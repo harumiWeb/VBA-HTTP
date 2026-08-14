@@ -27,6 +27,12 @@ Time is measured with Windows `QueryPerformanceCounter`. Process working set, pe
 
 `task benchmark:phase2` runs Raw WinHttpRequest and VBA-HTTP from synchronized copies of the same development workbook, against fresh instances of the same loopback server, within one top-level task invocation. Both paths use the Phase 0 parameters above. The Raw path and VBA-HTTP path share the measurement, JSON serialization, and process-snapshot code; only the HTTP invocation differs.
 
+The PowerShell benchmark runner fails closed when any Excel process exists before
+it starts. It records that empty baseline, waits for runner-created Excel to exit,
+and never terminates an Excel process. If another Excel process appears during a
+run, the result is inconclusive and the runner reports the remaining PID(s) for
+manual handling.
+
 `benchmarks/results/phase2-buffered-overhead.json` follows `benchmarks/schema/benchmark-comparison.schema.json`, compares sequential GET mean latency, and records the 15% engineering target. Exceeding the target does not make the evidence disappear: the comparison records `within_target: false`, and the human baseline must explain the absolute difference and the cost of the documented ownership/API guarantees. The comparison is a local engineering result, not a universal performance claim.
 
 ## VBA-Web comparator provenance and isolation
@@ -85,3 +91,23 @@ inconclusive and should be avoided. The result is atomically written to
 `benchmarks/results/phase9-cancellation-stress.json` and validated by
 `benchmarks/schema/cancellation-stress-result.schema.json`. This gate does not
 claim that a native total deadline interrupts a blocking `ReceiveResponse`.
+
+## Safe native hot-path optimization
+
+The current native optimization candidate keeps the public ownership contract
+unchanged while replacing the per-chunk availability query with direct
+`WinHttpReadData` into one reusable 64 KiB buffer. Known buffered
+`Content-Length` values may pre-size the output array within the transport's
+bounded initial-allocation limit. File upload reads reuse
+the same array for full-size chunks and resize only the final tail. These are
+implementation changes, not performance claims.
+
+Before/after runs must be PID-scoped to the Excel process created by the test
+runner; pre-existing Excel processes are excluded and never terminated. Each
+run must report median and p95 elapsed time, throughput, CPU, working-set and
+private-memory peaks, handle delta, payload hash, progress/cancellation
+latency, and the exact chunk size. The existing Phase 6 and Phase 7 JSON files
+remain pre-optimization baselines until this comparison is recorded.
+
+Memory mapping, SAFEARRAY descriptor manipulation, executable memory, runtime
+machine code, and native callback trampolines are not benchmark candidates.

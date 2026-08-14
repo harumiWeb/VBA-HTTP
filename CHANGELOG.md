@@ -1,5 +1,24 @@
 ## Unreleased
 
+- Optimized the native buffered and streaming read paths to reuse a fixed
+  64 KiB buffer, read directly with `WinHttpReadData`, pre-size known-length
+  buffered bodies (with a bounded initial allocation), and avoid VBA per-byte
+  copies for short download chunks.
+- Reused full-size file-upload buffers and added a non-aligned 1,048,577-byte
+  native upload regression case. Existing 1 GiB benchmark numbers remain the
+  pre-optimization baseline until a PID-scoped x64 before/after run is saved.
+- Hardened the Raw/VBA-HTTP benchmark runner to refuse pre-existing Excel
+  processes and never terminate Excel during cleanup; current x64 measurements
+  remain engineering evidence until repeated before/after runs are recorded.
+
+- Added strict SemVer tag-triggered GitHub Release automation. A hosted
+  Windows x64 workflow validates source/toolchain/pack manifests without
+  starting Excel, stages only production components for `xlflow pack
+  --experimental`, publishes the exact source/XLSM/manifest/checksum/license
+  asset set with `gh release create --verify-tag`, and records
+  `vbe_validation=not_performed`. Local Lefthook now runs `task precommit`,
+  including the ownership-safe temporary x64 VBE compile gate.
+
 - Changed the primary consumer distribution to a VBA-Web-style manifest-based
   source package with one-command installer/uninstaller, backup, and hash
   validation. The empty `App`, `Main`, and `Ui` scaffold entry modules were
