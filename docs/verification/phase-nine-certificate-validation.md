@@ -25,5 +25,5 @@ normal OS trust decision without introducing a certificate-ignore switch.
 The x64 HTTP/2 negotiated-protocol record is archived at
 benchmarks/results/protocol-host-http2.json. HTTP/3/QUIC is unsupported by
 policy under ADR-0035; no negotiated HTTP/3 evidence
-remains a separate x64 capability gate; 32-bit Office is unsupported by policy
-under ADR-0030.
+remains a separate x64 capability gate; 32-bit Office is currently unverified
+under ADR-0039.

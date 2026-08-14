@@ -29,9 +29,9 @@ failed; the dedicated loopback integration run above passed all 82 tests.
 
 ## Bitness boundary
 
-The supported runtime target is Windows x64 Office. 32-bit Office is outside
-the support matrix under ADR-0030; no x86 execution evidence is required for
-the Phase 5 release gate. The VBA7/legacy declaration contract remains an
-Excel-free ABI regression guard only. A future x86 support proposal would need
-to supersede ADR-0030 and provide a dedicated compile, integration, release,
-and consumer-smoke evidence bundle.
+The supported runtime target and release path remain Windows x64 Office.
+32-bit Office is `unverified` under ADR-0039; no x86 execution evidence is
+required for the Phase 5 x64 release gate. The VBA7/legacy declaration contract
+remains an Excel-free ABI regression guard only. A contributor may provide a
+dedicated x86 compile, integration, release, and consumer-smoke evidence bundle
+through the diagnostic runner, but it does not promote support by itself.

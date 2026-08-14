@@ -41,7 +41,7 @@ try {
     if ($null -ne (Compare-Object $expected $actual)) { throw 'GitHub release bundle test produced the wrong asset set.' }
 
     $release = Get-Content -LiteralPath (Join-Path $bundle "VBA-HTTP-$tag.release.json") -Raw | ConvertFrom-Json
-    if ($release.pack.vbe_validation -ne 'not_performed' -or $release.support.office_bitness -ne 'x64' -or $release.support.http3_quic -ne 'unsupported-by-policy') {
+    if ($release.pack.vbe_validation -ne 'not_performed' -or $release.support.office_bitness -ne 'x64' -or $release.support.office_32_bit -ne 'unverified' -or $release.support.http3_quic -ne 'unsupported-by-policy') {
         throw 'GitHub release bundle test produced invalid support/provenance metadata.'
     }
 

@@ -62,7 +62,7 @@ failure cleanup, and cancellation rules remain those in
 
 The option is documented by Microsoft as available from Windows 8.1. The
 project's current real evidence and supported runtime target is x64 Office on
-the configured host. 32-bit Office is unsupported by policy; conditional
+the configured host. 32-bit Office is currently unverified; conditional
 declarations remain a static ABI guard only. The deterministic local
 server exposes `/compress/gzip` and `/compress/deflate`; tests disable Go's
 automatic decompression when verifying the wire fixture. The release artifact

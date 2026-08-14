@@ -11,7 +11,7 @@ the public API/error contract on that boundary.
 
 | Area | Policy |
 | --- | --- |
-| 32-bit Office | Unsupported until a complete real-host evidence bundle and a superseding ADR exist. The legacy declaration branch is a static ABI guard only. |
+| 32-bit Office | Unverified. It may work on some hosts, but has no official release guarantee. Contributor diagnostic evidence is welcome; promotion requires ADR-0039 review. |
 | HTTP/3/QUIC | Unsupported. The native flag is retained for diagnostics/future work and is not a release or compatibility guarantee. |
 | HTTP/2 | Opt-in native capability; required mode needs host-specific HTTPS evidence. Plain loopback HTTP/1.1 is not proof of HTTP/2. |
 | XLAM | Independent optional target; not the primary source-package distribution. |
@@ -40,8 +40,10 @@ source/workbook revision, requested capability, observed error category, and
 `ProtocolUsed`. Do not include credentials, query values, raw target paths, or
 response bodies in evidence.
 
-See the normative matrix in
+For contributor validation, run `tools/Run-OfficeBitnessValidation.ps1
+-ExpectedArchitecture X86 -DiagnosticOnly`. The result is diagnostic only and
+must not be used as a release pass. See the normative matrix in
 [`../specs/compatibility-matrix.md`](../specs/compatibility-matrix.md), the x64
-boundary ADR [`../adr/ADR-0030-32-bit-office-support-boundary.md`](../adr/ADR-0030-32-bit-office-support-boundary.md),
+boundary ADR [`../adr/ADR-0039-32-bit-office-unverified-community-validation.md`](../adr/ADR-0039-32-bit-office-unverified-community-validation.md),
 and the HTTP/3 policy ADR
 [`../adr/ADR-0035-http3-support-boundary.md`](../adr/ADR-0035-http3-support-boundary.md).

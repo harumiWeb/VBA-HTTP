@@ -59,7 +59,8 @@ boundary.
   32-bit and 64-bit VBA declaration branches and exactly represents integral
   byte values through the supported file-size range without exposing a
   platform-specific `LongLong` type. This ABI portability does not expand the
-  supported Office runtime beyond x64 (ADR-0030).
+  supported release runtime beyond x64. 32-bit Office remains `unverified`
+  under ADR-0039.
 - Progress callbacks are easy to implement from VBA and deterministic in tests,
   but they must not perform reentrant calls on the same `HttpClient`.
 - Direct reads reduce one WinHTTP availability query per chunk and preserve the

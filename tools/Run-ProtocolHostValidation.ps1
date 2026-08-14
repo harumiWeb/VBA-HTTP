@@ -169,7 +169,7 @@ Write-Verbose "xlflow doctor completed."
 $architecture = [string]$doctor.bridge.architecture
 if ($architecture -notin @("X86", "X64")) { throw "xlflow did not report an X86 or X64 bridge." }
 if ($architecture -ne "X64") {
-    throw "32-bit Office is unsupported by policy; protocol-host promotion requires an X64 bridge."
+    throw "32-bit Office is unverified; protocol-host promotion requires an X64 bridge."
 }
 $preflightTimeoutMilliseconds = [Math]::Min(120000, [Math]::Max(1000, $MaxRuntimeSeconds * 1000))
 $capabilityPreflight = Invoke-ProtocolCapabilityPreflight $targetUri $ExpectedProtocol $preflightTimeoutMilliseconds

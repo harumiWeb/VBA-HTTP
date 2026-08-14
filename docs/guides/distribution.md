@@ -67,7 +67,8 @@ comparator and is not a product dependency. See [`../../LICENSE`](../../LICENSE)
 
 ## Release boundaries
 
-The package targets Windows x64 Office. 32-bit Office, HTTP/3/QUIC, and
+The package targets Windows x64 Office. 32-bit Office is currently unverified
+and is not a release guarantee; HTTP/3/QUIC remains unsupported by policy, and
 unverified host-specific protocol combinations are not promoted by the release
 pipeline. Review [Compatibility](compatibility.md) and the normative
 [`../specs/github-release.md`](../specs/github-release.md) before publishing a

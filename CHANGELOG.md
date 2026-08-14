@@ -1,5 +1,10 @@
 ## Unreleased
 
+- Reclassified 32-bit Office from `unsupported-by-policy` to `unverified` under
+  ADR-0039. The x64 runtime remains the official release target; contributors
+  can submit real-host `-DiagnosticOnly` evidence for maintainer review, but
+  diagnostic output alone does not create an official support guarantee.
+
 - Consolidated the consumer-facing API reference, usage recipes, reliability,
   streaming, security, transport, compatibility, and distribution guidance
   under `docs/guides/`; the README and legacy `docs/API.md` now act as concise
@@ -107,11 +112,11 @@
 - Rejected cookie `Domain` attributes that broaden a cookie to a single-label
   public-suffix-like scope, while preserving exact `localhost` fixtures.
 
-- Established ADR-0030: Windows x64 Office is the supported runtime target;
-  32-bit Office is unsupported by policy until a later decision supplies real
-  host evidence. Normal bitness and protocol-host promotion runners reject X86
-  before opening a new Excel instance, while the legacy declaration scan
-  remains an Excel-free ABI regression guard.
+- Superseded the earlier ADR-0030 32-bit Office exclusion with ADR-0039:
+  Windows x64 Office remains the official runtime target, while 32-bit Office
+  is `unverified` until a contributor evidence bundle is reviewed. Normal
+  promotion runners continue to reject X86 before opening a new Excel instance;
+  the explicit diagnostic-only path remains available.
 
 - Added an Excel-free native declaration ABI gate that verifies the VBA7
   `PtrSafe`/`LongPtr` and legacy `Long` WinHTTP branches, including the

@@ -2,7 +2,11 @@
 
 ## Status
 
-`accepted`
+`superseded`
+
+The x86 classification in this record is superseded by ADR-0039. The x64
+runtime and process-ownership requirements remain historical evidence for the
+current supported release path.
 
 ## Background
 
@@ -65,4 +69,4 @@ matrix stronger than the tested product.
 
 ## Superseded by
 
-- None
+- ADR-0039

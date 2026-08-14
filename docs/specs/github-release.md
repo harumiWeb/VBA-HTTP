@@ -11,8 +11,9 @@ Only a push of a tag matching the following expression is eligible:
 `+build` metadata is not supported. A suffix makes the GitHub Release a
 prerelease; a tag without a suffix is stable. The tag object must resolve to
 the workflow `GITHUB_SHA`. The runner is GitHub-hosted Windows x64
-(`windows-2022`); 32-bit Office, HTTP/3/QUIC, and XLAM are outside this
-release contract.
+(`windows-2022`); the release target remains Windows x64 Office. 32-bit Office
+is recorded as `unverified` and is not validated by this workflow; HTTP/3/QUIC
+and XLAM remain outside this release contract.
 
 ## Excel-free release pipeline
 

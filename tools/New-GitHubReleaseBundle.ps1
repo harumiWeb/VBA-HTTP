@@ -126,7 +126,7 @@ $release = [ordered]@{
     }
     support = [ordered]@{
         office_bitness = 'x64'
-        office_32_bit = 'unsupported-by-policy'
+        office_32_bit = 'unverified'
         http3_quic = 'unsupported-by-policy'
     }
     pack = [ordered]@{

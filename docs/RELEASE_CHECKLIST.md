@@ -112,8 +112,9 @@ The current XLSM/XLAM release is not evidence that every v1.0 compatibility targ
 is complete. Promotion of the v1.0 line additionally requires the remaining
 risk-register item for integrated/proxy challenge authentication, plus any
 other supported-target compatibility obligations, to be resolved with dedicated
-fixtures and evidence. HTTP/3/QUIC and 32-bit Office are outside the supported
-distribution boundary under ADR-0035 and ADR-0030 and are not v1 promotion
-gates. The remaining deferred items are recorded in
+fixtures and evidence. HTTP/3/QUIC is outside the supported distribution
+boundary under ADR-0035. 32-bit Office is `unverified` under ADR-0039 and has
+no official release guarantee; contributor diagnostic evidence is welcome but
+is not a v1 promotion pass. The remaining deferred items are recorded in
 `docs/security/risk-register.json` and must be re-evaluated before a v1
 promotion.

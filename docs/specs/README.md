@@ -43,6 +43,6 @@
 - `source-package.md`: VBA-Web-style manifest, module package, installer, backup, and upgrade contract
 - `licensing.md`: MIT license scope, package files, third-party notices, and release verification
 - `powershell-quality.md`: PSScriptAnalyzer settings, tools scope, warning gate, and setup
-- `office-bitness-validation.md`: supported x64 compile, isolated test, consumer-smoke evidence, diagnostic X86 rejection, and source-level ABI guard
+- `office-bitness-validation.md`: supported x64 compile, isolated test, consumer-smoke evidence, contributor diagnostic X86 path, and source-level ABI guard
 - `protocol-host-validation.md`: fail-closed HTTPS HTTP/2 negotiated-host evidence, diagnostic HTTP/3 probe boundary, Office/WinHTTP metadata, and redacted schema
 - `distribution.md` also defines the independent same-extension XLAM base, build target, add-in identity, and smoke gate (ADR-0021)

@@ -13,7 +13,7 @@
     "build": { "type": "object", "required": ["vbe_compile", "source_applied", "workbook_saved", "workbook_closed", "excel_cleanup"] },
     "consumer_smoke": { "const": "deferred-to-release-harness" },
     "external_network": { "const": false },
-    "support_status": { "enum": ["supported", "unsupported-by-policy"] },
+    "support_status": { "enum": ["supported", "unverified"] },
     "status": { "enum": ["passed", "diagnostic"] }
   }
 }

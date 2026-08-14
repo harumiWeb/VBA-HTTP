@@ -80,7 +80,8 @@ cross-volume copy. `Currency` byte counters are integral values and keep the
 public declaration portable across the retained VBA ABI branches; they support
 the Phase 6 2 GiB-plus tests without a platform-specific `LongLong` public
 type. This source-level portability does not make 32-bit Office a supported
-runtime; the current support boundary is x64 Office (ADR-0030).
+runtime; x64 Office remains the official release target while x86 is
+`unverified` under ADR-0039.
 
 ## Verification
 

@@ -32,6 +32,7 @@ $required = @(
     'docs/adr/ADR-0021-xlam-distribution-target.md',
     'docs/adr/ADR-0022-com-timeout-failure-cleanup.md',
     'docs/adr/ADR-0030-32-bit-office-support-boundary.md',
+    'docs/adr/ADR-0039-32-bit-office-unverified-community-validation.md',
     'docs/adr/ADR-0035-http3-support-boundary.md',
     'docs/adr/ADR-0036-mit-license-and-distribution-boundary.md',
     'docs/adr/ADR-0037-vba-web-style-source-package.md',
@@ -90,7 +91,7 @@ foreach ($relativePath in $required) {
 
 $tokens = @{
     'README.md' = @('docs/API.md', 'docs/guides/README.md', 'CONTRIBUTING.md', 'docs/specs/distribution.md', 'docs/specs/github-release.md', 'LICENSE', 'MIT', 'task verify', 'VBE validation not performed')
-    'CONTRIBUTING.md' = @('task check', 'task precommit', 'xlflow push', 'task release:build', 'github-hosted', 'LICENSE')
+    'CONTRIBUTING.md' = @('task check', 'task precommit', 'xlflow push', 'task release:build', 'github-hosted', 'LICENSE', 'DiagnosticOnly', 'ADR-0039', 'community-validated')
     'docs/API.md' = @('CreateClient', 'HttpResponse', 'HttpError')
     'docs/guides/README.md' = @('api-reference.md', 'distribution.md', 'compatibility.md', '../specs/')
     'docs/guides/api-reference.md' = @('CreateClient', 'HttpClient', 'HttpResponse', 'HttpErrorCategory', 'IHttpTransport', 'HttpCookieJar', 'HttpDiagnostics')
@@ -98,6 +99,7 @@ $tokens = @{
     'docs/guides/distribution.md' = @('source package', 'vbe_validation=not_performed', 'SHA-256', 'LICENSE', 'THIRD_PARTY_NOTICES')
     'docs/specs/distribution.md' = @('xlflow build', 'source package', 'Install-VBAHttp.ps1', 'checksum', 'rollback', 'xlam', 'release:xlam:build', 'Workbook.IsAddin', 'LICENSE', 'THIRD_PARTY_NOTICES', 'github-release.md', 'not performed')
     'docs/RELEASE_CHECKLIST.md' = @('task release:build', 'task release:security', 'task release:xlam:build', 'task test:github-release', 'risk-register', 'task test:license', 'THIRD_PARTY_NOTICES', 'not VBE-validated')
+    'docs/specs/office-bitness-validation.md' = @('ADR-0039', 'unverified', 'DiagnosticOnly', 'community')
 }
 
 foreach ($relativePath in $tokens.Keys) {

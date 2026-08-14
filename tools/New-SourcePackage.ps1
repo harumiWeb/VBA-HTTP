@@ -161,7 +161,7 @@ try {
     foreach ($specFile in @(Get-ChildItem -LiteralPath (Join-Path $projectRoot 'docs/specs') -Filter '*.md' -File)) {
         [void](Copy-PackageFile $specFile.FullName (ConvertTo-RepoPath (Join-Path 'docs/specs' $specFile.Name)) $stagingRoot)
     }
-    foreach ($adrFileName in @('ADR-0030-32-bit-office-support-boundary.md', 'ADR-0035-http3-support-boundary.md', 'ADR-0037-vba-web-style-source-package.md')) {
+    foreach ($adrFileName in @('ADR-0030-32-bit-office-support-boundary.md', 'ADR-0035-http3-support-boundary.md', 'ADR-0037-vba-web-style-source-package.md', 'ADR-0039-32-bit-office-unverified-community-validation.md')) {
         [void](Copy-PackageFile (Join-Path $projectRoot (Join-Path 'docs/adr' $adrFileName)) (ConvertTo-RepoPath (Join-Path 'docs/adr' $adrFileName)) $stagingRoot)
     }
     foreach ($fileName in @('Install-VBAHttp.ps1', 'Uninstall-VBAHttp.ps1', 'Validate-SourcePackage.ps1')) {

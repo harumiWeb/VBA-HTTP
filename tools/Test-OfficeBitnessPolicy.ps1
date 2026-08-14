@@ -22,8 +22,8 @@ catch {
 if ($childExit -eq 0) {
     throw "Office bitness runner accepted an X86 promotion invocation."
 }
-if (($output -join "`n") -notmatch "unsupported by policy") {
-    throw "Office bitness runner failed without the expected unsupported-by-policy diagnostic."
+if (($output -join "`n") -notmatch "unverified") {
+    throw "Office bitness runner failed without the expected unverified diagnostic."
 }
 
 try {
@@ -31,7 +31,7 @@ try {
     $fixturePath = Join-Path $fixtureRoot "x86-diagnostic.json"
     $fixture = Get-Content -LiteralPath (Join-Path (Split-Path -Parent $PSScriptRoot) "benchmarks\results\office-bitness-x64.json") -Raw | ConvertFrom-Json
     $fixture.architecture = "X86"
-    $fixture.support_status = "unsupported-by-policy"
+    $fixture.support_status = "unverified"
     $fixture.status = "diagnostic"
     $fixture.consumer_smoke = "deferred-to-release-harness"
     $fixture | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $fixturePath -Encoding UTF8
@@ -54,4 +54,4 @@ finally {
     }
 }
 
-Write-Output "Office bitness policy guard passed: normal X86 validation is rejected before Excel work."
+Write-Output "Office bitness policy guard passed: normal X86 promotion is rejected before Excel work, while diagnostic evidence remains available."

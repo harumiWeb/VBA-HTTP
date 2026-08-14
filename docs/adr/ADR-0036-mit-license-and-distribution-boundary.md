@@ -42,7 +42,7 @@ relicense third-party or platform material.
   notices.
 - The license does not grant Microsoft, VBA-Web, or platform trademarks and
   does not change the support boundaries for x64 Office, HTTP/2, or the
-  unsupported 32-bit Office and HTTP/3/QUIC combinations.
+unverified 32-bit Office and unsupported-by-policy HTTP/3/QUIC combinations.
 - Release automation must verify the license files as a packaging contract;
   a workbook-only handoff is incomplete.
 

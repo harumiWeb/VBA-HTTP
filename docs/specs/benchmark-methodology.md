@@ -57,7 +57,8 @@ manual handling.
   and `benchmarks/results/office-bitness-x64.json`; the supported runner
   requires both isolated and loopback integration tests to pass on x64 Office.
   The retained legacy declaration branch is static ABI evidence only; 32-bit
-  Office is unsupported by policy under ADR-0030.
+  Office remains `unverified` under ADR-0039 and requires an explicit
+  diagnostic real-host run before any compatibility claim.
 
 ## Phase 3 bounded-concurrency scenario
 

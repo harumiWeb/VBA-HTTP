@@ -22,6 +22,16 @@
       "blocks_v1": false,
       "required_evidence": "Canonical 25-iteration receive-timeout stress with stable idle handle count and bounded Abort cleanup",
       "evidence": "benchmarks/results/phase9-cancellation-stress.json; docs/specs/cancellation-stress.md; docs/adr/ADR-0022-com-timeout-failure-cleanup.md"
+    },
+    {
+      "id": "office-x86-runtime-validation",
+      "title": "32-bit Office runtime compatibility remains unverified",
+      "status": "deferred",
+      "severity": "medium",
+      "blocks_current_release": false,
+      "blocks_v1": false,
+      "required_evidence": "Contributor-run X86 diagnostic bundle with real Office compile, focused/full tests, loopback integration, filtered release build, external consumer smoke, and maintainer review before any official support promotion",
+      "evidence": "docs/adr/ADR-0039-32-bit-office-unverified-community-validation.md; docs/specs/office-bitness-validation.md; docs/specs/compatibility-matrix.md; tools/Run-OfficeBitnessValidation.ps1"
     }
   ]
 }

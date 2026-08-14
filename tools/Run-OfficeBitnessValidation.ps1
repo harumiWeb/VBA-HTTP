@@ -15,7 +15,7 @@ $buildRoot = Join-Path $validationRoot "build"
 $artifactPath = Join-Path $buildRoot "VBA-HTTP.xlsm"
 
 if ($ExpectedArchitecture -eq "X86" -and -not $DiagnosticOnly) {
-    throw "32-bit Office is unsupported by policy. Use -DiagnosticOnly only for explicitly non-promotional investigation."
+    throw "32-bit Office is unverified and not an official promotion target. Use -DiagnosticOnly for explicitly non-promotional investigation."
 }
 
 function Invoke-JsonCommand([string]$FilePath, [string[]]$Arguments) {
@@ -78,7 +78,7 @@ try {
         $architecture = [string]$doctor.bridge.architecture
         if ($architecture -notin @("X86", "X64")) { throw "xlflow did not report X86 or X64 bridge architecture." }
         if ($architecture -eq "X86" -and -not $DiagnosticOnly) {
-            throw "32-bit Office is unsupported by policy; refusing to run a promotion validation on an X86 bridge."
+            throw "32-bit Office is unverified; refusing to run an X86 promotion validation. Use -DiagnosticOnly."
         }
         if ($ExpectedArchitecture -ne "Auto" -and $architecture -ne $ExpectedArchitecture) {
             throw "Expected $ExpectedArchitecture Office bridge, but xlflow selected $architecture."
@@ -123,13 +123,13 @@ try {
             build = [ordered]@{ vbe_compile = [string]$validation.vbe_compile; source_applied = [bool]$validation.source_applied; workbook_saved = [bool]$validation.workbook_saved; workbook_closed = [bool]$validation.workbook_closed; excel_cleanup = [string]$validation.excel_cleanup }
             consumer_smoke = "deferred-to-release-harness"
             external_network = $false
-            support_status = if ($architecture -eq "X64") { "supported" } else { "unsupported-by-policy" }
+            support_status = if ($architecture -eq "X64") { "supported" } else { "unverified" }
             status = if ($architecture -eq "X64") { "passed" } else { "diagnostic" }
         }
         Publish-Json $resolvedOutput $evidence
         & (Join-Path $PSScriptRoot "Validate-OfficeBitnessResult.ps1") -Path $resolvedOutput
         if ($architecture -eq "X86") {
-            Write-Output "Office bitness diagnostic completed: X86 is unsupported by policy and is not promotion evidence. Evidence: $resolvedOutput"
+            Write-Output "Office bitness diagnostic completed: X86 is unverified and is not promotion evidence. Evidence: $resolvedOutput"
         }
         else {
             Write-Output "Office bitness validation passed: $architecture ($passed passing unit tests, $($integrationRecords.Count) passing integration tests, VBE compile, and consumer smoke). Evidence: $resolvedOutput"

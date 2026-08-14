@@ -38,8 +38,9 @@ from an automation failure.
 - The preflight is an opt-in host-runner concern. It is not used by the
   offline integration suite, release smoke, or production request execution.
   It never changes the fallback/required contract of the native transport.
-- The runner remains x64-only under ADR-0030. The preflight's direct x64
-  diagnostic path is not 32-bit Office evidence and cannot promote x86.
+- The runner remains x64-only for protocol-host promotion. The preflight's
+  direct x64 diagnostic path is not 32-bit Office evidence and cannot promote
+  the `unverified` x86 classification under ADR-0039.
 
 ## Consequences
 

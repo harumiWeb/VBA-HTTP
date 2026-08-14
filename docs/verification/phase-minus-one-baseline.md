@@ -39,9 +39,9 @@ Release artifacts and manifests are generated evidence and remain ignored. This 
 
 ## Office support boundary
 
-The supported runtime target is Windows x64 Office. 32-bit Office is
-`unsupported-by-policy` under ADR-0030, so no x86 compile, integration, or
-release artifact is required for the current release gate. The Excel-free
-VBA7/legacy declaration check remains a source ABI regression guard. A future
-support proposal must supersede ADR-0030 and include a dedicated real-host
-evidence bundle; it must not be inferred from this x64 baseline.
+The supported runtime target and release path remain Windows x64 Office.
+32-bit Office is `unverified` under ADR-0039, so no x86 compile, integration,
+or release artifact is required for the current x64 release gate. The
+Excel-free VBA7/legacy declaration check remains a source ABI regression guard.
+Contributors may submit a dedicated real-host x86 evidence bundle through the
+diagnostic runner; support must not be inferred from this x64 baseline.

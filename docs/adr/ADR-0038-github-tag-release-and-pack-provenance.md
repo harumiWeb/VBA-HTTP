@@ -33,8 +33,9 @@ and pack provenance instead of presenting a pack artifact as VBE-verified.
   `gh release create --verify-tag` is the only publication path.
 - Local `task precommit` runs `task check` followed by an ownership-safe,
   temporary `xlflow build` VBE compile. The GitHub workflow never starts Excel.
-- The support target is Windows x64 Office. 32-bit Office, HTTP/3/QUIC, and
-  XLAM are outside this tag-release contract.
+- The support target is Windows x64 Office. 32-bit Office is recorded as
+  `unverified` and is not validated by the tag workflow; HTTP/3/QUIC and XLAM
+  remain outside this tag-release contract.
 
 ## Consequences
 

@@ -7,8 +7,8 @@ installation experience of VBA-Web. Development remains split by architectural
 responsibility under `src/classes/` and `src/modules/`; consumers receive one
 manifest-verified archive and do not select individual VBA files by hand.
 
-The package targets Windows x64 Office only. 32-bit Office is outside the
-support boundary under ADR-0030, and HTTP/3/QUIC is unsupported under
+The package targets Windows x64 Office for its official release guarantee.
+32-bit Office is currently unverified under ADR-0039, and HTTP/3/QUIC is unsupported under
 ADR-0035.
 
 ## Package contents

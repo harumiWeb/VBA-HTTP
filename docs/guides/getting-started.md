@@ -7,7 +7,8 @@ library uses late-bound WinHTTP for its default buffered client, so a WinHTTP
 type-library reference is not required. The native client additionally uses
 the Windows WinHTTP API through pointer-safe declarations.
 
-32-bit Office is unsupported by policy. HTTP/3/QUIC is also unsupported; the
+32-bit Office is currently unverified and has no official support guarantee.
+HTTP/3/QUIC is unsupported by policy; the
 retained HTTP/3 enum is diagnostic-only and must not be used as a production
 compatibility claim.
 

@@ -16,7 +16,7 @@ the focused compile, integration, and release-consumer smoke checks.
 | WinHTTP default/direct/manual HTTP proxy routing | `integration-tested` | x64 COM/native loopback forwarding and HTTPS CONNECT-boundary tests; WinHTTP access-type mapping and release smoke; trusted corporate CONNECT remains host-dependent |
 | Preemptive Basic/Bearer auth providers | `integration-tested` | x64 COM/native loopback success, HTTPS-by-default validation, redirect suppression, and release consumer smoke |
 | Buffered Windows/Digest/server-or-proxy challenge provider | `integration-tested` | x64 COM/native bounded server Basic, HTTP proxy Basic, and loopback HTTPS CONNECT Basic challenge; COM uses `Auto` with the WinHTTP-managed default exchange, native enforces the configured limit and honors explicit scheme selection; custom COM limits fail before network; release smoke, wrong-credential 407, and upload pre-network rejection; real Windows-domain and trusted corporate CONNECT fixtures remain pending |
-| Windows 32-bit Office, native declarations | `unsupported-by-policy` | No promotion evidence is required. A future support claim needs a superseding ADR and a complete real-host compile, loopback integration, release build, and consumer-smoke bundle |
+| Windows 32-bit Office, native declarations | `unverified` | Contributor diagnostic runs are welcome but are not release evidence. Promotion requires a reproducible real-host compile, focused/full tests, loopback integration, filtered release build, external consumer smoke, and maintainer review under ADR-0039 |
 | COM transport with advanced protocol options | `rejected-by-contract` | Public contract test must reject non-empty options without network I/O |
 
 `HttpProtocolOptions.EnabledProtocols = 0` means no native override. Modern
@@ -40,7 +40,10 @@ prove negotiated HTTP/2 support. The recorded HTTP/2 result is host-specific.
 HTTP/3/QUIC is unsupported by policy under ADR-0035; its retained native flag
 and diagnostic probe do not promote a compatibility row. The x64 row is the
 only supported Office runtime row; the legacy declaration branch is a static
-ABI guard, not runtime support for 32-bit Office.
+ABI guard, not runtime support for 32-bit Office. The x86 row is `unverified`,
+not known-incompatible: contributors may run the diagnostic bitness command,
+but the release target and official guarantee remain x64 until a later ADR
+promotes the evidence.
 
 The host-evidence runner and schema are defined in
 `docs/specs/protocol-host-validation.md`. A passing HTTP/2 record is required

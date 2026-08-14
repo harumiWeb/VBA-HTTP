@@ -56,7 +56,8 @@ that host only; it is not silently treated as cross-bitness compatibility
 evidence. This record does not declare the broader auth compatibility matrix
 complete; host-specific integrated/proxy challenge authentication remains an
 explicit follow-up gate. HTTP/3/QUIC is unsupported by policy under ADR-0035,
-and 32-bit Office is outside the supported boundary under ADR-0030. The
+and 32-bit Office is currently unverified under ADR-0039 and is not a release
+guarantee. The
 certificate-negative test is covered by the deterministic HTTPS fixture and
 both transport integration tests. The explicit cookie jar policy is covered by
 ADR-0018 and its unit/integration/release smoke tests.

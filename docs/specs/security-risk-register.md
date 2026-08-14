@@ -25,8 +25,9 @@ summary and fails closed for missing, malformed, duplicate, or contradictory
 records. The current register intentionally keeps host-specific integrated/
 proxy challenge authentication as future-v1 work without making it a current
 release blocker. HTTP/3/QUIC is explicitly unsupported by policy under
-ADR-0035. 32-bit Office is explicitly unsupported by policy under ADR-0030 and
-is not a future-v1 evidence obligation unless that decision is superseded. The bounded
+ADR-0035. 32-bit Office is currently `unverified` under ADR-0039; it is not a
+current release blocker, but reproducible contributor evidence is a tracked
+future compatibility obligation. The bounded
 loopback challenge contract is covered by ADR-0023 and the loopback CONNECT
 boundary by ADR-0031; real domain/trusted-proxy evidence remains deferred. The
 protocol-host runner has produced a passing x64 HTTP/2

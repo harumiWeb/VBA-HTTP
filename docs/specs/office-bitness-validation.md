@@ -2,10 +2,11 @@
 
 The declarations in `WinHttpNativeApi.bas` retain both VBA7 pointer-sized
 handles and legacy 32-bit `Long` branches for source-level ABI protection. The
-supported runtime target is Windows x64 Office only. A conditional branch or
-an x64 compile cannot prove that 32-bit Office loads every declaration and
-workbook component, so 32-bit Office is `unsupported-by-policy` under
-ADR-0030.
+officially supported runtime target and release path remain Windows x64 Office.
+A conditional branch or an x64 compile cannot prove that 32-bit Office loads
+every declaration and workbook component, so 32-bit Office is currently
+`unverified` under ADR-0039: it may work on some hosts, but it has no official
+support guarantee.
 
 Run the supported runner on the x64 Office host:
 
@@ -31,10 +32,10 @@ powershell -File tools/Run-OfficeBitnessValidation.ps1 -ExpectedArchitecture X64
 ```
 
 The current repository evidence is X64 only and is the supported release path.
-An explicitly requested exploratory run on a future x86 host must use
+An explicitly requested contributor run on an x86 host must use
 `-DiagnosticOnly`; its result uses `status=diagnostic` and
-`support_status=unsupported-by-policy`, and cannot promote a compatibility or
-release row:
+`support_status=unverified`, and cannot promote a compatibility or release row
+by itself:
 
 ```powershell
 powershell -File tools/Run-OfficeBitnessValidation.ps1 `
@@ -48,6 +49,9 @@ The host-specific runner is complemented by the Excel-free
 declaration has a `VBA7` `PtrSafe`/`LongPtr` branch and a legacy `Long` branch,
 and that the upload DWORD sentinel remains
 `WINHTTP_IGNORE_REQUEST_TOTAL_LENGTH = 0`. The gate catches accidental
-pointer-size regressions but does not promote or support the x86 Office row.
-Changing this boundary requires a superseding ADR and a new real-host evidence
-bundle; the diagnostic switch is not a release gate.
+pointer-size regressions but does not promote or support the x86 Office row. A
+contributor may attach the diagnostic JSON to a compatibility proposal.
+Maintainer promotion to `community-validated`, and eventual official support,
+requires review of a reproducible real-host bundle covering compile, tests,
+loopback integration, filtered release build, and external consumer smoke. The
+diagnostic switch is not a release gate.

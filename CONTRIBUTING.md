@@ -52,6 +52,26 @@ release artifact is built and the operator has selected a trusted TLS endpoint;
 HTTP/3/QUIC probing is diagnostic-only under ADR-0035. The runner records no
 URL path, query, credentials, or body.
 
+### 32-bit Office validation contributions
+
+32-bit Office is currently `unverified`, not known-incompatible. The official
+release target remains Windows x64 Office, so the normal promotion gate does
+not switch to an x86 bridge. Contributors with a real 32-bit Office host may
+run the non-promotional diagnostic path:
+
+```powershell
+powershell -File tools/Run-OfficeBitnessValidation.ps1 `
+  -ExpectedArchitecture X86 -DiagnosticOnly
+```
+
+Attach the resulting JSON and host/tool versions to a compatibility proposal;
+do not label it as a release pass. The runner snapshots existing Excel PIDs,
+proves ownership of the Excel instance it starts, and fails closed when that
+ownership is ambiguous. Promotion to `community-validated` requires a
+reproducible real-host bundle and maintainer review; official support requires
+a later ADR and the full compile, test, integration, filtered-build, and
+consumer-smoke evidence described in ADR-0039.
+
 Never save a workbook after a failed proof. Follow xlflow recovery guidance if
 the session reports a recovery-required state.
 

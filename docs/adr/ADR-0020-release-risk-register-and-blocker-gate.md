@@ -31,9 +31,9 @@ cannot prove that the current release has no known blocker.
 ## Consequences
 
   - The current x64 release can prove zero known current blockers without falsely
-  claiming host-specific integrated-auth compatibility. HTTP/3/QUIC and 32-bit
-  Office are explicitly outside the supported boundary under ADR-0035 and
-  ADR-0030.
+    claiming host-specific integrated-auth compatibility. HTTP/3/QUIC remains
+    outside the supported boundary under ADR-0035; 32-bit Office is `unverified`
+    under ADR-0039 and has no official release guarantee.
 - A future release cannot hide a newly discovered blocker in prose; the
   machine-readable register and release gate must be updated together.
 - Deferred issues remain visible and block the v1.0 checklist until their

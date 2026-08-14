@@ -47,7 +47,7 @@
       "required": ["office_bitness", "office_32_bit", "http3_quic"],
       "properties": {
         "office_bitness": { "const": "x64" },
-        "office_32_bit": { "const": "unsupported-by-policy" },
+        "office_32_bit": { "const": "unverified" },
         "http3_quic": { "const": "unsupported-by-policy" }
       }
     },

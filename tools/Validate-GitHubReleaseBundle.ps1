@@ -72,7 +72,7 @@ if ([string](Get-RequiredProperty $release 'version') -ne $Tag.Substring(1)) {
 }
 $support = Get-RequiredProperty $release 'support'
 if ([string](Get-RequiredProperty $support 'office_bitness') -ne 'x64' -or
-    [string](Get-RequiredProperty $support 'office_32_bit') -ne 'unsupported-by-policy' -or
+    [string](Get-RequiredProperty $support 'office_32_bit') -ne 'unverified' -or
     [string](Get-RequiredProperty $support 'http3_quic') -ne 'unsupported-by-policy') {
     throw 'Release manifest support boundary is invalid.'
 }
