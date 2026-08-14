@@ -9,6 +9,8 @@ $zipPath = Join-Path $fixtureRoot 'VBA-HTTP-source.zip'
 $extractRoot = Join-Path $fixtureRoot 'extracted'
 $tamperedRoot = Join-Path $fixtureRoot 'tampered'
 $whatIfWorkbook = Join-Path $fixtureRoot 'consumer.xlsm'
+$expectedSourceRevision = '0123456789abcdef0123456789abcdef01234567'
+$previousSourceRevision = $null
 
 function Test-ThrowsError([scriptblock]$Script, [string]$Description) {
     $threw = $false
@@ -19,6 +21,8 @@ function Test-ThrowsError([scriptblock]$Script, [string]$Description) {
 
 try {
     [void](New-Item -ItemType Directory -Path $fixtureRoot -Force)
+    $previousSourceRevision = [Environment]::GetEnvironmentVariable('VBA_HTTP_SOURCE_REVISION')
+    $env:VBA_HTTP_SOURCE_REVISION = $expectedSourceRevision
     & (Join-Path $PSScriptRoot 'New-SourcePackage.ps1') -OutputPath $zipPath -PackageVersion 'test'
     if (-not (Test-Path -LiteralPath $zipPath -PathType Leaf)) {
         throw 'Source package test did not produce a ZIP file.'
@@ -33,6 +37,9 @@ try {
         throw 'Source package installer WhatIf created a backup or touched the target.'
     }
     $manifest = Get-Content -LiteralPath (Join-Path $extractRoot 'manifest.json') -Raw | ConvertFrom-Json
+    if ([string]$manifest.source_revision -ne $expectedSourceRevision) {
+        throw 'Source package did not preserve the clean-checkout source revision.'
+    }
     $names = @($manifest.components.name)
     foreach ($forbidden in @('App', 'Main', 'Ui', 'Sheet1', 'ThisWorkbook')) {
         if ($names -contains $forbidden) { throw "Source package contains forbidden scaffold/document component: $forbidden" }
@@ -46,6 +53,12 @@ try {
     Write-Output "Source package tests passed: $($manifest.components.Count) components, manifest hashes, scaffold exclusion, and tamper rejection."
 }
 finally {
+    if ($null -eq $previousSourceRevision) {
+        Remove-Item Env:VBA_HTTP_SOURCE_REVISION -ErrorAction SilentlyContinue
+    }
+    else {
+        $env:VBA_HTTP_SOURCE_REVISION = $previousSourceRevision
+    }
     if (Test-Path -LiteralPath $fixtureRoot) {
         Remove-Item -LiteralPath $fixtureRoot -Recurse -Force
     }

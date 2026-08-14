@@ -34,6 +34,12 @@ The installer validates every record before opening Excel. A package with a
 missing file, path traversal, duplicate name, development-only path, or hash
 mismatch fails closed.
 
+The manifest `source_revision` is resolved from the explicit
+`-SourceRevision` argument when supplied. The clean-checkout contract passes
+the archived commit through `VBA_HTTP_SOURCE_REVISION` because a `git archive`
+does not contain a `.git` directory; that fallback must be a full hexadecimal
+Git revision and is never used to bypass normal working-tree revision checks.
+
 ## Installation contract
 
 The target workbook must be closed and writable (the installer probes an

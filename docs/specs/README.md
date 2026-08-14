@@ -40,6 +40,7 @@
 - `compatibility-matrix.md`: observed Windows/Office/protocol evidence and promotion requirements
 - `distribution.md`: development/release workbook separation, build, checksum, install, and upgrade contract
 - `github-release.md`: strict tag trigger, Excel-free production-only pack, exact GitHub asset set, and provenance
+- `github-ci.md`: pull-request, main-branch, scheduled, and manual Excel-free CI gates and boundaries
 - `source-package.md`: VBA-Web-style manifest, module package, installer, backup, and upgrade contract
 - `licensing.md`: MIT license scope, package files, third-party notices, and release verification
 - `powershell-quality.md`: PSScriptAnalyzer settings, tools scope, warning gate, and setup

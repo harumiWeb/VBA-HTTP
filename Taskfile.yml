@@ -81,6 +81,7 @@ tasks:
       - task: test:office-policy
       - task: test:license
       - task: test:source-package
+      - task: test:ci-workflow
 
   test:
     desc: Run the complete xlflow test suite
@@ -180,6 +181,11 @@ tasks:
       - task: test:release-tag
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-GitHubReleaseBundle.ps1
       - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-GitHubReleaseWorkflow.ps1
+
+  test:ci-workflow:
+    desc: Verify the Excel-free pull-request and scheduled CI workflow contract
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-CIWorkflow.ps1
 
   test:precommit-safety:
     desc: Verify the pre-commit VBE compile safety contract without starting Excel

@@ -1,0 +1,104 @@
+name: Excel-free CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "17 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vba-http-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  excel-free:
+    runs-on: windows-2022
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pinned Go toolchain
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24.0"
+          cache-dependency-path: tools/testserver/go.mod
+
+      - name: Install pinned validation tools
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = $env:GITHUB_WORKSPACE
+          $lock = Get-Content -LiteralPath (Join-Path $root 'tools/release-toolchain.json') -Raw | ConvertFrom-Json
+          $toolRoot = Join-Path $root '.release-tools'
+          & (Join-Path $root 'tools/Install-ReleaseToolchain.ps1') -InstallPath $toolRoot
+          if ($LASTEXITCODE -ne 0) { throw "xlflow installation failed with exit code $LASTEXITCODE." }
+
+          $taskRoot = Join-Path $env:RUNNER_TEMP 'vba-http-task'
+          New-Item -ItemType Directory -Path $taskRoot -Force | Out-Null
+          $env:GOBIN = $taskRoot
+          $taskVersion = [string]$lock.task.version
+          go install "github.com/go-task/task/v3/cmd/task@$taskVersion"
+          if ($LASTEXITCODE -ne 0) { throw "Task installation failed with exit code $LASTEXITCODE." }
+
+          $psaVersion = [string]$lock.psscriptanalyzer.version
+          Install-Module PSScriptAnalyzer -RequiredVersion $psaVersion -Scope CurrentUser -Force -AllowClobber
+          $env:PATH = "$taskRoot;$toolRoot;$env:PATH"
+          Add-Content -LiteralPath $env:GITHUB_PATH -Value $toolRoot
+          Add-Content -LiteralPath $env:GITHUB_PATH -Value $taskRoot
+
+          & (Join-Path $toolRoot 'xlflow.exe') version --json
+          if ($LASTEXITCODE -ne 0) { throw 'Installed xlflow failed its version probe.' }
+          task --version
+          if ($LASTEXITCODE -ne 0) { throw 'Installed Task failed its version probe.' }
+          $module = Get-Module PSScriptAnalyzer -ListAvailable | Where-Object Version -eq ([version]$psaVersion) | Select-Object -First 1
+          if ($null -eq $module) { throw "PSScriptAnalyzer $psaVersion was not found after installation." }
+
+      - name: Run Excel-free source and release-plan gates
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          function Invoke-RequiredTask([string]$Name) {
+            & task $Name
+            if ($LASTEXITCODE -ne 0) { throw "task $Name failed with exit code $LASTEXITCODE." }
+          }
+
+          foreach ($taskName in @(
+              'check',
+              'test:docs',
+              'test:security-risks',
+              'testserver:unit',
+              'test:release-checksum',
+              'test:release-security',
+              'build:plan',
+              'build:plan:xlam',
+              'test:xlam',
+              'test:pack-release',
+              'test:github-release'
+          )) {
+            Invoke-RequiredTask $taskName
+          }
+
+          $status = git status --porcelain --untracked-files=all
+          if (-not [string]::IsNullOrWhiteSpace(($status | Out-String))) {
+            throw 'Excel-free CI gates modified tracked or untracked repository files.'
+          }
+
+      - name: Run clean-checkout contract
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & task test:clean-checkout
+          if ($LASTEXITCODE -ne 0) { throw "task test:clean-checkout failed with exit code $LASTEXITCODE." }

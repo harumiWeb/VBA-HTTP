@@ -29,6 +29,7 @@ $required = @(
     'docs/specs/licensing.md',
     'docs/specs/powershell-quality.md',
     'docs/specs/development-and-release-workflow.md',
+    'docs/specs/github-ci.md',
     'docs/adr/ADR-0021-xlam-distribution-target.md',
     'docs/adr/ADR-0022-com-timeout-failure-cleanup.md',
     'docs/adr/ADR-0030-32-bit-office-support-boundary.md',
@@ -37,6 +38,7 @@ $required = @(
     'docs/adr/ADR-0036-mit-license-and-distribution-boundary.md',
     'docs/adr/ADR-0037-vba-web-style-source-package.md',
     'docs/adr/ADR-0038-github-tag-release-and-pack-provenance.md',
+    'docs/adr/ADR-0040-pull-request-and-scheduled-excel-free-ci.md',
     'tools/Test-LicenseContract.ps1',
     'tools/Invoke-PSScriptAnalyzer.ps1',
     'tools/New-SourcePackage.ps1',
@@ -55,9 +57,11 @@ $required = @(
     'tools/Test-PackArtifact.ps1',
     'tools/Test-GitHubReleaseBundle.ps1',
     'tools/Test-GitHubReleaseWorkflow.ps1',
+    'tools/Test-CIWorkflow.ps1',
     'tools/Test-PreCommitSafetyContract.ps1',
     'tools/Run-PreCommitCompile.ps1',
     'tools/release-toolchain.json',
+    '.github/workflows/ci.yml',
     '.github/workflows/release.yml',
     'benchmarks/schema/github-release-manifest.schema.json',
     'benchmarks/schema/source-package-manifest.schema.json',
@@ -91,15 +95,17 @@ foreach ($relativePath in $required) {
 
 $tokens = @{
     'README.md' = @('docs/API.md', 'docs/guides/README.md', 'CONTRIBUTING.md', 'docs/specs/distribution.md', 'docs/specs/github-release.md', 'LICENSE', 'MIT', 'task verify', 'VBE validation not performed')
-    'CONTRIBUTING.md' = @('task check', 'task precommit', 'xlflow push', 'task release:build', 'github-hosted', 'LICENSE', 'DiagnosticOnly', 'ADR-0039', 'community-validated')
+    'CONTRIBUTING.md' = @('task check', 'task precommit', 'xlflow push', 'task release:build', 'github-hosted', 'pull request', 'Excel-free CI', 'LICENSE', 'DiagnosticOnly', 'ADR-0039', 'community-validated')
     'docs/API.md' = @('CreateClient', 'HttpResponse', 'HttpError')
     'docs/guides/README.md' = @('api-reference.md', 'distribution.md', 'compatibility.md', '../specs/')
     'docs/guides/api-reference.md' = @('CreateClient', 'HttpClient', 'HttpResponse', 'HttpErrorCategory', 'IHttpTransport', 'HttpCookieJar', 'HttpDiagnostics')
     'docs/guides/getting-started.md' = @('Install-VBAHttp.ps1', 'CreateClient', 'CreateNativeClient', 'x64')
     'docs/guides/distribution.md' = @('source package', 'vbe_validation=not_performed', 'SHA-256', 'LICENSE', 'THIRD_PARTY_NOTICES')
     'docs/specs/distribution.md' = @('xlflow build', 'source package', 'Install-VBAHttp.ps1', 'checksum', 'rollback', 'xlam', 'release:xlam:build', 'Workbook.IsAddin', 'LICENSE', 'THIRD_PARTY_NOTICES', 'github-release.md', 'not performed')
+    'docs/specs/development-and-release-workflow.md' = @('github-ci.md', 'ci.yml', 'test:clean-checkout', 'VBA_HTTP_SOURCE_REVISION', 'VBE compilation')
     'docs/RELEASE_CHECKLIST.md' = @('task release:build', 'task release:security', 'task release:xlam:build', 'task test:github-release', 'risk-register', 'task test:license', 'THIRD_PARTY_NOTICES', 'not VBE-validated')
     'docs/specs/office-bitness-validation.md' = @('ADR-0039', 'unverified', 'DiagnosticOnly', 'community')
+    'docs/specs/github-ci.md' = @('pull requests', 'windows-2022', 'contents: read', 'task check', 'test:clean-checkout', 'VBE', 'Test-CIWorkflow.ps1')
 }
 
 foreach ($relativePath in $tokens.Keys) {

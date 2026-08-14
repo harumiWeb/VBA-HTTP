@@ -17,6 +17,10 @@ function Invoke-Checked([string]$FilePath, [string[]]$Arguments) {
 }
 
 try {
+    $sourceRevision = ((& git -C $projectRoot rev-parse HEAD 2>$null) | Out-String).Trim()
+    if ($LASTEXITCODE -ne 0 -or $sourceRevision -notmatch '^[0-9a-fA-F]{40,64}$') {
+        throw 'Could not resolve the clean-checkout source revision.'
+    }
     Invoke-Checked "git" @("-C", $projectRoot, "archive", "--format=zip", "--output=$archivePath", "HEAD")
     Expand-Archive -LiteralPath $archivePath -DestinationPath $tempRoot -Force
     if (-not (Test-Path -LiteralPath (Join-Path $tempRoot "build\VBA-HTTP.xlsm") -PathType Leaf) -or
@@ -24,6 +28,8 @@ try {
         throw "The clean archive does not contain both tracked development workbook bases."
     }
 
+    $previousArchiveRevision = [Environment]::GetEnvironmentVariable('VBA_HTTP_SOURCE_REVISION')
+    $env:VBA_HTTP_SOURCE_REVISION = $sourceRevision.ToLowerInvariant()
     Push-Location $tempRoot
     try {
         Invoke-Checked "task" @("check")
@@ -38,6 +44,12 @@ try {
     }
     finally {
         Pop-Location
+        if ($null -eq $previousArchiveRevision) {
+            Remove-Item Env:VBA_HTTP_SOURCE_REVISION -ErrorAction SilentlyContinue
+        }
+        else {
+            $env:VBA_HTTP_SOURCE_REVISION = $previousArchiveRevision
+        }
     }
 
     if ($FullRelease) {

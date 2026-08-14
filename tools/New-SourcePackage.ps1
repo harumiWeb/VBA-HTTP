@@ -45,6 +45,14 @@ function Get-SourceRevision([string]$RequestedRevision) {
     if (-not [string]::IsNullOrWhiteSpace($RequestedRevision)) {
         return $RequestedRevision.Trim()
     }
+    $archiveRevision = [Environment]::GetEnvironmentVariable('VBA_HTTP_SOURCE_REVISION')
+    if (-not [string]::IsNullOrWhiteSpace($archiveRevision)) {
+        $archiveRevision = $archiveRevision.Trim()
+        if ($archiveRevision -notmatch '^[0-9a-fA-F]{40,64}$') {
+            throw 'VBA_HTTP_SOURCE_REVISION must be a full hexadecimal Git revision.'
+        }
+        return $archiveRevision.ToLowerInvariant()
+    }
     $revision = & git -C $projectRoot rev-parse HEAD 2>$null
     if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace(($revision | Out-String))) {
         $revisionText = ([string]($revision | Select-Object -First 1)).Trim()

@@ -13,6 +13,11 @@ not the place to edit production code.
 
 Run `task hooks:install` once to install the pre-commit hook. The hook stops on
 any VBA lint/analyzer, PowerShell analyzer, formatter, or class-source failure.
+Pull requests targeting `main`, pushes to `main`, and the weekly scheduled
+workflow run the hosted Excel-free CI contract in
+[`docs/specs/github-ci.md`](docs/specs/github-ci.md). That workflow does not
+start Excel or provide VBE compilation evidence; local `task precommit` remains
+the Excel-backed pre-commit boundary.
 
 ## Source layout
 
