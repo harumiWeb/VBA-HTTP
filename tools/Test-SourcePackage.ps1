@@ -31,6 +31,19 @@ try {
 
     Expand-Archive -LiteralPath $zipPath -DestinationPath $extractRoot -Force
     & (Join-Path $PSScriptRoot 'Validate-SourcePackage.ps1') -PackageRoot $extractRoot
+    foreach ($scriptName in @('Install-VBAHttp.ps1', 'Uninstall-VBAHttp.ps1')) {
+        $scriptText = Get-Content -LiteralPath (Join-Path $extractRoot $scriptName) -Raw
+        if ($scriptText -notmatch 'function Clear-ComObject' -or
+            $scriptText -notmatch 'Marshal\]::IsComObject') {
+            throw "$scriptName does not guard COM release operations."
+        }
+        if ($scriptText -cmatch '(?m)^\s*\$workbook\s*=') {
+            throw "$scriptName reuses the case-insensitive Workbook path parameter for a COM object."
+        }
+        if ([regex]::Matches($scriptText, 'FinalReleaseComObject').Count -ne 1) {
+            throw "$scriptName contains an unguarded or duplicated COM release operation."
+        }
+    }
     [IO.File]::WriteAllBytes($whatIfWorkbook, [byte[]](0..15))
     & (Join-Path $extractRoot 'Install-VBAHttp.ps1') -Workbook $whatIfWorkbook -WhatIf -Confirm:$false
     & (Join-Path $extractRoot 'Uninstall-VBAHttp.ps1') -Workbook $whatIfWorkbook -WhatIf -Confirm:$false

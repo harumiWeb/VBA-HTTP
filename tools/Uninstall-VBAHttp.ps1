@@ -24,6 +24,18 @@ if ([IO.Path]::GetExtension($resolvedWorkbook).ToLowerInvariant() -notin @('.xls
     throw "Target workbook must be .xlsm, .xlam, or .xlsb: $resolvedWorkbook"
 }
 
+function Clear-ComObject([object]$Object) {
+    if ($null -eq $Object -or -not [Runtime.InteropServices.Marshal]::IsComObject($Object)) {
+        return
+    }
+    try {
+        [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($Object)
+    }
+    catch {
+        Write-Debug "Could not release a COM object: $($_.Exception.Message)"
+    }
+}
+
 function Test-TargetWorkbookClosed([string]$Path) {
     $stream = $null
     try {
@@ -69,7 +81,7 @@ if (Test-Path -LiteralPath $backupFile -PathType Leaf) {
 Copy-Item -LiteralPath $resolvedWorkbook -Destination $backupFile -Force
 
 $excel = $null
-$workbook = $null
+$targetWorkbook = $null
 $components = $null
 $component = $null
 try {
@@ -77,8 +89,8 @@ try {
     $excel.Visible = $false
     $excel.DisplayAlerts = $false
     $excel.AutomationSecurity = 3
-    $workbook = $excel.Workbooks.Open($resolvedWorkbook, 0, $false)
-    $components = $workbook.VBProject.VBComponents
+    $targetWorkbook = $excel.Workbooks.Open($resolvedWorkbook, 0, $false)
+    $components = $targetWorkbook.VBProject.VBComponents
 
     foreach ($manifestComponent in @($manifest.components)) {
         $name = [string]$manifestComponent.name
@@ -94,22 +106,22 @@ try {
                 throw "Component '$name' exists in the target workbook. Pass -Force to remove package components."
             }
             $components.Remove($component)
-            [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($component)
+            Clear-ComObject $component
             $component = $null
         }
     }
-    $workbook.Save()
+    $targetWorkbook.Save()
     Write-Output "VBA-HTTP uninstalled: backup: $backupFile"
 }
 finally {
-    if ($null -ne $component) { [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($component) }
-    if ($null -ne $components) { [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($components) }
-    if ($null -ne $workbook) {
-        try { $workbook.Close($false) } catch { Write-Debug "Target workbook was already closed: $_" }
-        [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($workbook)
+    Clear-ComObject $component
+    Clear-ComObject $components
+    if ($null -ne $targetWorkbook) {
+        try { $targetWorkbook.Close($false) } catch { Write-Debug "Target workbook was already closed: $_" }
+        Clear-ComObject $targetWorkbook
     }
     if ($null -ne $excel) {
         try { $excel.Quit() } catch { Write-Debug "Uninstaller Excel instance was already closed: $_" }
-        [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($excel)
+        Clear-ComObject $excel
     }
 }

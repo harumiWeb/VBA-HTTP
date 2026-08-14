@@ -24,6 +24,18 @@ if ([IO.Path]::GetExtension($resolvedWorkbook).ToLowerInvariant() -notin @('.xls
     throw "Target workbook must be .xlsm, .xlam, or .xlsb: $resolvedWorkbook"
 }
 
+function Clear-ComObject([object]$Object) {
+    if ($null -eq $Object -or -not [Runtime.InteropServices.Marshal]::IsComObject($Object)) {
+        return
+    }
+    try {
+        [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($Object)
+    }
+    catch {
+        Write-Debug "Could not release a COM object: $($_.Exception.Message)"
+    }
+}
+
 function Test-TargetWorkbookClosed([string]$Path) {
     $stream = $null
     try {
@@ -69,7 +81,7 @@ if (Test-Path -LiteralPath $backupFile -PathType Leaf) {
 Copy-Item -LiteralPath $resolvedWorkbook -Destination $backupFile -Force
 
 $excel = $null
-$workbook = $null
+$targetWorkbook = $null
 $components = $null
 $existing = $null
 $imported = $null
@@ -78,8 +90,8 @@ try {
     $excel.Visible = $false
     $excel.DisplayAlerts = $false
     $excel.AutomationSecurity = 3
-    $workbook = $excel.Workbooks.Open($resolvedWorkbook, 0, $false)
-    $components = $workbook.VBProject.VBComponents
+    $targetWorkbook = $excel.Workbooks.Open($resolvedWorkbook, 0, $false)
+    $components = $targetWorkbook.VBProject.VBComponents
 
     foreach ($component in @($manifest.components)) {
         $name = [string]$component.name
@@ -96,28 +108,28 @@ try {
                 throw "Component '$name' already exists in the target workbook. Pass -Force to replace package components."
             }
             $components.Remove($existing)
-            [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($existing)
+            Clear-ComObject $existing
             $existing = $null
         }
         $imported = $components.Import($componentPath)
         if ($null -ne $imported) {
-            [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($imported)
+            Clear-ComObject $imported
             $imported = $null
         }
     }
-    $workbook.Save()
+    $targetWorkbook.Save()
     Write-Output "VBA-HTTP installed: $($manifest.components.Count) components; backup: $backupFile"
 }
 finally {
-    if ($null -ne $imported) { [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($imported) }
-    if ($null -ne $existing) { [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($existing) }
-    if ($null -ne $components) { [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($components) }
-    if ($null -ne $workbook) {
-        try { $workbook.Close($false) } catch { Write-Debug "Target workbook was already closed: $_" }
-        [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($workbook)
+    Clear-ComObject $imported
+    Clear-ComObject $existing
+    Clear-ComObject $components
+    if ($null -ne $targetWorkbook) {
+        try { $targetWorkbook.Close($false) } catch { Write-Debug "Target workbook was already closed: $_" }
+        Clear-ComObject $targetWorkbook
     }
     if ($null -ne $excel) {
         try { $excel.Quit() } catch { Write-Debug "Installer Excel instance was already closed: $_" }
-        [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($excel)
+        Clear-ComObject $excel
     }
 }
