@@ -15,7 +15,7 @@ Private Const MaximumMaxEvents As Long = 10000
 Private mEnabled As Boolean
 Private mMaxEvents As Long
 Private mNextSequence As Long
-Private mEvents As Collection
+Private mEvents As New Collection
 
 Public Property Get Enabled() As Boolean
     Enabled = mEnabled

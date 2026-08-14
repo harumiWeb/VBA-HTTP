@@ -65,13 +65,13 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          task check
-          task test:docs
-          task test:security-risks
-          task testserver:unit
-          task build:plan
-          task test:pack-release
-          task test:github-release
+          function Invoke-RequiredTask([string]$Name) {
+            & task $Name
+            if ($LASTEXITCODE -ne 0) { throw "task $Name failed with exit code $LASTEXITCODE." }
+          }
+          foreach ($taskName in @('check', 'test:docs', 'test:security-risks', 'testserver:unit', 'build:plan', 'test:pack-release', 'test:github-release')) {
+            Invoke-RequiredTask $taskName
+          }
           $status = git status --porcelain --untracked-files=all
           if (-not [string]::IsNullOrWhiteSpace(($status | Out-String))) {
             throw 'Excel-free release gates modified tracked or untracked repository files.'
@@ -94,7 +94,7 @@ jobs:
             'The XLSM asset was produced by xlflow pack --experimental from production-only staging.',
             '**VBE validation not performed in GitHub Actions.** Local pre-commit VBE evidence is a separate boundary.',
             '',
-            'Support boundary: Windows x64 Office only. 32-bit Office and HTTP/3/QUIC are unsupported by policy.',
+            'Support boundary: Windows x64 Office is the official release target. 32-bit Office is unverified; HTTP/3/QUIC is unsupported by policy.',
             '',
             'Verify downloaded assets with the included SHA256SUMS.txt file.'
           ) | Set-Content -LiteralPath $notes -Encoding utf8
@@ -107,8 +107,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $ErrorActionPreference = 'Stop'
-          gh release view $env:RELEASE_TAG *> $null
-          if ($LASTEXITCODE -eq 0) {
+          $releaseList = gh release list --limit 1000 --json tagName,isDraft
+          if ($LASTEXITCODE -ne 0) { throw "Could not query existing GitHub Releases." }
+          $existingReleases = @($releaseList | Out-String | ConvertFrom-Json)
+          if (@($existingReleases | Where-Object { $_.tagName -eq $env:RELEASE_TAG }).Count -gt 0) {
             throw "GitHub Release $($env:RELEASE_TAG) already exists; refusing to overwrite it."
           }
 

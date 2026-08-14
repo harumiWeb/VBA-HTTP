@@ -130,7 +130,7 @@ Public Function SendBody(ByVal HandleValue As LongPtr, ByVal Body As Variant) As
         SendBody = (WinHttpSendRequest(HandleValue, 0, 0, 0, 0, 0, 0) <> 0)
         Exit Function
     End If
-    bytes = Body
+    bytes = Body ' xlflow:disable-line VBA209
     lowerBound = LBound(bytes) ' xlflow:disable-line VBA227
     byteCount = UBound(bytes) - lowerBound + 1 ' xlflow:disable-line VBA227
     SendBody = (WinHttpSendRequest(HandleValue, 0, 0, VarPtr(bytes(lowerBound)), byteCount, byteCount, 0) <> 0) ' xlflow:disable-line VBA227
@@ -268,7 +268,7 @@ Public Function SendBody(ByVal HandleValue As Long, ByVal Body As Variant) As Bo
         SendBody = (WinHttpSendRequest(HandleValue, 0, 0, 0, 0, 0, 0) <> 0)
         Exit Function
     End If
-    bytes = Body
+    bytes = Body ' xlflow:disable-line VBA209
     lowerBound = LBound(bytes) ' xlflow:disable-line VBA227
     byteCount = UBound(bytes) - lowerBound + 1 ' xlflow:disable-line VBA227
     SendBody = (WinHttpSendRequest(HandleValue, 0, 0, VarPtr(bytes(lowerBound)), byteCount, byteCount, 0) <> 0) ' xlflow:disable-line VBA227

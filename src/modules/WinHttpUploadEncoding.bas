@@ -43,7 +43,7 @@ Public Sub WriteUtf8(ByVal value As String, ByVal Writer As WinHttpUploadStreamW
         bytes = HttpEncoding.EncodeUtf8(Mid$(value, position, chunkLength))
         count = HttpEncoding.ByteCount(bytes)
         If count > 0 Then
-            buffer = bytes
+            buffer = bytes ' xlflow:disable-line VBA209
             Writer.WriteBytes buffer, 0, count
         End If
         position = position + chunkLength - 1

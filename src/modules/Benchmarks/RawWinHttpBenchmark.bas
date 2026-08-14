@@ -66,7 +66,7 @@ Private Sub RunBaseline(ByVal baseUrl As String, ByVal outputPath As String, ByV
 
     WarmUp baseUrl, client, benchmarkSource
     latencyBefore = CaptureProcessSnapshot()
-    latencyDurations = MeasureLatency(baseUrl, client, benchmarkSource, latencyStatus)
+    latencyDurations = MeasureLatency(baseUrl, client, benchmarkSource, latencyStatus) ' xlflow:disable-line VBA209
     latencyAfter = CaptureProcessSnapshot()
     downloadBefore = CaptureProcessSnapshot()
     MeasureDownload baseUrl, client, benchmarkSource, downloadStatus, actualDownloadBytes, downloadElapsedMs

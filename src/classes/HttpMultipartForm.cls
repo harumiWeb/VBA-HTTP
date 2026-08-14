@@ -10,7 +10,7 @@ Attribute VB_Exposed = True
 Option Explicit
 
 Private mBoundary As String
-Private mParts As Collection
+Private mParts As New Collection
 
 Public Property Get Boundary() As String
     Boundary = mBoundary
@@ -38,10 +38,14 @@ Public Sub AddFile(ByVal Name As String, ByVal FilePath As String, Optional ByVa
     Dim normalizedPath As String
     Dim fileSystem As Object
 
+    Set fileSystem = CreateObject("Scripting.FileSystemObject")
+    If fileSystem Is Nothing Then
+        Err.Raise vbObjectError + 736, "HttpMultipartForm.AddFile", "File system service is unavailable."
+        Exit Sub
+    End If
     ValidateHeaderToken Name, "HttpMultipartForm.AddFile"
     ValidateHeaderValue ContentType, "HttpMultipartForm.AddFile"
     normalizedPath = WinHttpUploadFileSystem.NormalizeSource(FilePath)
-    Set fileSystem = CreateObject("Scripting.FileSystemObject")
     If Len(FileName) = 0 Then FileName = fileSystem.GetFileName(normalizedPath)
     ValidateHeaderToken FileName, "HttpMultipartForm.AddFile"
     If Len(ContentType) = 0 Then HttpErrors.RaiseValidation "HttpMultipartForm.AddFile", "Content type cannot be empty."

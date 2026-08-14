@@ -118,17 +118,21 @@ Friend Function SelectScheme(ByVal SupportedSchemes As Long, ByVal FirstScheme A
         If (SupportedSchemes And CLng(mScheme)) <> 0 Then SelectScheme = CLng(mScheme)
         Exit Function
     End If
-    If (SupportedSchemes And CLng(HttpAuthSchemeNegotiate)) <> 0 Then
+    If HasScheme(SupportedSchemes, CLng(HttpAuthSchemeNegotiate)) Then
         SelectScheme = CLng(HttpAuthSchemeNegotiate)
-    ElseIf (SupportedSchemes And CLng(HttpAuthSchemeNtlm)) <> 0 Then
+    ElseIf HasScheme(SupportedSchemes, CLng(HttpAuthSchemeNtlm)) Then
         SelectScheme = CLng(HttpAuthSchemeNtlm)
-    ElseIf (SupportedSchemes And CLng(HttpAuthSchemeDigest)) <> 0 Then
+    ElseIf HasScheme(SupportedSchemes, CLng(HttpAuthSchemeDigest)) Then
         SelectScheme = CLng(HttpAuthSchemeDigest)
-    ElseIf (SupportedSchemes And CLng(HttpAuthSchemeBasic)) <> 0 Then
+    ElseIf HasScheme(SupportedSchemes, CLng(HttpAuthSchemeBasic)) Then
         SelectScheme = CLng(HttpAuthSchemeBasic)
     ElseIf IsSupportedScheme(FirstScheme) Then
         SelectScheme = FirstScheme
     End If
+End Function
+
+Private Function HasScheme(ByVal SupportedSchemes As Long, ByVal SchemeValue As Long) As Boolean
+    HasScheme = (SupportedSchemes And SchemeValue) <> 0
 End Function
 
 Private Function IsSupportedScheme(ByVal SchemeValue As Long) As Boolean

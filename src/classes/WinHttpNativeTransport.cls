@@ -763,13 +763,17 @@ Private Function QueryProtocol(ByVal nativeRequest As WinHttpRequestHandle, Opti
     If Not WinHttpNativeApi.QueryProtocolUsed(nativeRequest.Value, protocolFlags) Then
         If WinHttpNativeApi.LastErrorCode() <> WinHttpNativeApi.WinHttpErrorInvalidOption Then RaiseNativeFailure "QueryProtocolUsed", Source
     End If
-    If (protocolFlags And WinHttpNativeApi.WinHttpProtocolFlagHttp3) <> 0 Then
+    If HasProtocolFlag(protocolFlags, WinHttpNativeApi.WinHttpProtocolFlagHttp3) Then
         QueryProtocol = "HTTP/3"
-    ElseIf (protocolFlags And WinHttpNativeApi.WinHttpProtocolFlagHttp2) <> 0 Then
+    ElseIf HasProtocolFlag(protocolFlags, WinHttpNativeApi.WinHttpProtocolFlagHttp2) Then
         QueryProtocol = "HTTP/2"
     Else
         QueryProtocol = "HTTP/1.1"
     End If
+End Function
+
+Private Function HasProtocolFlag(ByVal ProtocolFlags As Long, ByVal ProtocolFlag As Long) As Boolean
+    HasProtocolFlag = (ProtocolFlags And ProtocolFlag) <> 0
 End Function
 
 Private Sub CheckDownloadControls(ByVal Options As HttpExecutionOptions, ByVal started As Currency)

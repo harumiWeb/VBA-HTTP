@@ -12,7 +12,7 @@ Option Explicit
 Private Const MaximumCookies As Long = 300
 Private Const MaximumSerializedCookieBytes As Long = 4096
 
-Private mCookies As Collection
+Private mCookies As New Collection
 Private mClock As IHttpCookieClock
 
 Public Property Get Count() As Long

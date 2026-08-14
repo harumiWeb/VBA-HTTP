@@ -38,3 +38,14 @@
   boundaries before adding fixtures or release gates. Diagnostic flags and
   capability probes must not become compatibility claims; promotion runners,
   manifests, and risk registers must accept only evidence for supported rows.
+
+## Release workflow and pinned tools
+
+- Validate release-gate scripts with the exact pinned xlflow version used by
+  GitHub Actions; a local development build may accept different VBA lint or
+  analyzer rules.
+- When checking that a GitHub Release is absent, use a successful listing/query
+  that returns an empty result. Do not intentionally invoke a 404-producing
+  command under PowerShell's fail-fast error policy.
+- Wrap every required Task invocation and check `$LASTEXITCODE`; otherwise a
+  failed source gate can be masked while later packaging steps continue.

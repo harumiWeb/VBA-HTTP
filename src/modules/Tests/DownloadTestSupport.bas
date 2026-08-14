@@ -67,13 +67,17 @@ Public Function CountDownloadTemporaryFiles(ByVal DestinationPath As String) As 
     Dim fileSystem As Object
     Dim parentFolder As Object
     Dim fileItem As Object
+    Dim fileIndex As Long
 
     Set fileSystem = CreateObject("Scripting.FileSystemObject")
     Set parentFolder = fileSystem.GetFolder(fileSystem.GetParentFolderName(DestinationPath))
     If parentFolder Is Nothing Then Exit Function
-    For Each fileItem In parentFolder.Files
-        If LCase$(Left$(fileItem.Name, Len(".vba-http-download-"))) = ".vba-http-download-" Then CountDownloadTemporaryFiles = CountDownloadTemporaryFiles + 1
-    Next fileItem
+    For fileIndex = 1 To parentFolder.Files.Count
+        Set fileItem = parentFolder.Files.Item(fileIndex)
+        If Not fileItem Is Nothing Then
+            If LCase$(Left$(fileItem.Name, Len(".vba-http-download-"))) = ".vba-http-download-" Then CountDownloadTemporaryFiles = CountDownloadTemporaryFiles + 1
+        End If
+    Next fileIndex
 End Function
 
 Public Sub DeleteDownloadFile(ByVal FilePath As String)
