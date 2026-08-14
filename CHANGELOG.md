@@ -3,6 +3,11 @@
 - Fixed the source-package installer and uninstaller default package-root
   resolution so the documented commands work without an explicit
   `-PackageRoot` argument.
+- Made installer and uninstaller COM cleanup type-safe and non-fatal so the
+  owned Excel instance is closed even when a returned object is not directly
+  releasable as a COM proxy.
+- Fixed the case-insensitive PowerShell variable collision between the
+  `Workbook` path parameter and the target workbook COM object.
 
 - Added a read-only Excel-free GitHub CI workflow for pull requests, `main`
   pushes, weekly maintenance runs, and manual validation. It installs the
