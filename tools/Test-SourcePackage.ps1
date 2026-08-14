@@ -32,9 +32,11 @@ try {
     Expand-Archive -LiteralPath $zipPath -DestinationPath $extractRoot -Force
     & (Join-Path $PSScriptRoot 'Validate-SourcePackage.ps1') -PackageRoot $extractRoot
     [IO.File]::WriteAllBytes($whatIfWorkbook, [byte[]](0..15))
-    & (Join-Path $extractRoot 'Install-VBAHttp.ps1') -Workbook $whatIfWorkbook -PackageRoot $extractRoot -WhatIf -Confirm:$false
-    if (Test-Path -LiteralPath "$whatIfWorkbook.vba-http.bak" -PathType Leaf) {
-        throw 'Source package installer WhatIf created a backup or touched the target.'
+    & (Join-Path $extractRoot 'Install-VBAHttp.ps1') -Workbook $whatIfWorkbook -WhatIf -Confirm:$false
+    & (Join-Path $extractRoot 'Uninstall-VBAHttp.ps1') -Workbook $whatIfWorkbook -WhatIf -Confirm:$false
+    if ((Test-Path -LiteralPath "$whatIfWorkbook.vba-http.bak" -PathType Leaf) -or
+        (Test-Path -LiteralPath "$whatIfWorkbook.vba-http-uninstall.bak" -PathType Leaf)) {
+        throw 'Source package WhatIf created a backup or touched the target.'
     }
     $manifest = Get-Content -LiteralPath (Join-Path $extractRoot 'manifest.json') -Raw | ConvertFrom-Json
     if ([string]$manifest.source_revision -ne $expectedSourceRevision) {

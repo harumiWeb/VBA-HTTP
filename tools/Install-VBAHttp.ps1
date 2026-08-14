@@ -2,7 +2,7 @@
 param(
     [Parameter(Mandatory = $true)]
     [string]$Workbook,
-    [string]$PackageRoot = $PSScriptRoot,
+    [string]$PackageRoot = "",
     [string]$BackupPath = "",
     [switch]$Force
 )
@@ -10,7 +10,12 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$resolvedPackageRoot = [IO.Path]::GetFullPath($PackageRoot)
+$resolvedPackageRoot = if ([string]::IsNullOrWhiteSpace($PackageRoot)) {
+    [IO.Path]::GetFullPath($PSScriptRoot)
+}
+else {
+    [IO.Path]::GetFullPath($PackageRoot)
+}
 $resolvedWorkbook = [IO.Path]::GetFullPath($Workbook)
 if (-not (Test-Path -LiteralPath $resolvedWorkbook -PathType Leaf)) {
     throw "Target workbook does not exist: $resolvedWorkbook"

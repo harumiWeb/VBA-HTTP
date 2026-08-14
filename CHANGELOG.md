@@ -1,5 +1,9 @@
 ## Unreleased
 
+- Fixed the source-package installer and uninstaller default package-root
+  resolution so the documented commands work without an explicit
+  `-PackageRoot` argument.
+
 - Added a read-only Excel-free GitHub CI workflow for pull requests, `main`
   pushes, weekly maintenance runs, and manual validation. It installs the
   locked toolchain, runs source/release-plan contracts, and uses a dedicated
